@@ -187,9 +187,10 @@ class VehicleController extends Controller
 
     public function decodeVin(Request $request)
     {
-        $request->validate([
-            'vin' => 'required|string|size:17',
-        ]);
+        
+        // $request->validate([
+        //     'vin' => 'required|string|size:17',
+        // ]);
 
         try {
             $data = $this->vinDecoder->decode($request->vin);

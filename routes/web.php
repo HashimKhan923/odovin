@@ -31,8 +31,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Vehicles
+    Route::get(
+    '/vehicles/decode-vin/{vin}',
+    [\App\Http\Controllers\VehicleController::class, 'decodeVin']
+)->middleware(['auth'])
+ ->name('vehicles.decode-vin');
+
     Route::prefix('vehicles')->name('vehicles.')->group(function () {
-        Route::get('/decode-vin', [VehicleController::class, 'decodeVin'])->name('decode-vin');
+        // Route::get('/decode-vin', [VehicleController::class, 'decodeVin'])->name('decode-vin');
         Route::get('/', [VehicleController::class, 'index'])->name('index');
         Route::get('/create', [VehicleController::class, 'create'])->name('create');
         Route::post('/', [VehicleController::class, 'store'])->name('store');

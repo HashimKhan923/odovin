@@ -437,12 +437,15 @@
                     this.loading = true;
                     
                     try {
-                        const response = await fetch(`/vehicles/decode-vin/${this.vin}`, {
-                            headers: {
-                                'Accept': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                            }
-                        });
+                            const response = await fetch(`/vehicles/decode-vin/${this.vin}`, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document
+                                        .querySelector('meta[name="csrf-token"]')
+                                        .content
+                                }
+                            });
+
                         
                         const data = await response.json();
                         

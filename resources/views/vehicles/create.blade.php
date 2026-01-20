@@ -170,12 +170,14 @@ function vinDecoder() {
             this.loading = true;
             
             try {
-                const response = await fetch(`{{ route('vehicles.decode-vin') }}?vin=${this.vin}`, {
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json'
-                    }
-                });
+                            const response = await fetch(`/vehicles/decode-vin/${this.vin}`, {
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document
+                                        .querySelector('meta[name="csrf-token"]')
+                                        .content
+                                }
+                            });
                 
                 const data = await response.json();
                 
