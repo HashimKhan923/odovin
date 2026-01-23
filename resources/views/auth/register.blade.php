@@ -123,7 +123,7 @@
 
             <!-- Footer -->
             <div class="mt-6 text-center text-sm text-gray-500">
-                Already have an account?
+                Already have an account
                 <a href="{{ route('login') }}" class="text-indigo-600 font-medium hover:underline">
                     Sign in
                 </a>
