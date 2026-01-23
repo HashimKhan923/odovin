@@ -116,7 +116,7 @@
 
             <!-- Footer -->
             <div class="mt-6 text-center text-sm text-gray-500">
-                New to Odovin?
+                New to Odovin
                 <a href="{{ route('register') }}" class="text-indigo-600 font-medium hover:underline">
                     Create an account
                 </a>
