@@ -6,6 +6,8 @@ use App\Models\ServiceRecord;
 use App\Models\Vehicle;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Request;
+use App\Models\Expense;
+
 
 class MaintenanceController extends Controller
 {
@@ -27,7 +29,39 @@ class MaintenanceController extends Controller
 
         $vehicles = $request->user()->vehicles;
 
-        return view('maintenance.index', compact('schedules', 'vehicles'));
+        $vehicleIds = $vehicles->pluck('id');
+
+        $maintenanceExpensesQuery = Expense::whereIn('vehicle_id', $vehicleIds)
+            ->whereIn('category', ['maintenance', 'service', 'repair']);
+
+        /**
+         * Analytics
+         */
+        $analytics = [
+            'month_cost' => (clone $maintenanceExpensesQuery)
+                ->whereMonth('expense_date', now()->month)
+                ->whereYear('expense_date', now()->year)
+                ->sum('amount'),
+
+            'overdue_count' => \App\Models\MaintenanceSchedule::whereIn('vehicle_id', $vehicleIds)
+                ->where('status', 'overdue')
+                ->count(),
+
+            'upcoming_30_days' => \App\Models\MaintenanceSchedule::whereIn('vehicle_id', $vehicleIds)
+                ->where('status', 'pending')
+                ->whereBetween('due_date', [now(), now()->addDays(30)])
+                ->count(),
+
+            'top_service' => (clone $maintenanceExpensesQuery)
+                ->whereMonth('expense_date', now()->month)
+                ->whereYear('expense_date', now()->year)
+                ->selectRaw('description, SUM(amount) as total')
+                ->groupBy('description')
+                ->orderByDesc('total')
+                ->first(),
+        ];
+
+        return view('maintenance.index', compact('schedules', 'vehicles','analytics'));
     }
 
     public function create()

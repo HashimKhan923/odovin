@@ -13,8 +13,50 @@ use App\Http\Controllers\{
     ReminderController,
     AlertController,
     ReportController,
-    RecallController
+    RecallController,
+    ProfileController,
+    FuelLogController,
+    VehicleComparisonController
 };
+
+use App\Http\Controllers\Admin\AuthController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+
+
+////////////////////////////////////////////// Admin Routes \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+
+    Route::prefix('admin')->name('admin.')->group(function () {
+
+        // Auth
+        Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+        Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+        // Protected
+        Route::middleware('admin')->group(function () {
+            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        });
+
+    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////// User Routes \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 // Public Routes
 Route::get('/', function () {
@@ -109,13 +151,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{provider}', [ServiceProviderController::class, 'show'])->name('show');
         Route::get('/search/nearby', [ServiceProviderController::class, 'searchNearby'])->name('search-nearby');
     });
-    
+
+    // Comparison (NEW)
+    Route::prefix('comparison')->name('comparison.')->group(function () {
+        Route::get('/', [VehicleComparisonController::class, 'index'])->name('index');
+        Route::post('/comparison', [VehicleComparisonController::class, 'compare'])->name('compare');
+    });
+
     // Fuel Tracking (NEW)
     Route::prefix('fuel')->name('fuel.')->group(function () {
         Route::get('/', [FuelLogController::class, 'index'])->name('index');
         Route::get('/create', [FuelLogController::class, 'create'])->name('create');
         Route::post('/', [FuelLogController::class, 'store'])->name('store');
         Route::delete('/{fuelLog}', [FuelLogController::class, 'destroy'])->name('destroy');
+        Route::get('/{fuelLog}/edit', [FuelLogController::class, 'edit'])->name('edit');
+        Route::put('/{fuelLog}', [FuelLogController::class, 'update'])->name('update');
+        Route::get('/import', [FuelLogController::class, 'importForm'])->name('import.form');
+        Route::post('/import', [FuelLogController::class, 'import'])->name('import');
+        Route::get('/export/csv/{vehicle_id?}', [FuelLogController::class, 'exportCsv'])->name('export.csv');
+        Route::get('/export/pdf/{vehicle_id?}', [FuelLogController::class, 'exportPdf'])->name('export.pdf');
     });
     
     // Trip Logs (NEW)

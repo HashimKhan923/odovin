@@ -67,7 +67,103 @@
                 </div>
             </div>
         </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <!-- Icon -->
+                <div class="flex-shrink-0 bg-yellow-100 rounded-md p-3">
+                    <!-- Fuel / Gas Pump Icon -->
+                    <svg class="h-6 w-6 text-yellow-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 3h8v18H3V3zm8 0h4l3 3v6a2 2 0 002 2v5a2 2 0 01-2 2h-1m-6-9h4" />
+                    </svg>
+                </div>
+
+                <!-- Content -->
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-600">Fuel This Month</p>
+                    <p class="text-2xl font-semibold text-gray-900">
+                        ${{ number_format($stats['fuel_cost_month'], 2) }}
+                    </p>
+
+                    <a href="{{ route('fuel.index') }}"
+                    class="text-sm text-blue-600 hover:underline mt-1 inline-block">
+                        View fuel logs
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+
+    {{-- Avg MPG --}}
+    <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-sm text-gray-500">Avg MPG (30 days)</p>
+        <p class="text-2xl font-semibold text-gray-900">
+            {{ $fuelInsights['avg_mpg_30'] ?? '—' }}
+        </p>
     </div>
+
+    {{-- Fuel Cost Per Mile --}}
+    <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-sm text-gray-500">Fuel Cost / Mile</p>
+
+        @if($fuelInsights['fuel_cost_mile'])
+            <p class="text-2xl font-semibold text-gray-900">
+                ${{ number_format($fuelInsights['fuel_cost_mile'], 3) }}
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+                Based on {{ number_format($fuelInsights['total_miles']) }} miles
+            </p>
+        @else
+            <p class="text-sm text-gray-400">Not enough data</p>
+        @endif
+    </div>
+
+    {{-- MPG Trend --}}
+    <div class="bg-white rounded-lg shadow p-6">
+        <p class="text-sm text-gray-500">MPG Trend</p>
+
+        @if($fuelInsights['mpg_trend'] === 'up')
+            <p class="text-2xl font-semibold text-green-600">
+                ▲ Improving
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+                Fuel efficiency is improving
+            </p>
+
+        @elseif($fuelInsights['mpg_trend'] === 'down')
+            <p class="text-2xl font-semibold text-red-600">
+                ▼ Declining
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+                Consider checking driving or maintenance
+            </p>
+
+        @elseif($fuelInsights['mpg_trend'] === 'stable')
+            <p class="text-2xl font-semibold text-yellow-600">
+                ● Stable
+            </p>
+            <p class="text-xs text-gray-400 mt-1">
+                No major efficiency change
+            </p>
+
+        @else
+            <p class="text-sm text-gray-400">
+                Not enough data
+            </p>
+        @endif
+    </div>
+    </div>
+
+    
+
+    
 
         @if($stats['open_recalls'] > 0)
 <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -296,6 +392,21 @@
                 </svg>
                 <span class="text-sm font-medium text-gray-900">Find Services</span>
             </a>
+
+            <!-- <a href="{{ route('fuel.index') }}"
+            class="flex flex-col items-center justify-center p-4
+                    border border-gray-200 rounded-lg
+                    hover:bg-blue-50 hover:border-blue-300 transition">
+
+                <svg class="w-8 h-8 text-blue-600 mb-2"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                </svg>
+
+                <span class="text-sm font-medium text-gray-900">Fuel Logs</span>
+            </a> -->
+
         </div>
     </div>
 </div>

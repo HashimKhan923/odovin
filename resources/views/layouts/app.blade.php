@@ -27,7 +27,7 @@
                         <!-- Logo -->
                         <div class="shrink-0 flex items-center">
                             <a href="{{ route('dashboard') }}" class="text-xl font-bold text-blue-600">
-                                🚗 OdoVin
+                                Odovin
                             </a>
                         </div>
 
@@ -48,8 +48,14 @@
                             <x-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*')">
                                 Expenses
                             </x-nav-link>
+                            <x-nav-link :href="route('fuel.index')" :active="request()->routeIs('fuel.*')">
+                                Fuel Logs
+                            </x-nav-link>
                             <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                                 Reports
+                            </x-nav-link>
+                            <x-nav-link :href="route('comparison.index')" :active="request()->routeIs('comparison.*')">
+                                Compare
                             </x-nav-link>
                         </div>
                     </div>
@@ -148,6 +154,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    
+ @stack('scripts')
 </body>
 </html>
 

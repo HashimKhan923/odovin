@@ -23,6 +23,48 @@
         </a>
     </div>
 
+    {{-- Maintenance Analytics --}}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+    <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Maintenance (This Month)</p>
+        <p class="text-xl font-semibold">
+            ${{ number_format($analytics['month_cost'], 2) }}
+        </p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Overdue Tasks</p>
+        <p class="text-xl font-semibold text-red-600">
+            {{ $analytics['overdue_count'] }}
+        </p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Due in 30 Days</p>
+        <p class="text-xl font-semibold text-yellow-600">
+            {{ $analytics['upcoming_30_days'] }}
+        </p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow">
+        <p class="text-sm text-gray-500">Top Service</p>
+
+        @if($analytics['top_service'])
+            <p class="text-sm font-semibold truncate">
+                {{ $analytics['top_service']->description }}
+            </p>
+            <p class="text-xs text-gray-500">
+                ${{ number_format($analytics['top_service']->total, 2) }}
+            </p>
+        @else
+            <p class="text-sm text-gray-400">No data</p>
+        @endif
+    </div>
+
+</div>
+
+
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-4 mb-6">
         <form method="GET" class="flex flex-wrap gap-4 items-end">

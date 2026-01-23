@@ -7,6 +7,11 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use App\Services\VinDecoderService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+
 
 class VehicleController extends Controller
 {
@@ -19,14 +24,74 @@ class VehicleController extends Controller
 
     public function index(Request $request)
     {
-        $vehicles = $request->user()
-            ->vehicles()
-            ->withCount(['maintenanceSchedules', 'serviceRecords', 'expenses'])
+        $user = $request->user();
+
+        /**
+         * 1. Get vehicles (basic data)
+         */
+        $vehicles = $user->vehicles()
+            ->with(['documents']) // keep what you already had
             ->latest()
             ->get();
 
+        if ($vehicles->isEmpty()) {
+            return view('vehicles.index', compact('vehicles'));
+        }
+
+        /**
+         * 2. Collect vehicle IDs once
+         */
+        $vehicleIds = $vehicles->pluck('id');
+
+        /**
+         * 3. Get overdue maintenance counts (ONE QUERY)
+         */
+        $overdueMaintenanceCounts = \App\Models\MaintenanceSchedule::whereIn('vehicle_id', $vehicleIds)
+            ->where('status', 'overdue')
+            ->selectRaw('vehicle_id, COUNT(*) as count')
+            ->groupBy('vehicle_id')
+            ->pluck('count', 'vehicle_id');
+
+        /**
+         * 4. Get open recall counts (ONE QUERY)
+         */
+        $openRecallCounts = \App\Models\VehicleRecall::whereIn('vehicle_id', $vehicleIds)
+            ->where('is_open', true)
+            ->selectRaw('vehicle_id, COUNT(*) as count')
+            ->groupBy('vehicle_id')
+            ->pluck('count', 'vehicle_id');
+
+        /**
+         * 5. Attach health info to each vehicle
+         */
+        $vehicles->transform(function ($vehicle) use ($overdueMaintenanceCounts, $openRecallCounts) {
+
+            $overdue = $overdueMaintenanceCounts[$vehicle->id] ?? 0;
+            $recalls = $openRecallCounts[$vehicle->id] ?? 0;
+
+            // Simple, understandable health logic
+            if ($recalls > 0 || $overdue >= 2) {
+                $healthStatus = 'needs_attention';
+            } elseif ($overdue === 1) {
+                $healthStatus = 'good';
+            } else {
+                $healthStatus = 'excellent';
+            }
+
+            // Attach computed properties (NOT saved in DB)
+            $vehicle->health_status = $healthStatus;
+            $vehicle->overdue_maintenance_count = $overdue;
+            $vehicle->open_recall_count = $recalls;
+
+            return $vehicle;
+        });
+
+        /**
+         * 6. Return view
+         */
         return view('vehicles.index', compact('vehicles'));
     }
+
 
     public function create()
     {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>odoVin - Your Complete Vehicle Management Solution</title>
+    <title>Odovin - Your Complete Vehicle Management Solution</title>
     
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -59,7 +59,7 @@
                     <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                     </svg>
-                    <span class="text-xl font-bold text-gray-900">odoVin</span>
+                    <span class="text-xl font-bold text-gray-900">Odovin</span>
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-8">
@@ -382,7 +382,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
-                    <h3 class="font-bold text-lg mb-4">odoVin</h3>
+                    <h3 class="font-bold text-lg mb-4">ODOVIN</h3>
                     <p class="text-gray-400">Your complete vehicle management solution.</p>
                 </div>
                 <div>
@@ -411,7 +411,7 @@
                 </div>
             </div>
             <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-                <p>&copy; 2024 odoVin. All rights reserved.</p>
+                <p>&copy; 2024 ODOVIN. All rights reserved.</p>
             </div>
         </div>
     </footer>

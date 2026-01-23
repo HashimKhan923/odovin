@@ -31,6 +31,8 @@
             </a>
         </div>
     @else
+
+    
         <!-- Vehicles Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @foreach($vehicles as $vehicle)
@@ -86,6 +88,18 @@
                         </div>
                         @if($vehicle->license_plate)
                         <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Health</span>
+                            @if($vehicle->health_status === 'excellent')
+                            <span class="font-medium text-green-900">Excellent</span>
+                            @elseif($vehicle->health_status === 'good')
+                            <span class="font-medium text-yellow-900">Good</span>
+                            @else
+                            <span class="font-medium text-red-900">Needs Attention</span>
+                            @endif
+                        </div>
+                        @endif
+                        @if($vehicle->license_plate)
+                        <div class="flex justify-between text-sm">
                             <span class="text-gray-600">License Plate</span>
                             <span class="font-medium text-gray-900">{{ $vehicle->license_plate }}</span>
                         </div>
@@ -101,15 +115,15 @@
                     <!-- Stats -->
                     <div class="grid grid-cols-3 gap-2 pt-4 border-t border-gray-200">
                         <div class="text-center">
-                            <p class="text-lg font-bold text-gray-900">{{ $vehicle->maintenance_schedules_count }}</p>
+                            <p class="text-lg font-bold text-gray-900">{{ $vehicle->maintenanceSchedules->count() }}</p>
                             <p class="text-xs text-gray-600">Maintenance</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-lg font-bold text-gray-900">{{ $vehicle->service_records_count }}</p>
+                            <p class="text-lg font-bold text-gray-900">{{ $vehicle->serviceRecords->count() }}</p>
                             <p class="text-xs text-gray-600">Services</p>
                         </div>
                         <div class="text-center">
-                            <p class="text-lg font-bold text-gray-900">{{ $vehicle->expenses_count }}</p>
+                            <p class="text-lg font-bold text-gray-900">{{ $vehicle->expenses->count() }}</p>
                             <p class="text-xs text-gray-600">Expenses</p>
                         </div>
                     </div>

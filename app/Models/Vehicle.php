@@ -148,57 +148,92 @@ class Vehicle extends Model
     }
 
     public function fuelLogs(): HasMany
-{
-    return $this->hasMany(FuelLog::class);
-}
-
-public function tripLogs(): HasMany
-{
-    return $this->hasMany(TripLog::class);
-}
-
-public function insurances(): HasMany
-{
-    return $this->hasMany(Insurance::class);
-}
-
-public function getAverageMpg()
-{
-    return $this->fuelLogs()->where('mpg', '>', 0)->avg('mpg');
-}
-
-public function getTotalFuelCost()
-{
-    return $this->fuelLogs()->sum('total_cost');
-}
-
-public function getBusinessMiles($startDate = null, $endDate = null)
-{
-    $query = $this->tripLogs()->where('purpose', 'business');
-    
-    if ($startDate) {
-        $query->where('trip_date', '>=', $startDate);
+    {
+        return $this->hasMany(FuelLog::class);
     }
-    
-    if ($endDate) {
-        $query->where('trip_date', '<=', $endDate);
+
+    public function tripLogs(): HasMany
+    {
+        return $this->hasMany(TripLog::class);
     }
-    
-    return $query->sum('distance');
-}
 
-public function getCurrentInsurance()
-{
-    return $this->insurances()
-        ->where('start_date', '<=', now())
-        ->where('end_date', '>=', now())
-        ->latest()
-        ->first();
-}
+    public function insurances(): HasMany
+    {
+        return $this->hasMany(Insurance::class);
+    }
 
-public function recalls()
-{
-    return $this->hasMany(VehicleRecall::class);
-}
+    public function getAverageMpg()
+    {
+        return $this->fuelLogs()->where('mpg', '>', 0)->avg('mpg');
+    }
+
+    public function getTotalFuelCost()
+    {
+        return $this->fuelLogs()->sum('total_cost');
+    }
+
+    public function getBusinessMiles($startDate = null, $endDate = null)
+    {
+        $query = $this->tripLogs()->where('purpose', 'business');
+        
+        if ($startDate) {
+            $query->where('trip_date', '>=', $startDate);
+        }
+        
+        if ($endDate) {
+            $query->where('trip_date', '<=', $endDate);
+        }
+        
+        return $query->sum('distance');
+    }
+
+    public function getCurrentInsurance()
+    {
+        return $this->insurances()
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->latest()
+            ->first();
+    }
+
+    public function recalls()
+    {
+        return $this->hasMany(VehicleRecall::class);
+    }
+
+
+
+    public function totalExpenses(): float
+    {
+        return (float) $this->expenses()->sum('amount');
+    }
+
+    public function vehicleAgeInMonths(): int
+    {
+        return max(1, $this->created_at->diffInMonths(now()));
+    }
+
+    public function costPerMile(): float
+    {
+        if ($this->current_mileage <= 0) {
+            return 0;
+        }
+
+        return round($this->totalExpenses() / $this->current_mileage, 2);
+    }
+
+    public function expenseByType(string $type): float
+    {
+        return (float) $this->expenses()
+            ->whereHas('category', fn ($q) => $q->where('slug', $type))
+            ->sum('amount');
+    }
+
+    public function expenseByCategory(string $category): float
+    {
+        return (float) $this->expenses()
+            ->where('category', $category)
+            ->sum('amount');
+    }
 
 }
