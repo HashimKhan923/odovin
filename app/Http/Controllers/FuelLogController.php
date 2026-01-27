@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Alert;
 
 
 class FuelLogController extends Controller
@@ -188,19 +189,87 @@ class FuelLogController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        // Calculate MPG if possible
+        /**
+         * 1. Calculate MPG (only for full tank)
+         */
         $lastLog = $vehicle->fuelLogs()->latest('fill_date')->first();
-        if ($lastLog && $validated['is_full_tank']) {
+        if ($lastLog && ($validated['is_full_tank'] ?? false)) {
             $miles = $validated['odometer'] - $lastLog->odometer;
-            $validated['mpg'] = $miles / $validated['gallons'];
+            if ($miles > 0 && $validated['gallons'] > 0) {
+                $validated['mpg'] = round($miles / $validated['gallons'], 2);
+            }
         }
 
+        /**
+         * 2. Create Fuel Log
+         */
         $log = FuelLog::create($validated);
 
-        // Update vehicle mileage
+        /**
+         * 3. Update vehicle mileage
+         */
         $vehicle->updateMileage($validated['odometer']);
 
-        // Create expense
+        /**
+         * 4. LOW MPG TREND ALERT (SYSTEM)
+         */
+        $lowMpgAlertExists = Alert::where('user_id', $request->user()->id)
+            ->where('vehicle_id', $vehicle->id)
+            ->where('type', 'system')
+            ->where('title', 'Fuel Efficiency Dropping')
+            ->where('is_read', false)
+            ->exists();
+
+        if (!$lowMpgAlertExists && $this->detectLowMpgTrend($vehicle->id)) {
+            Alert::create([
+                'user_id'    => $request->user()->id,
+                'vehicle_id' => $vehicle->id,
+                'type'       => 'system',
+                'priority'   => 'warning',
+                'title'      => 'Fuel Efficiency Dropping',
+                'message'    => 'Your vehicle’s fuel efficiency has dropped significantly over recent fill-ups. This may indicate low tire pressure, driving conditions, or overdue maintenance.',
+            ]);
+        }
+
+        /**
+         * 5. MAINTENANCE OVERDUE ALERTS (CRITICAL)
+         */
+        $overdueSchedules = $vehicle->maintenanceSchedules()
+            ->where('status', '!=', 'completed')
+            ->get()
+            ->filter(fn ($schedule) => $schedule->isOverdue());
+
+        foreach ($overdueSchedules as $schedule) {
+
+            // Update status to overdue (once)
+            if ($schedule->status !== 'overdue') {
+                $schedule->update(['status' => 'overdue']);
+            }
+
+            // Prevent duplicate unread alerts per maintenance item
+            $exists = Alert::where('user_id', $request->user()->id)
+                ->where('vehicle_id', $vehicle->id)
+                ->where('type', 'maintenance')
+                ->where('title', 'Maintenance Overdue')
+                ->where('is_read', false)
+                ->where('message', 'like', '%' . $schedule->service_type . '%')
+                ->exists();
+
+            if (!$exists) {
+                Alert::create([
+                    'user_id'    => $request->user()->id,
+                    'vehicle_id' => $vehicle->id,
+                    'type'       => 'maintenance',
+                    'priority'   => 'critical',
+                    'title'      => 'Maintenance Overdue',
+                    'message'    => "{$schedule->service_type} is overdue for your vehicle. Please schedule service as soon as possible.",
+                ]);
+            }
+        }
+
+        /**
+         * 6. Create fuel expense
+         */
         $vehicle->expenses()->create([
             'category' => 'fuel',
             'description' => 'Fuel fill-up at ' . ($validated['gas_station'] ?? 'Gas Station'),
@@ -434,6 +503,26 @@ class FuelLogController extends Controller
         ]);
 
         return $pdf->download('fuel_logs_' . now()->format('Ymd') . '.pdf');
+    }
+
+    private function detectLowMpgTrend(int $vehicleId): bool
+    {
+        $mpgValues = FuelLog::where('vehicle_id', $vehicleId)
+            ->whereNotNull('mpg')
+            ->orderBy('fill_date')
+            ->pluck('mpg')
+            ->values(); // important
+
+        if ($mpgValues->count() < 4) {
+            return false;
+        }
+
+        $lastFour = $mpgValues->slice(-4)->values();
+
+        $previousAvg = ($lastFour[0] + $lastFour[1]) / 2;
+        $recentAvg   = ($lastFour[2] + $lastFour[3]) / 2;
+
+        return $recentAvg < ($previousAvg * 0.9); // >10% drop
     }
 
 

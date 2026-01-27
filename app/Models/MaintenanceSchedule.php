@@ -57,4 +57,24 @@ class MaintenanceSchedule extends Model
         $newSchedule->status = 'pending';
         $newSchedule->save();
     }
+
+    public function isOverdue(): bool
+    {
+        if ($this->status === 'completed') {
+            return false;
+        }
+
+        if ($this->due_mileage !== null &&
+            $this->vehicle &&
+            $this->vehicle->current_mileage >= $this->due_mileage) {
+            return true;
+        }
+
+        if ($this->due_date !== null &&
+            $this->due_date->isPast()) {
+            return true;
+        }
+
+        return false;
+    }
 }
