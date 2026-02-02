@@ -53,6 +53,107 @@
         </div>
     </div>
 
+    {{-- AI INSIGHTS --}}
+    <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 shadow mb-8">
+
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h2 class="text-xl font-bold text-gray-900">AI Vehicle Insights</h2>
+                <p class="text-sm text-gray-600">
+                    Personalized insights based on your vehicle data
+                </p>
+            </div>
+
+            @if($vehicle->aiInsight)
+                <span class="text-sm font-semibold px-3 py-1 rounded-full bg-green-100 text-green-800">
+                    Peace of Mind: {{ $vehicle->aiInsight->peace_of_mind_score }}/100
+                </span>
+            @endif
+        </div>
+
+        @if(!$vehicle->aiInsight)
+            {{-- EMPTY STATE --}}
+            <div class="bg-white border rounded-lg p-5 text-center">
+                <p class="text-gray-600 mb-4">
+                    AI insights are not generated yet.
+                </p>
+
+                <form method="POST" action="{{ route('vehicles.ai-insights.generate', $vehicle) }}">
+                    @csrf
+                    <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Generate AI Insights
+                    </button>
+                </form>
+            </div>
+        @else
+            @php($ai = $vehicle->aiInsight)
+
+            {{-- SUMMARY --}}
+            <div class="bg-white rounded-lg p-5 mb-6 border">
+                <h3 class="font-semibold text-gray-800 mb-2">Overview</h3>
+                <p class="text-gray-700 leading-relaxed">
+                    {{ $ai->summary }}
+                </p>
+            </div>
+
+            {{-- KNOWN ISSUES --}}
+            <div class="mb-6">
+                <h3 class="font-semibold text-gray-800 mb-3">Known Issues</h3>
+
+                @forelse($ai->known_issues as $issue)
+                    <div class="bg-white border-l-4 border-yellow-400 p-4 mb-3 rounded">
+                        <p class="font-medium text-gray-900">
+                            {{ $issue['issue'] }}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            Mileage: {{ $issue['mileage_range'] }} ·
+                            Severity: {{ $issue['severity'] }}
+                        </p>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-600">No common issues detected.</p>
+                @endforelse
+            </div>
+
+            {{-- TIPS --}}
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+
+                <div class="bg-white rounded-lg p-5 border">
+                    <h3 class="font-semibold text-gray-800 mb-2">Maintenance Tips</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        @foreach($ai->maintenance_tips as $tip)
+                            <li>{{ $tip }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg p-5 border">
+                    <h3 class="font-semibold text-gray-800 mb-2">Owner Tips</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        @foreach($ai->owner_tips as $tip)
+                            <li>{{ $tip }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+
+            </div>
+
+            {{-- COST EXPECTATIONS --}}
+            <div class="bg-white rounded-lg p-5 border">
+                <h3 class="font-semibold text-gray-800 mb-2">Ownership Cost Expectations</h3>
+                <p class="text-gray-700">
+                    <strong>Yearly:</strong>
+                    {{ $ai->cost_expectations['yearly_range'] ?? 'N/A' }}
+                </p>
+                <p class="text-gray-700 mt-1">
+                    <strong>High Cost Parts:</strong>
+                    {{ implode(', ', $ai->cost_expectations['high_cost_parts'] ?? []) }}
+                </p>
+            </div>
+        @endif
+
+    </div>
+
     <!-- Vehicle Details and Actions -->
     <div class="grid lg:grid-cols-3 gap-6 mb-8">
         <!-- Vehicle Info -->

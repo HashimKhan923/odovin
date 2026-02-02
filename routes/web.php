@@ -16,7 +16,8 @@ use App\Http\Controllers\{
     RecallController,
     ProfileController,
     FuelLogController,
-    VehicleComparisonController
+    VehicleComparisonController,
+    VehicleAIInsightController
 };
 
 use App\Http\Controllers\Admin\AuthController;
@@ -242,6 +243,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/maintenance-history', [ReportController::class, 'maintenanceHistory'])->name('maintenance-history');
         Route::get('/vehicle-analytics', [ReportController::class, 'vehicleAnalytics'])->name('vehicle-analytics');
         Route::get('/export/{type}', [ReportController::class, 'export'])->name('export');
+    });
+
+    // Vehicle AI Insights
+    Route::prefix('vehicles/{vehicle}/ai-insights')->name('vehicles.ai-insights.')->group(function () {
+        Route::post('/generate', [VehicleAIInsightController::class, 'generate'])->name('generate');
     });
     
     // Profile

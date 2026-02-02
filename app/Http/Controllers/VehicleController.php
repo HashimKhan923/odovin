@@ -167,6 +167,7 @@ class VehicleController extends Controller
             'expenses' => function ($query) {
                 $query->latest()->limit(10);
             },
+            'aiInsight',
         ]);
 
         // Get statistics

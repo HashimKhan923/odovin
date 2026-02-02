@@ -94,6 +94,9 @@
                     <option value="completed" {{ request('status') === 'completed' ? 'selected' : '' }}>
                         Completed
                     </option>
+                    <option value="overdue" {{ request('status') === 'overdue' ? 'selected' : '' }}>
+                        Overdue
+                    </option>
                 </select>
             </div>
 
@@ -185,6 +188,11 @@
                                 <span class="px-2 py-1 text-xs font-medium rounded-full
                                     bg-green-100 text-green-800">
                                     Completed
+                                </span>
+                            @elseif($schedule->status === 'overdue')
+                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                    bg-red-100 text-red-800">
+                                    Overdue
                                 </span>
                             @else
                                 <span class="px-2 py-1 text-xs font-medium rounded-full

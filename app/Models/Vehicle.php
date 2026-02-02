@@ -236,4 +236,9 @@ class Vehicle extends Model
             ->sum('amount');
     }
 
+    public function aiInsight()
+    {
+        return $this->hasOne(\App\Models\VehicleAIInsight::class);
+    }
+
 }
