@@ -396,6 +396,10 @@
             border: 1px solid rgba(255, 51, 102, 0.3);
             color: #ff3366;
         }
+
+        .right-4 {
+            right: 3rem;
+        }
         
         /* Mobile Menu */
         @media (max-width: 1024px) {
