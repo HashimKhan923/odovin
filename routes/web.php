@@ -20,7 +20,8 @@ use App\Http\Controllers\{
     VehicleAIInsightController,
     AdvancedAnalyticsController,
     TripLogController,
-    InsuranceController
+    InsuranceController,
+    AiAnalyticsController
 };
 
 use App\Http\Controllers\Admin\AuthController;
@@ -77,9 +78,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Advanced Analytics Dashboard
-        Route::get('/analytics/dashboard', [AdvancedAnalyticsController::class, 'index'])->name('analytics.dashboard');
-        Route::get('/analytics/export/{vehicle}', [AdvancedAnalyticsController::class, 'exportPDF'])->name('analytics.export');
+            // Route::get('/analytics/dashboard', [AdvancedAnalyticsController::class, 'index'])->name('analytics.dashboard');
+            // Route::get('/analytics/export/{vehicle}', [AdvancedAnalyticsController::class, 'exportPDF'])->name('analytics.export');
 
+            // AI Analytics Dashboard
+            Route::get('/ai-analytics/dashboard', [AiAnalyticsController::class, 'index'])->name('ai-analytics.dashboard'); 
+            Route::get('/ai-analytics/export/{vehicle}', [AiAnalyticsController::class, 'exportPDF'])->name('ai-analytics.export');
     
     // Vehicles
     Route::get(
