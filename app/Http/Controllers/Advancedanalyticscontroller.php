@@ -14,7 +14,7 @@ use Carbon\Carbon;
 class AdvancedAnalyticsController extends Controller
 {
     /**
-     * Display the advanced analytics dashboard
+     * Display the advanced analytics
      */
     public function index(Request $request)
     {
