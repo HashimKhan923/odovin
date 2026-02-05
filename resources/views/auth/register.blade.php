@@ -336,7 +336,7 @@
         <div class="auth-card">
             <!-- Header -->
             <div class="auth-header">
-                <h1 class="auth-logo">VehicleTracker</h1>
+                <h1 class="auth-logo">odovin</h1>
                 <p class="auth-subtitle">Create your account to get started</p>
             </div>
 
