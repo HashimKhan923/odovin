@@ -39,6 +39,30 @@
             </div>
         </div>
 
+        <!-- Analytics Toggle Button -->
+<div class="analytics-toggle-container fade-in-up" style="animation-delay: 0.15s;">
+    <a href="{{ route('analytics.dashboard') }}" class="analytics-toggle-button">
+        <div class="toggle-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+        </div>
+        <div class="toggle-content">
+            <div class="toggle-badge">
+                <span class="ai-pulse"></span>
+                AI POWERED
+            </div>
+            <h3>Advanced Analytics</h3>
+            <p>Predictive Maintenance • Cost Forecasting • ROI Analysis</p>
+        </div>
+        <div class="toggle-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            </svg>
+        </div>
+    </a>
+</div>
+
         @if($stats['open_recalls'] > 0)
         <div class="alert-banner critical fade-in-up" style="animation-delay: 0.1s;">
             <div class="alert-icon">
@@ -2081,6 +2105,193 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-secondary);
+}
+
+/* Analytics Toggle Button */
+.analytics-toggle-container {
+    margin-bottom: 2rem;
+}
+
+.analytics-toggle-button {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 170, 0.05));
+    border: 2px solid transparent;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.analytics-toggle-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.2), transparent);
+    transition: left 0.6s ease;
+}
+
+.analytics-toggle-button:hover::before {
+    left: 100%;
+}
+
+.analytics-toggle-button:hover {
+    border-color: var(--accent-primary);
+    transform: translateX(10px);
+    box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
+}
+
+.toggle-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.4s ease;
+    position: relative;
+}
+
+.toggle-icon::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 18px;
+    opacity: 0;
+    filter: blur(8px);
+    transition: opacity 0.4s ease;
+}
+
+.analytics-toggle-button:hover .toggle-icon::after {
+    opacity: 0.6;
+    animation: iconGlow 2s ease-in-out infinite;
+}
+
+@keyframes iconGlow {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+}
+
+.analytics-toggle-button:hover .toggle-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.toggle-icon svg {
+    width: 32px;
+    height: 32px;
+    color: var(--bg-primary);
+    position: relative;
+    z-index: 1;
+}
+
+.toggle-content {
+    flex: 1;
+}
+
+.toggle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid var(--accent-primary);
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent-primary);
+    margin-bottom: 0.5rem;
+}
+
+.ai-pulse {
+    width: 6px;
+    height: 6px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.toggle-content h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem 0;
+    transition: color 0.3s ease;
+}
+
+.analytics-toggle-button:hover .toggle-content h3 {
+    color: var(--accent-primary);
+}
+
+.toggle-content p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.toggle-arrow {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 212, 255, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.4s ease;
+}
+
+.analytics-toggle-button:hover .toggle-arrow {
+    background: var(--accent-primary);
+    transform: translateX(5px);
+}
+
+.toggle-arrow svg {
+    width: 24px;
+    height: 24px;
+    color: var(--accent-primary);
+    transition: color 0.3s ease;
+}
+
+.analytics-toggle-button:hover .toggle-arrow svg {
+    color: var(--bg-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .analytics-toggle-button {
+        padding: 1.25rem 1.5rem;
+        gap: 1rem;
+    }
+    
+    .toggle-icon {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .toggle-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .toggle-content h3 {
+        font-size: 1.125rem;
+    }
+    
+    .toggle-content p {
+        font-size: 0.8rem;
+    }
 }
 </style>
 @endsection
