@@ -7,7 +7,6 @@ use App\Models\Expense;
 use App\Models\ServiceRecord;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
-use PDF; // Install barryvdh/laravel-dompdf
 
 class ReportController extends Controller
 {
@@ -22,9 +21,16 @@ class ReportController extends Controller
     {
         $vehicles = auth()->user()->vehicles;
         
-        $startDate = $request->start_date ?? Carbon::now()->subMonths(6)->startOfMonth();
-        $endDate = $request->end_date ?? Carbon::now()->endOfMonth();
+        // Use Carbon to parse dates or default values
+        $startDate = $request->start_date 
+            ? Carbon::parse($request->start_date) 
+            : Carbon::now()->subMonths(6)->startOfMonth();
+            
+        $endDate = $request->end_date 
+            ? Carbon::parse($request->end_date) 
+            : Carbon::now()->endOfMonth();
 
+        // Get expenses with proper eager loading
         $expenses = Expense::whereHas('vehicle', function ($query) {
                 $query->where('user_id', auth()->id());
             })
@@ -32,13 +38,22 @@ class ReportController extends Controller
             ->when($request->vehicle_id, function ($query, $vehicleId) {
                 return $query->where('vehicle_id', $vehicleId);
             })
+            ->orderBy('expense_date', 'desc')
             ->get();
 
         $totalExpenses = $expenses->sum('amount');
-        $byCategory = $expenses->groupBy('category')->map->sum('amount');
+        
+        // Group by category
+        $byCategory = $expenses->groupBy('category')->map(function($group) {
+            return $group->sum('amount');
+        })->sortDesc();
+        
+        // Group by month
         $byMonth = $expenses->groupBy(function ($expense) {
             return $expense->expense_date->format('Y-m');
-        })->map->sum('amount');
+        })->map(function($group) {
+            return $group->sum('amount');
+        })->sortKeys();
 
         return view('reports.expense-summary', compact(
             'vehicles', 'expenses', 'totalExpenses', 'byCategory', 'byMonth', 'startDate', 'endDate'
@@ -62,16 +77,27 @@ class ReportController extends Controller
         return view('reports.maintenance-history', compact('vehicles', 'records'));
     }
 
-    public function vehicleAnalytics(Request $request, Vehicle $vehicle)
+    public function vehicleAnalytics(Request $request, $vehicleId)
     {
-        // $this->authorize('view', $vehicle);
+        $vehicle = Vehicle::findOrFail($vehicleId);
+        
+        // return $vehicle;
+        // Make sure user owns this vehicle
+        // if ($vehicle->user_id !== auth()->id()) {
+        //     abort(403);
+        // }
 
-        $totalExpenses = $vehicle->getTotalExpenses();
+        // Total expenses
+        $totalExpenses = $vehicle->expenses()->sum('amount');
+        
+        // Expenses by category
         $expensesByCategory = $vehicle->expenses()
             ->selectRaw('category, SUM(amount) as total')
             ->groupBy('category')
+            ->orderByDesc('total')
             ->get();
 
+        // Monthly expenses for last 12 months
         $monthlyExpenses = $vehicle->expenses()
             ->whereBetween('expense_date', [
                 Carbon::now()->subMonths(12),
@@ -82,6 +108,7 @@ class ReportController extends Controller
             ->orderBy('month')
             ->get();
 
+        // Get counts
         $maintenanceCount = $vehicle->maintenanceSchedules()->count();
         $serviceCount = $vehicle->serviceRecords()->count();
 

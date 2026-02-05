@@ -3,23 +3,292 @@
 @section('title', 'Add Expense')
 
 @section('content')
-<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-900">Add Expense</h1>
-        <p class="mt-1 text-sm text-gray-600">Record a new vehicle expense</p>
+<style>
+    /* Page Variables */
+    :root[data-theme="dark"] {
+        --page-bg: #0a0e1a;
+        --card-bg: rgba(26, 32, 48, 0.8);
+        --border-color: rgba(0, 212, 255, 0.1);
+        --input-bg: rgba(0, 212, 255, 0.05);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --text-tertiary: rgba(255, 255, 255, 0.5);
+        --accent-cyan: #00d4ff;
+        --accent-green: #00ffaa;
+        --accent-danger: #ff3366;
+    }
+
+    :root[data-theme="light"] {
+        --page-bg: #f8fafc;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --border-color: rgba(0, 0, 0, 0.1);
+        --input-bg: rgba(0, 0, 0, 0.02);
+        --text-primary: #1a1f36;
+        --text-secondary: rgba(26, 31, 54, 0.7);
+        --text-tertiary: rgba(26, 31, 54, 0.5);
+        --accent-cyan: #0066ff;
+        --accent-green: #00cc88;
+        --accent-danger: #ff3366;
+    }
+
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Page Header */
+    .page-header {
+        margin-bottom: 2rem;
+        animation: slideDown 0.5s ease-out;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .page-header h1 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    /* Form Card */
+    .form-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.2s backwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .required {
+        color: var(--accent-danger);
+        font-size: 1rem;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea,
+    .form-file {
+        padding: 0.875rem 1rem;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        color: var(--text-primary);
+        font-size: 0.875rem;
+        font-family: 'Chakra Petch', sans-serif;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus,
+    .form-file:focus {
+        outline: none;
+        border-color: var(--accent-cyan);
+        background: rgba(0, 212, 255, 0.08);
+        box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+    }
+
+    .form-select option {
+        background: var(--card-bg);
+        color: var(--text-primary);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .input-with-icon {
+        position: relative;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-tertiary);
+        font-size: 1rem;
+        pointer-events: none;
+    }
+
+    .input-with-icon .form-input {
+        padding-left: 2.5rem;
+    }
+
+    .input-helper {
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+        margin-top: 0.25rem;
+    }
+
+    .error-message {
+        font-size: 0.75rem;
+        color: var(--accent-danger);
+        margin-top: 0.25rem;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .button {
+        padding: 0.875rem 1.75rem;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid;
+    }
+
+    .button-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border-color: var(--border-color);
+    }
+
+    .button-secondary:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .button-primary {
+        background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+    }
+
+    .button-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(0, 212, 255, 0.5);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.5rem 1rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+        }
+
+        .form-card {
+            padding: 1.5rem;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group.full-width {
+            grid-column: 1;
+        }
+
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+
+        .button {
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="form-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Add Expense</h1>
+        <p>Record a new vehicle expense</p>
     </div>
 
-    <div class="bg-white rounded-lg shadow-lg p-6">
+    <!-- Form Card -->
+    <div class="form-card">
         <form action="{{ route('expenses.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div class="md:col-span-2">
-                    <label for="vehicle_id" class="block text-sm font-medium text-gray-700 mb-2">
-                        Vehicle <span class="text-red-500">*</span>
+            <div class="form-grid">
+                <!-- Vehicle -->
+                <div class="form-group full-width">
+                    <label for="vehicle_id" class="form-label">
+                        Vehicle <span class="required">*</span>
                     </label>
-                    <select id="vehicle_id" name="vehicle_id" required
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select id="vehicle_id" name="vehicle_id" required class="form-select">
                         <option value="">Select a vehicle</option>
                         @foreach($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
@@ -28,16 +297,16 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
 
-                <div>
-                    <label for="category" class="block text-sm font-medium text-gray-700 mb-2">
-                        Category <span class="text-red-500">*</span>
+                <!-- Category -->
+                <div class="form-group">
+                    <label for="category" class="form-label">
+                        Category <span class="required">*</span>
                     </label>
-                    <select id="category" name="category" required
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select id="category" name="category" required class="form-select">
                         <option value="">Select category</option>
                         @foreach($categories as $key => $label)
                             <option value="{{ $key }}" {{ old('category') == $key ? 'selected' : '' }}>
@@ -47,74 +316,77 @@
                     </select>
                 </div>
 
-                <div>
-                    <label for="expense_date" class="block text-sm font-medium text-gray-700 mb-2">
-                        Date <span class="text-red-500">*</span>
+                <!-- Date -->
+                <div class="form-group">
+                    <label for="expense_date" class="form-label">
+                        Date <span class="required">*</span>
                     </label>
                     <input type="date" id="expense_date" name="expense_date" required
                            value="{{ old('expense_date', date('Y-m-d')) }}"
                            max="{{ date('Y-m-d') }}"
-                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                           class="form-input">
                 </div>
 
-                <div class="md:col-span-2">
-                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-                        Description <span class="text-red-500">*</span>
+                <!-- Description -->
+                <div class="form-group full-width">
+                    <label for="description" class="form-label">
+                        Description <span class="required">*</span>
                     </label>
                     <input type="text" id="description" name="description" required
                            value="{{ old('description') }}"
-                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                           placeholder="e.g., Gas station fill-up, Oil change at AutoShop">
+                           placeholder="e.g., Gas station fill-up, Oil change at AutoShop"
+                           class="form-input">
                 </div>
 
-                <div>
-                    <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
-                        Amount <span class="text-red-500">*</span>
+                <!-- Amount -->
+                <div class="form-group">
+                    <label for="amount" class="form-label">
+                        Amount <span class="required">*</span>
                     </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">$</span>
+                    <div class="input-with-icon">
+                        <span class="input-icon">$</span>
                         <input type="number" id="amount" name="amount" step="0.01" required
                                value="{{ old('amount') }}"
-                               class="w-full pl-7 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                               placeholder="0.00"
+                               class="form-input">
                     </div>
                 </div>
 
-                <div>
-                    <label for="odometer_reading" class="block text-sm font-medium text-gray-700 mb-2">
-                        Odometer Reading
-                    </label>
+                <!-- Odometer Reading -->
+                <div class="form-group">
+                    <label for="odometer_reading" class="form-label">Odometer Reading</label>
                     <input type="number" id="odometer_reading" name="odometer_reading"
                            value="{{ old('odometer_reading') }}"
-                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                           placeholder="Current mileage">
+                           placeholder="Current mileage"
+                           class="form-input">
+                    <span class="input-helper">Optional: Record current mileage</span>
                 </div>
 
-                <div class="md:col-span-2">
-                    <label for="receipt_file" class="block text-sm font-medium text-gray-700 mb-2">
-                        Receipt (Optional)
-                    </label>
-                    <input type="file" id="receipt_file" name="receipt_file" accept=".pdf,.jpg,.jpeg,.png"
-                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                    <p class="mt-1 text-xs text-gray-500">PDF, JPG, or PNG. Max 5MB</p>
+                <!-- Receipt File -->
+                <div class="form-group full-width">
+                    <label for="receipt_file" class="form-label">Receipt (Optional)</label>
+                    <input type="file" id="receipt_file" name="receipt_file" 
+                           accept=".pdf,.jpg,.jpeg,.png"
+                           class="form-file">
+                    <span class="input-helper">PDF, JPG, or PNG. Max 5MB</span>
                 </div>
 
-                <div class="md:col-span-2">
-                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                        Notes
-                    </label>
+                <!-- Notes -->
+                <div class="form-group full-width">
+                    <label for="notes" class="form-label">Notes</label>
                     <textarea id="notes" name="notes" rows="3"
-                              class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                              placeholder="Any additional notes...">{{ old('notes') }}</textarea>
+                              placeholder="Any additional notes..."
+                              class="form-textarea">{{ old('notes') }}</textarea>
+                    <span class="input-helper">Optional: Add any extra information</span>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3">
-                <a href="{{ route('expenses.index') }}" 
-                   class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{{ route('expenses.index') }}" class="button button-secondary">
                     Cancel
                 </a>
-                <button type="submit" 
-                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                <button type="submit" class="button button-primary">
                     Add Expense
                 </button>
             </div>

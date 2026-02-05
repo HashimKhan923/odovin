@@ -51,6 +51,8 @@ class VehicleComparisonController extends Controller
             ];
         });
 
-        return view('comparison.results', compact('comparison'));
+        // return $comparison;
+
+        return view('comparison.results', ['comparison' => $comparison->toArray()]);
     }
 }

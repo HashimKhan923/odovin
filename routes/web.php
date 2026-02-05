@@ -241,7 +241,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/expense-summary', [ReportController::class, 'expenseSummary'])->name('expense-summary');
         Route::get('/maintenance-history', [ReportController::class, 'maintenanceHistory'])->name('maintenance-history');
-        Route::get('/vehicle-analytics', [ReportController::class, 'vehicleAnalytics'])->name('vehicle-analytics');
+        Route::get('/vehicle-analytics/{vehicleId}', [ReportController::class, 'vehicleAnalytics'])->name('vehicle-analytics');
         Route::get('/export/{type}', [ReportController::class, 'export'])->name('export');
     });
 

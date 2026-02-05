@@ -260,10 +260,10 @@
                 @if($primaryVehicle)
                 <div class="vehicle-card-premium">
                     <div class="vehicle-badge">Primary Vehicle</div>
-                    <div class="vehicle-image-container">
+                    <!-- <div class="vehicle-image-container">
                         <div class="vehicle-image-bg"></div>
                         <div class="vehicle-glow"></div>
-                    </div>
+                    </div> -->
                     <div class="vehicle-info">
                         <h2 class="vehicle-name">{{ $primaryVehicle->full_name }}</h2>
                         <p class="vehicle-vin">{{ $primaryVehicle->vin }}</p>
@@ -1304,7 +1304,7 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    height: 100%;
+    height: 63%;
 }
 
 .vehicle-card-premium:hover {
@@ -1384,6 +1384,7 @@
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
+    margin-top: 2.5rem;
 }
 
 .vehicle-vin {
@@ -2066,7 +2067,7 @@
 
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
-    width: 10px;
+    width: 13px;
 }
 
 ::-webkit-scrollbar-track {

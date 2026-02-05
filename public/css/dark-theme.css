@@ -1,0 +1,698 @@
+/* ============================================================================
+   VEHICARE - DARK THEME STYLESHEET
+   Place this file in: public/css/dark-theme.css
+   Include in layout: <link href="{{ asset('css/dark-theme.css') }}" rel="stylesheet">
+   ============================================================================ */
+
+/* FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700;800&display=swap');
+
+/* CSS VARIABLES */
+:root {
+    --bg-primary: #0a0e1a;
+    --bg-secondary: #121827;
+    --bg-card: rgba(26, 32, 48, 0.8);
+    --accent-primary: #00d4ff;
+    --accent-secondary: #00ffaa;
+    --accent-danger: #ff3366;
+    --accent-warning: #ffaa00;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255,255,255,0.7);
+    --text-tertiary: rgba(255,255,255,0.5);
+    --border-color: rgba(0,212,255,0.1);
+    --border-hover: rgba(0,212,255,0.3);
+}
+
+/* GLOBAL STYLES */
+body {
+    font-family: 'Chakra Petch', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+/* PAGE WRAPPER */
+.dark-page {
+    min-height: 100vh;
+    padding: 2rem 0;
+    font-family: 'Chakra Petch', sans-serif;
+}
+
+/* ============================================================================
+   HEADER COMPONENTS
+   ============================================================================ */
+
+/* Page Header */
+.dh {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.dh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid var(--border-hover);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-primary);
+    margin-bottom: 0.75rem;
+}
+
+.dh-badge .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.dh-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+}
+
+.dh-sub {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+/* Back Navigation */
+.back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--accent-primary);
+    text-decoration: none;
+    font-size: 0.88rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    transition: all 0.3s;
+}
+
+.back-nav:hover {
+    gap: 0.6rem;
+}
+
+.back-nav svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ============================================================================
+   BUTTON COMPONENTS
+   ============================================================================ */
+
+.btn-glow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem 1.6rem;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    color: var(--bg-primary);
+    text-decoration: none;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.btn-glow svg {
+    width: 18px;
+    height: 18px;
+}
+
+.btn-glow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,212,255,0.5);
+}
+
+.btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.btn-ghost:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    background: rgba(0,212,255,0.08);
+}
+
+.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.4rem;
+    background: rgba(255,51,102,0.15);
+    border: 1px solid rgba(255,51,102,0.3);
+    border-radius: 10px;
+    color: var(--accent-danger);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.btn-danger:hover {
+    background: rgba(255,51,102,0.25);
+    box-shadow: 0 4px 15px rgba(255,51,102,0.3);
+}
+
+/* ============================================================================
+   CARD COMPONENTS
+   ============================================================================ */
+
+/* Glass Card */
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+    padding: 1.5rem;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.glass-card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 16px 48px rgba(0,212,255,0.15);
+}
+
+.glass-card:hover::before {
+    opacity: 1;
+}
+
+/* List Card */
+.list-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.list-card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 12px 36px rgba(0,212,255,0.12);
+}
+
+.list-card .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.list-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.list-card .card-meta {
+    font-size: 0.85rem;
+    color: var(--text-tertiary);
+}
+
+.list-card .card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ============================================================================
+   STATS & METRICS
+   ============================================================================ */
+
+/* Stats Row */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    transition: all 0.3s;
+}
+
+.stat-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0,212,255,0.15);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* ============================================================================
+   BADGES & STATUS
+   ============================================================================ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.badge-cyan {
+    background: rgba(0,212,255,0.12);
+    border: 1px solid rgba(0,212,255,0.25);
+    color: var(--accent-primary);
+}
+
+.badge-green {
+    background: rgba(0,255,170,0.12);
+    border: 1px solid rgba(0,255,170,0.25);
+    color: var(--accent-secondary);
+}
+
+.badge-red {
+    background: rgba(255,51,102,0.12);
+    border: 1px solid rgba(255,51,102,0.25);
+    color: var(--accent-danger);
+}
+
+.badge-warn {
+    background: rgba(255,170,0,0.12);
+    border: 1px solid rgba(255,170,0,0.25);
+    color: var(--accent-warning);
+}
+
+.badge-gray {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text-secondary);
+}
+
+/* ============================================================================
+   FORMS
+   ============================================================================ */
+
+.dark-form {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.dark-form label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.dark-form label .required {
+    color: var(--accent-danger);
+}
+
+.dark-form input[type="text"],
+.dark-form input[type="email"],
+.dark-form input[type="tel"],
+.dark-form input[type="number"],
+.dark-form input[type="date"],
+.dark-form input[type="time"],
+.dark-form input[type="password"],
+.dark-form select,
+.dark-form textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: all 0.3s;
+}
+
+.dark-form input:focus,
+.dark-form select:focus,
+.dark-form textarea:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: rgba(0,212,255,0.05);
+    box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+
+.dark-form input::placeholder,
+.dark-form textarea::placeholder {
+    color: var(--text-tertiary);
+}
+
+.dark-form .help-text {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin-top: 0.25rem;
+}
+
+.dark-form .error-text {
+    font-size: 0.75rem;
+    color: var(--accent-danger);
+    margin-top: 0.25rem;
+}
+
+/* ============================================================================
+   TABLES
+   ============================================================================ */
+
+.dark-table-wrap {
+    overflow-x: auto;
+    border-radius: 16px;
+}
+
+.dark-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dark-table thead {
+    background: rgba(0,212,255,0.06);
+}
+
+.dark-table th {
+    padding: 1rem 1.5rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.dark-table td {
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dark-table tbody tr {
+    transition: all 0.3s;
+}
+
+.dark-table tbody tr:hover {
+    background: rgba(0,212,255,0.04);
+}
+
+.dark-table .actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* ============================================================================
+   FILTERS
+   ============================================================================ */
+
+.filter-bar {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filter-select,
+.filter-input {
+    padding: 0.65rem 1rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    transition: all 0.3s;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: rgba(0,212,255,0.05);
+}
+
+/* ============================================================================
+   EMPTY STATES
+   ============================================================================ */
+
+.empty-state {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.empty-icon-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+}
+
+.empty-icon {
+    width: 120px;
+    height: 120px;
+    background: linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,255,170,0.2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(0,212,255,0.3);
+    position: relative;
+    z-index: 2;
+}
+
+.empty-icon svg {
+    width: 60px;
+    height: 60px;
+    color: var(--accent-primary);
+}
+
+.glow-ring {
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    opacity: 0.3;
+    filter: blur(20px);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+.empty-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.empty-desc {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================================================
+   ANIMATIONS
+   ============================================================================ */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px var(--accent-primary);
+    }
+    50% {
+        opacity: 0.5;
+        box-shadow: 0 0 20px var(--accent-primary);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0;
+}
+
+
+
+/* Staggered delays for multiple items */
+.fade-in-up:nth-child(1) { animation-delay: 0.08s; }
+.fade-in-up:nth-child(2) { animation-delay: 0.12s; }
+.fade-in-up:nth-child(3) { animation-delay: 0.16s; }
+.fade-in-up:nth-child(4) { animation-delay: 0.20s; }
+.fade-in-up:nth-child(5) { animation-delay: 0.24s; }
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .dh {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .dh-title {
+        font-size: 1.8rem;
+    }
+    
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-select,
+    .filter-input {
+        width: 100%;
+    }
+}
+
+@media (max-width: 1024px) {
+    .stats-row {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-accent { color: var(--accent-primary); }
+.text-danger { color: var(--accent-danger); }
+.text-warning { color: var(--accent-warning); }
+
+.inline { display: inline; }
+.flex { display: flex; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+
+.mt-4 { margin-top: 1rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-6 { margin-bottom: 1.5rem; }
