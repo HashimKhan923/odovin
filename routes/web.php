@@ -18,7 +18,7 @@ use App\Http\Controllers\{
     FuelLogController,
     VehicleComparisonController,
     VehicleAIInsightController,
-    AdvancedanalyticsController,
+    AdvancedAnalyticsController,
     TripLogController,
     InsuranceController
 };
@@ -77,8 +77,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Advanced Analytics Dashboard
-        Route::get('/analytics/dashboard', [AdvancedanalyticsController::class, 'index'])->name('analytics.dashboard');
-        Route::get('/analytics/export/{vehicle}', [AdvancedanalyticsController::class, 'exportPDF'])->name('analytics.export');
+        Route::get('/analytics/dashboard', [AdvancedAnalyticsController::class, 'index'])->name('analytics.dashboard');
+        Route::get('/analytics/export/{vehicle}', [AdvancedAnalyticsController::class, 'exportPDF'])->name('analytics.export');
 
     
     // Vehicles
