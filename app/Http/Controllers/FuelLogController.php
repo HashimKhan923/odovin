@@ -35,9 +35,9 @@ class FuelLogController extends Controller
             'average_price_per_gallon' => $logs->avg('price_per_gallon'),
         ];
 
-        // Get the selected vehicle ID
-
+        // Get the selected vehicle and vehicle ID
         $selectedVehicleId = $request->vehicle_id;
+        $selectedVehicle = $selectedVehicleId ? Vehicle::find($selectedVehicleId) : null;
 
         $mpgChartData = FuelLog::whereHas('vehicle', function ($q) use ($request) {
                 $q->where('user_id', $request->user()->id);
@@ -56,58 +56,60 @@ class FuelLogController extends Controller
                 ];
             });
 
-            // Calculate Fuel Cost per Mile
+        // Calculate Fuel Cost per Mile
+        $totalMiles = 0;
+        $totalFuelCost = 0;
 
-            $totalMiles = 0;
-            $totalFuelCost = 0;
+        $fuelLogsForCost = FuelLog::whereHas('vehicle', function ($q) use ($request) {
+                $q->where('user_id', $request->user()->id);
+            })
+            ->when($selectedVehicleId, function ($q) use ($selectedVehicleId) {
+                $q->where('vehicle_id', $selectedVehicleId);
+            })
+            ->orderBy('fill_date')
+            ->get();
 
-            $fuelLogsForCost = FuelLog::whereHas('vehicle', function ($q) use ($request) {
-                    $q->where('user_id', $request->user()->id);
-                })
-                ->when($selectedVehicleId, function ($q) use ($selectedVehicleId) {
-                    $q->where('vehicle_id', $selectedVehicleId);
-                })
-                ->orderBy('fill_date')
-                ->get();
+        for ($i = 1; $i < $fuelLogsForCost->count(); $i++) {
+            $previous = $fuelLogsForCost[$i - 1];
+            $current = $fuelLogsForCost[$i];
 
-            for ($i = 1; $i < $fuelLogsForCost->count(); $i++) {
-                $previous = $fuelLogsForCost[$i - 1];
-                $current = $fuelLogsForCost[$i];
+            $milesDriven = $current->odometer - $previous->odometer;
 
-                $milesDriven = $current->odometer - $previous->odometer;
-
-                if ($milesDriven > 0) {
-                    $totalMiles += $milesDriven;
-                    $totalFuelCost += $current->total_cost;
-                }
+            if ($milesDriven > 0) {
+                $totalMiles += $milesDriven;
+                $totalFuelCost += $current->total_cost;
             }
+        }
 
-            $fuelCostPerMile = $totalMiles > 0
-                ? round($totalFuelCost / $totalMiles, 3)
-                : null;
+        $fuelCostPerMile = $totalMiles > 0
+            ? round($totalFuelCost / $totalMiles, 3)
+            : null;
 
-            // Calculate Vehicle Average MPG
+        // Calculate Vehicle Average MPG
+        $vehicleAvgMpg = FuelLog::whereHas('vehicle', function ($q) use ($request) {
+                $q->where('user_id', $request->user()->id);
+            })
+            ->when($selectedVehicleId, fn ($q) => $q->where('vehicle_id', $selectedVehicleId))
+            ->whereNotNull('mpg')
+            ->where('mpg', '>', 0)
+            ->avg('mpg');
 
-            $vehicleAvgMpg = FuelLog::whereHas('vehicle', function ($q) use ($request) {
-                    $q->where('user_id', $request->user()->id);
-                })
-                ->when($selectedVehicleId, fn ($q) => $q->where('vehicle_id', $selectedVehicleId))
-                    ->whereNotNull('mpg')
-                    ->where('mpg', '>', 0)
-                    ->avg('mpg');
+        $logs->getCollection()->transform(function ($log) use ($vehicleAvgMpg) {
+            $log->mpg_anomaly = $this->evaluateMpgAnomaly($log, $vehicleAvgMpg);
+            return $log;
+        });
 
-                $logs->getCollection()->transform(function ($log) use ($vehicleAvgMpg) {
-                    $log->mpg_anomaly = $this->evaluateMpgAnomaly($log, $vehicleAvgMpg);
-                    return $log;
-                });
-
-            ////////////////////////////////////////////////////////////////////////////////    
-
-
-
-        return view('fuel.index', compact('logs', 'vehicles', 'stats', 'mpgChartData', 'selectedVehicleId', 'fuelCostPerMile',
+        return view('fuel.index', compact(
+            'logs', 
+            'vehicles', 
+            'stats', 
+            'mpgChartData', 
+            'selectedVehicleId', 
+            'selectedVehicle',
+            'fuelCostPerMile',
             'totalMiles',
-            'totalFuelCost'));
+            'totalFuelCost'
+        ));
     }
 
     public function create()
@@ -138,6 +140,7 @@ class FuelLogController extends Controller
             'total_cost' => 'required|numeric|min:0',
             'is_full_tank' => 'boolean',
             'gas_station' => 'nullable|string|max:255',
+            'charge_type' => 'nullable|string|in:level1,level2,dcfast,supercharger',
             'notes' => 'nullable|string',
         ]);
 
@@ -145,7 +148,7 @@ class FuelLogController extends Controller
             ->where('user_id', auth()->id())
             ->firstOrFail();
 
-        // Recalculate MPG
+        // Recalculate MPG (or Mi/kWh for electric)
         $validated['mpg'] = null;
         if ($validated['is_full_tank']) {
             $previousLog = $vehicle->fuelLogs()
@@ -166,10 +169,10 @@ class FuelLogController extends Controller
 
         return redirect()
             ->route('fuel.index')
-            ->with('success', 'Fuel log updated successfully.');
+            ->with('success', $vehicle->fuel_type === 'Electric' 
+                ? 'Charge log updated successfully.' 
+                : 'Fuel log updated successfully.');
     }
-
-
 
     public function store(Request $request)
     {
@@ -182,6 +185,7 @@ class FuelLogController extends Controller
             'total_cost' => 'required|numeric|min:0',
             'is_full_tank' => 'boolean',
             'gas_station' => 'nullable|string|max:255',
+            'charge_type' => 'nullable|string|in:level1,level2,dcfast,supercharger',
             'notes' => 'nullable|string',
         ]);
 
@@ -190,7 +194,7 @@ class FuelLogController extends Controller
             ->firstOrFail();
 
         /**
-         * 1. Calculate MPG (only for full tank)
+         * 1. Calculate MPG (only for full tank) or Mi/kWh for electric
          */
         $lastLog = $vehicle->fuelLogs()->latest('fill_date')->first();
         if ($lastLog && ($validated['is_full_tank'] ?? false)) {
@@ -211,24 +215,27 @@ class FuelLogController extends Controller
         $vehicle->updateMileage($validated['odometer']);
 
         /**
-         * 4. LOW MPG TREND ALERT (SYSTEM)
+         * 4. LOW MPG/EFFICIENCY TREND ALERT (SYSTEM)
+         * Only for non-electric vehicles (electric efficiency is measured differently)
          */
-        $lowMpgAlertExists = Alert::where('user_id', $request->user()->id)
-            ->where('vehicle_id', $vehicle->id)
-            ->where('type', 'system')
-            ->where('title', 'Fuel Efficiency Dropping')
-            ->where('is_read', false)
-            ->exists();
+        if ($vehicle->fuel_type !== 'Electric') {
+            $lowMpgAlertExists = Alert::where('user_id', $request->user()->id)
+                ->where('vehicle_id', $vehicle->id)
+                ->where('type', 'system')
+                ->where('title', 'Fuel Efficiency Dropping')
+                ->where('is_read', false)
+                ->exists();
 
-        if (!$lowMpgAlertExists && $this->detectLowMpgTrend($vehicle->id)) {
-            Alert::create([
-                'user_id'    => $request->user()->id,
-                'vehicle_id' => $vehicle->id,
-                'type'       => 'system',
-                'priority'   => 'warning',
-                'title'      => 'Fuel Efficiency Dropping',
-                'message'    => 'Your vehicle’s fuel efficiency has dropped significantly over recent fill-ups. This may indicate low tire pressure, driving conditions, or overdue maintenance.',
-            ]);
+            if (!$lowMpgAlertExists && $this->detectLowMpgTrend($vehicle->id)) {
+                Alert::create([
+                    'user_id'    => $request->user()->id,
+                    'vehicle_id' => $vehicle->id,
+                    'type'       => 'system',
+                    'priority'   => 'warning',
+                    'title'      => 'Fuel Efficiency Dropping',
+                    'message'    => 'Your vehicle\'s fuel efficiency has dropped significantly over recent fill-ups. This may indicate low tire pressure, driving conditions, or overdue maintenance.',
+                ]);
+            }
         }
 
         /**
@@ -240,7 +247,6 @@ class FuelLogController extends Controller
             ->filter(fn ($schedule) => $schedule->isOverdue());
 
         foreach ($overdueSchedules as $schedule) {
-
             // Update status to overdue (once)
             if ($schedule->status !== 'overdue') {
                 $schedule->update(['status' => 'overdue']);
@@ -268,19 +274,28 @@ class FuelLogController extends Controller
         }
 
         /**
-         * 6. Create fuel expense
+         * 6. Create fuel/charge expense
          */
+        $expenseCategory = $vehicle->fuel_type === 'Electric' ? 'charging' : 'fuel';
+        $expenseDescription = $vehicle->fuel_type === 'Electric' 
+            ? 'Charging session at ' . ($validated['gas_station'] ?? 'Charging Station')
+            : 'Fuel fill-up at ' . ($validated['gas_station'] ?? 'Gas Station');
+
         $vehicle->expenses()->create([
-            'category' => 'fuel',
-            'description' => 'Fuel fill-up at ' . ($validated['gas_station'] ?? 'Gas Station'),
+            'category' => $expenseCategory,
+            'description' => $expenseDescription,
             'amount' => $validated['total_cost'],
             'expense_date' => $validated['fill_date'],
             'odometer_reading' => $validated['odometer'],
         ]);
 
+        $successMessage = $vehicle->fuel_type === 'Electric'
+            ? 'Charge log added successfully!'
+            : 'Fuel log added successfully!';
+
         return redirect()
             ->route('fuel.index')
-            ->with('success', 'Fuel log added successfully!');
+            ->with('success', $successMessage);
     }
 
     public function destroy(FuelLog $fuelLog)
@@ -289,7 +304,7 @@ class FuelLogController extends Controller
 
         $fuelLog->delete();
 
-        return back()->with('success', 'Fuel log deleted.');
+        return back()->with('success', 'Log deleted successfully.');
     }
 
     private function evaluateMpgAnomaly(FuelLog $log, float $vehicleAvgMpg = null): ?string
@@ -298,16 +313,35 @@ class FuelLogController extends Controller
             return null;
         }
 
-        if ($log->mpg > 200) {
-            return 'impossible';
-        }
+        // Check if this is an electric vehicle (Mi/kWh typically ranges 2-5)
+        $isElectric = $log->vehicle->fuel_type === 'Electric';
 
-        if ($log->mpg < 5 || $log->mpg > 80) {
-            return 'unrealistic';
-        }
+        if ($isElectric) {
+            // Electric vehicle efficiency checks
+            if ($log->mpg > 10) {
+                return 'impossible';
+            }
 
-        if ($vehicleAvgMpg && abs($log->mpg - $vehicleAvgMpg) / $vehicleAvgMpg > 0.5) {
-            return 'suspicious';
+            if ($log->mpg < 1 || $log->mpg > 6) {
+                return 'unrealistic';
+            }
+
+            if ($vehicleAvgMpg && abs($log->mpg - $vehicleAvgMpg) / $vehicleAvgMpg > 0.4) {
+                return 'suspicious';
+            }
+        } else {
+            // Traditional fuel vehicle MPG checks
+            if ($log->mpg > 200) {
+                return 'impossible';
+            }
+
+            if ($log->mpg < 5 || $log->mpg > 80) {
+                return 'unrealistic';
+            }
+
+            if ($vehicleAvgMpg && abs($log->mpg - $vehicleAvgMpg) / $vehicleAvgMpg > 0.5) {
+                return 'suspicious';
+            }
         }
 
         return null;
@@ -345,6 +379,7 @@ class FuelLogController extends Controller
                     'price_per_gallon' => 'required|numeric|min:0',
                     'total_cost' => 'required|numeric|min:0',
                     'is_full_tank' => 'nullable|boolean',
+                    'charge_type' => 'nullable|string',
                 ]);
 
                 if ($validator->fails()) {
@@ -398,6 +433,7 @@ class FuelLogController extends Controller
                     'total_cost' => $data['total_cost'],
                     'is_full_tank' => !empty($data['is_full_tank']),
                     'gas_station' => $data['gas_station'] ?? null,
+                    'charge_type' => $data['charge_type'] ?? null,
                     'notes' => $data['notes'] ?? null,
                     'mpg' => $mpg,
                 ]);
@@ -456,11 +492,12 @@ class FuelLogController extends Controller
                 'Vehicle',
                 'Fill Date',
                 'Odometer',
-                'Gallons',
-                'Price Per Gallon',
+                'Quantity (Gallons/kWh)',
+                'Price Per Unit',
                 'Total Cost',
-                'MPG',
-                'Gas Station',
+                'Efficiency (MPG/Mi/kWh)',
+                'Location',
+                'Charge Type',
                 'Notes',
             ]);
 
@@ -474,6 +511,7 @@ class FuelLogController extends Controller
                     $log->total_cost,
                     $log->mpg,
                     $log->gas_station,
+                    $log->charge_type ?? '',
                     $log->notes,
                 ]);
             }
@@ -481,7 +519,6 @@ class FuelLogController extends Controller
             fclose($handle);
         }, $filename);
     }
-
 
     public function exportPdf(Request $request)
     {
@@ -524,7 +561,4 @@ class FuelLogController extends Controller
 
         return $recentAvg < ($previousAvg * 0.9); // >10% drop
     }
-
-
-
 }

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Fuel Logs')
+@section('title', 'Fuel & Charge Logs')
 
 @section('content')
 <style>
@@ -16,6 +16,7 @@
         --accent-green: #00ffaa;
         --accent-danger: #ff3366;
         --accent-warning: #ffaa00;
+        --accent-electric: #7c3aed;
     }
 
     :root[data-theme="light"] {
@@ -29,6 +30,7 @@
         --accent-green: #00cc88;
         --accent-danger: #ff3366;
         --accent-warning: #ff9500;
+        --accent-electric: #6d28d9;
     }
 
     .fuel-container {
@@ -184,6 +186,11 @@
         box-shadow: 0 8px 30px rgba(0, 212, 255, 0.2);
     }
 
+    .stat-card.electric:hover {
+        border-color: var(--accent-electric);
+        box-shadow: 0 8px 30px rgba(124, 58, 237, 0.2);
+    }
+
     .stat-label {
         font-size: 0.75rem;
         color: var(--text-tertiary);
@@ -204,6 +211,38 @@
     .stat-subtitle {
         font-size: 0.75rem;
         color: var(--text-secondary);
+    }
+
+    /* Vehicle Type Badge */
+    .vehicle-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.25rem 0.625rem;
+        border-radius: 12px;
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-left: 0.5rem;
+    }
+
+    .vehicle-type-badge.fuel {
+        background: rgba(0, 212, 255, 0.15);
+        color: var(--accent-cyan);
+        border: 1px solid rgba(0, 212, 255, 0.3);
+    }
+
+    .vehicle-type-badge.electric {
+        background: rgba(124, 58, 237, 0.15);
+        color: var(--accent-electric);
+        border: 1px solid rgba(124, 58, 237, 0.3);
+    }
+
+    .vehicle-type-badge.hybrid {
+        background: rgba(0, 255, 170, 0.15);
+        color: var(--accent-green);
+        border: 1px solid rgba(0, 255, 170, 0.3);
     }
 
     /* Chart Card */
@@ -278,7 +317,7 @@
         text-align: right;
     }
 
-    .mpg-value {
+    .efficiency-value {
         font-weight: 600;
         color: var(--text-primary);
     }
@@ -391,7 +430,7 @@
     <!-- Page Header -->
     <div class="page-header">
         <div class="page-title">
-            <h1>Fuel Logs</h1>
+            <h1>{{ $selectedVehicle && $selectedVehicle->fuel_type === 'Electric' ? 'Charge Logs' : 'Fuel Logs' }}</h1>
         </div>
 
         <div class="header-actions">
@@ -399,7 +438,7 @@
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
-                Add Fuel Log
+                {{ $selectedVehicle && $selectedVehicle->fuel_type === 'Electric' ? 'Add Charge Log' : 'Add Fuel Log' }}
             </a>
             <a href="{{ route('fuel.import.form') }}" class="action-button secondary">
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -430,6 +469,11 @@
                 @foreach($vehicles as $vehicle)
                     <option value="{{ $vehicle->id }}" {{ $selectedVehicleId == $vehicle->id ? 'selected' : '' }}>
                         {{ $vehicle->full_name }}
+                        @if($vehicle->fuel_type === 'Electric')
+                            ⚡
+                        @else
+                            🔥
+                        @endif
                     </option>
                 @endforeach
             </select>
@@ -438,28 +482,49 @@
 
     <!-- Stats Grid -->
     <div class="stats-grid">
+        @if(!$selectedVehicle || $selectedVehicle->fuel_type !== 'Electric')
         <div class="stat-card">
             <div class="stat-label">Total Gallons</div>
             <div class="stat-value">{{ number_format($stats['total_gallons'], 2) }}</div>
         </div>
+        @else
+        <div class="stat-card electric">
+            <div class="stat-label">Total kWh</div>
+            <div class="stat-value">{{ number_format($stats['total_gallons'], 2) }}</div>
+        </div>
+        @endif
 
-        <div class="stat-card">
+        <div class="stat-card {{ $selectedVehicle && $selectedVehicle->fuel_type === 'Electric' ? 'electric' : '' }}">
             <div class="stat-label">Total Cost</div>
             <div class="stat-value">${{ number_format($stats['total_cost'], 2) }}</div>
         </div>
 
+        @if(!$selectedVehicle || $selectedVehicle->fuel_type !== 'Electric')
         <div class="stat-card">
             <div class="stat-label">Average MPG</div>
             <div class="stat-value">{{ number_format($stats['average_mpg'], 1) }}</div>
         </div>
+        @else
+        <div class="stat-card electric">
+            <div class="stat-label">Average Mi/kWh</div>
+            <div class="stat-value">{{ number_format($stats['average_mpg'], 2) }}</div>
+        </div>
+        @endif
 
+        @if(!$selectedVehicle || $selectedVehicle->fuel_type !== 'Electric')
         <div class="stat-card">
             <div class="stat-label">Avg Price/Gal</div>
             <div class="stat-value">${{ number_format($stats['average_price_per_gallon'], 2) }}</div>
         </div>
+        @else
+        <div class="stat-card electric">
+            <div class="stat-label">Avg Price/kWh</div>
+            <div class="stat-value">${{ number_format($stats['average_price_per_gallon'], 3) }}</div>
+        </div>
+        @endif
 
-        <div class="stat-card">
-            <div class="stat-label">Fuel Cost / Mile</div>
+        <div class="stat-card {{ $selectedVehicle && $selectedVehicle->fuel_type === 'Electric' ? 'electric' : '' }}">
+            <div class="stat-label">{{ $selectedVehicle && $selectedVehicle->fuel_type === 'Electric' ? 'Charge' : 'Fuel' }} Cost / Mile</div>
             @if($fuelCostPerMile)
                 <div class="stat-value">${{ number_format($fuelCostPerMile, 3) }}</div>
                 <div class="stat-subtitle">Based on {{ number_format($totalMiles) }} miles</div>
@@ -472,7 +537,13 @@
     <!-- Chart -->
     @if($mpgChartData->count() > 1)
     <div class="chart-card">
-        <h2>MPG Performance Trend</h2>
+        <h2>
+            @if($selectedVehicle && $selectedVehicle->fuel_type === 'Electric')
+                Efficiency Trend (Mi/kWh)
+            @else
+                MPG Performance Trend
+            @endif
+        </h2>
         <canvas id="mpgChart" height="100"></canvas>
     </div>
     @endif
@@ -484,9 +555,21 @@
                 <tr>
                     <th>Date</th>
                     <th>Vehicle</th>
-                    <th class="text-right">Gallons</th>
+                    <th class="text-right">
+                        @if($selectedVehicle)
+                            {{ $selectedVehicle->fuel_type === 'Electric' ? 'kWh' : 'Gallons' }}
+                        @else
+                            Quantity
+                        @endif
+                    </th>
                     <th class="text-right">Cost</th>
-                    <th class="text-right">MPG</th>
+                    <th class="text-right">
+                        @if($selectedVehicle)
+                            {{ $selectedVehicle->fuel_type === 'Electric' ? 'Mi/kWh' : 'MPG' }}
+                        @else
+                            Efficiency
+                        @endif
+                    </th>
                     <th class="text-right">Actions</th>
                 </tr>
             </thead>
@@ -494,23 +577,30 @@
                 @foreach($logs as $log)
                     <tr>
                         <td>{{ $log->fill_date->format('M d, Y') }}</td>
-                        <td>{{ $log->vehicle->full_name }}</td>
+                        <td>
+                            {{ $log->vehicle->full_name }}
+                            @if($log->vehicle->fuel_type === 'Electric')
+                                <span class="vehicle-type-badge electric">⚡ Electric</span>
+                            @else
+                                <span class="vehicle-type-badge fuel">🔥 Fuel</span>
+                            @endif
+                        </td>
                         <td class="text-right">{{ $log->gallons }}</td>
                         <td class="text-right">${{ $log->total_cost }}</td>
                         <td class="text-right">
                             @if($log->mpg)
-                                <span class="mpg-value">{{ number_format($log->mpg, 1) }}</span>
+                                <span class="efficiency-value">{{ number_format($log->mpg, $log->vehicle->fuel_type === 'Electric' ? 2 : 1) }}</span>
                                 
                                 @if($log->mpg_anomaly === 'impossible')
-                                    <span class="anomaly-badge impossible" title="This MPG is far from your vehicle's average">
+                                    <span class="anomaly-badge impossible" title="This efficiency is far from your vehicle's average">
                                         ⚠ Impossible
                                     </span>
                                 @elseif($log->mpg_anomaly === 'unrealistic')
-                                    <span class="anomaly-badge unrealistic" title="This MPG is unusual for this vehicle">
+                                    <span class="anomaly-badge unrealistic" title="This efficiency is unusual for this vehicle">
                                         ⚠ Unrealistic
                                     </span>
                                 @elseif($log->mpg_anomaly === 'suspicious')
-                                    <span class="anomaly-badge suspicious" title="Check odometer or gallons">
+                                    <span class="anomaly-badge suspicious" title="Check odometer or quantity">
                                         ⚠ Suspicious
                                     </span>
                                 @endif
@@ -522,7 +612,7 @@
                             <div class="actions-cell">
                                 <a href="{{ route('fuel.edit', $log) }}" class="action-link">Edit</a>
                                 <form method="POST" action="{{ route('fuel.destroy', $log) }}" 
-                                      onsubmit="return confirm('Delete this fuel log?')" style="display: inline;">
+                                      onsubmit="return confirm('Delete this {{ $log->vehicle->fuel_type === 'Electric' ? 'charge' : 'fuel' }} log?')" style="display: inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="action-button-delete">Delete</button>
@@ -552,6 +642,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const mpgData = @json($mpgChartData);
         const canvas = document.getElementById('mpgChart');
+        const isElectric = {{ $selectedVehicle && $selectedVehicle->fuel_type === 'Electric' ? 'true' : 'false' }};
         
         if (!canvas) return;
 
@@ -560,8 +651,8 @@
         const isDark = theme === 'dark';
         
         const colors = {
-            gradient1: isDark ? '#00d4ff' : '#0066ff',
-            gradient2: isDark ? '#00ffaa' : '#00cc88',
+            gradient1: isElectric ? (isDark ? '#7c3aed' : '#6d28d9') : (isDark ? '#00d4ff' : '#0066ff'),
+            gradient2: isElectric ? (isDark ? '#a78bfa' : '#8b5cf6') : (isDark ? '#00ffaa' : '#00cc88'),
             grid: isDark ? 'rgba(0, 212, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
             text: isDark ? 'rgba(255, 255, 255, 0.5)' : 'rgba(26, 31, 54, 0.5)',
             tooltip: isDark ? '#1a2030' : '#ffffff'
@@ -582,7 +673,7 @@
             data: {
                 labels: mpgData.map(d => d.date),
                 datasets: [{
-                    label: 'MPG',
+                    label: isElectric ? 'Mi/kWh' : 'MPG',
                     data: mpgData.map(d => d.mpg),
                     borderColor: lineGradient,
                     backgroundColor: gradient,
@@ -612,12 +703,12 @@
                         backgroundColor: colors.tooltip,
                         titleColor: colors.text,
                         bodyColor: colors.text,
-                        borderColor: isDark ? 'rgba(0, 212, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+                        borderColor: isDark ? (isElectric ? 'rgba(124, 58, 237, 0.2)' : 'rgba(0, 212, 255, 0.2)') : 'rgba(0, 0, 0, 0.1)',
                         borderWidth: 1,
                         padding: 12,
                         displayColors: false,
                         callbacks: {
-                            label: ctx => `${ctx.parsed.y.toFixed(1)} MPG`
+                            label: ctx => isElectric ? `${ctx.parsed.y.toFixed(2)} Mi/kWh` : `${ctx.parsed.y.toFixed(1)} MPG`
                         }
                     }
                 },
@@ -641,7 +732,7 @@
                                 family: "'Chakra Petch', sans-serif",
                                 size: 11
                             },
-                            callback: value => value.toFixed(0)
+                            callback: value => isElectric ? value.toFixed(1) : value.toFixed(0)
                         },
                         grid: {
                             color: colors.grid

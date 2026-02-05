@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Add Fuel Log')
+@section('title', 'Add Fuel/Charge Log')
 
 @section('content')
 <style>
@@ -16,6 +16,7 @@
         --accent-cyan: #00d4ff;
         --accent-green: #00ffaa;
         --accent-danger: #ff3366;
+        --accent-electric: #7c3aed;
     }
 
     :root[data-theme="light"] {
@@ -29,6 +30,7 @@
         --accent-cyan: #0066ff;
         --accent-green: #00cc88;
         --accent-danger: #ff3366;
+        --accent-electric: #6d28d9;
     }
 
     .form-container {
@@ -69,6 +71,13 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
         margin-bottom: 0.5rem;
+    }
+
+    .page-header h1.electric {
+        background: linear-gradient(135deg, var(--accent-electric), var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .page-header p {
@@ -261,8 +270,8 @@
 <div class="form-container">
     <!-- Page Header -->
     <div class="page-header">
-        <h1>Add Fuel Log</h1>
-        <p>Track your fuel usage and cost</p>
+        <h1 id="page-title">Add Fuel Log</h1>
+        <p id="page-subtitle">Track your fuel usage and cost</p>
     </div>
 
     <!-- Form Card -->
@@ -279,8 +288,14 @@
                     <select name="vehicle_id" id="vehicle_id" required class="form-select">
                         <option value="">Select vehicle</option>
                         @foreach($vehicles as $vehicle)
-                            <option value="{{ $vehicle->id }}">
+                            <option value="{{ $vehicle->id }}" 
+                                    data-fuel-type="{{ $vehicle->fuel_type }}">
                                 {{ $vehicle->full_name }}
+                                @if($vehicle->fuel_type === 'Electric')
+                                    ⚡
+                                @else
+                                    🔥
+                                @endif
                             </option>
                         @endforeach
                     </select>
@@ -289,7 +304,7 @@
                 <!-- Fill Date -->
                 <div class="form-group">
                     <label for="fill_date" class="form-label">
-                        Fill Date <span class="required">*</span>
+                        <span id="date-label">Fill Date</span> <span class="required">*</span>
                     </label>
                     <input type="date" name="fill_date" id="fill_date" required
                            class="form-input"
@@ -306,20 +321,20 @@
                            class="form-input">
                 </div>
 
-                <!-- Gallons -->
+                <!-- Gallons/kWh -->
                 <div class="form-group">
                     <label for="gallons" class="form-label">
-                        Gallons <span class="required">*</span>
+                        <span id="quantity-label">Gallons</span> <span class="required">*</span>
                     </label>
                     <input type="number" step="0.01" name="gallons" id="gallons" required
                            placeholder="e.g., 12.50"
                            class="form-input">
                 </div>
 
-                <!-- Price per Gallon -->
+                <!-- Price per Gallon/kWh -->
                 <div class="form-group">
                     <label for="price_per_gallon" class="form-label">
-                        Price / Gallon <span class="required">*</span>
+                        <span id="price-label">Price / Gallon</span> <span class="required">*</span>
                     </label>
                     <input type="number" step="0.01" name="price_per_gallon" id="price_per_gallon" required
                            placeholder="e.g., 3.49"
@@ -336,18 +351,32 @@
                            class="form-input">
                 </div>
 
-                <!-- Full Tank Checkbox -->
+                <!-- Full Tank/Charge Checkbox -->
                 <div class="form-group">
                     <div class="form-checkbox">
                         <input type="checkbox" name="is_full_tank" value="1" checked
                                class="checkbox-input" id="is_full_tank">
-                        <label for="is_full_tank" class="checkbox-label">Full tank fill-up</label>
+                        <label for="is_full_tank" class="checkbox-label" id="full-tank-label">Full tank fill-up</label>
                     </div>
                 </div>
 
-                <!-- Gas Station -->
+                <!-- Charge Type (for electric vehicles only) -->
+                <div class="form-group" id="charge-type-group" style="display: none;">
+                    <label for="charge_type" class="form-label">Charge Type</label>
+                    <select name="charge_type" id="charge_type" class="form-select">
+                        <option value="">Select charge type</option>
+                        <option value="level1">Level 1 (120V)</option>
+                        <option value="level2">Level 2 (240V)</option>
+                        <option value="dcfast">DC Fast Charging</option>
+                        <option value="supercharger">Supercharger</option>
+                    </select>
+                </div>
+
+                <!-- Gas Station / Charging Station -->
                 <div class="form-group full-width">
-                    <label for="gas_station" class="form-label">Gas Station</label>
+                    <label for="gas_station" class="form-label">
+                        <span id="station-label">Gas Station</span>
+                    </label>
                     <input type="text" name="gas_station" id="gas_station"
                            placeholder="e.g., Shell, Chevron, BP"
                            class="form-input">
@@ -367,11 +396,97 @@
                 <a href="{{ route('fuel.index') }}" class="button button-secondary">
                     Cancel
                 </a>
-                <button type="submit" class="button button-primary">
+                <button type="submit" class="button button-primary" id="submit-button">
                     Save Fuel Log
                 </button>
             </div>
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const vehicleSelect = document.getElementById('vehicle_id');
+    const pageTitle = document.getElementById('page-title');
+    const pageSubtitle = document.getElementById('page-subtitle');
+    const dateLabel = document.getElementById('date-label');
+    const quantityLabel = document.getElementById('quantity-label');
+    const priceLabel = document.getElementById('price-label');
+    const stationLabel = document.getElementById('station-label');
+    const fullTankLabel = document.getElementById('full-tank-label');
+    const submitButton = document.getElementById('submit-button');
+    const chargeTypeGroup = document.getElementById('charge-type-group');
+    const gallonsInput = document.getElementById('gallons');
+    const priceInput = document.getElementById('price_per_gallon');
+    const stationInput = document.getElementById('gas_station');
+
+    function updateFormLabels(fuelType) {
+        if (fuelType === 'Electric') {
+            // Update page header
+            pageTitle.textContent = 'Add Charge Log';
+            pageTitle.classList.add('electric');
+            pageSubtitle.textContent = 'Track your charging sessions and cost';
+
+            // Update form labels
+            dateLabel.textContent = 'Charge Date';
+            quantityLabel.textContent = 'kWh';
+            priceLabel.textContent = 'Price / kWh';
+            stationLabel.textContent = 'Charging Station';
+            fullTankLabel.textContent = 'Full charge';
+            submitButton.textContent = 'Save Charge Log';
+
+            // Update placeholders
+            gallonsInput.placeholder = 'e.g., 45.50';
+            priceInput.placeholder = 'e.g., 0.28';
+            stationInput.placeholder = 'e.g., Tesla Supercharger, ChargePoint';
+
+            // Show charge type field
+            chargeTypeGroup.style.display = 'block';
+            
+        } else {
+            // Default to fuel
+            pageTitle.textContent = 'Add Fuel Log';
+            pageTitle.classList.remove('electric');
+            pageSubtitle.textContent = 'Track your fuel usage and cost';
+
+            dateLabel.textContent = 'Fill Date';
+            quantityLabel.textContent = 'Gallons';
+            priceLabel.textContent = 'Price / Gallon';
+            stationLabel.textContent = 'Gas Station';
+            fullTankLabel.textContent = 'Full tank fill-up';
+            submitButton.textContent = 'Save Fuel Log';
+
+            gallonsInput.placeholder = 'e.g., 12.50';
+            priceInput.placeholder = 'e.g., 3.49';
+            stationInput.placeholder = 'e.g., Shell, Chevron, BP';
+
+            // Hide charge type field
+            chargeTypeGroup.style.display = 'none';
+        }
+    }
+
+    vehicleSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const fuelType = selectedOption.getAttribute('data-fuel-type');
+        
+        if (fuelType) {
+            updateFormLabels(fuelType);
+        }
+    });
+
+    // Auto-calculate total cost
+    const calculateTotal = () => {
+        const quantity = parseFloat(gallonsInput.value) || 0;
+        const price = parseFloat(priceInput.value) || 0;
+        const total = quantity * price;
+        
+        if (total > 0) {
+            document.getElementById('total_cost').value = total.toFixed(2);
+        }
+    };
+
+    gallonsInput.addEventListener('input', calculateTotal);
+    priceInput.addEventListener('input', calculateTotal);
+});
+</script>
 @endsection
