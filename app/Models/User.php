@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'user_type',
+        'role',
     ];
 
     /**
@@ -52,24 +53,24 @@ class User extends Authenticatable
         return $this->hasMany(Vehicle::class);
     }
 
-    public function reminders()
+   public function expenses()
     {
-        return $this->hasMany(Reminder::class);
-    }
-
-    public function alerts()
-    {
-        return $this->hasMany(Alert::class);
+        return $this->hasManyThrough(Expense::class, Vehicle::class);
     }
 
     public function serviceBookings()
     {
-        return $this->hasMany(ServiceBooking::class);
+        return $this->hasManyThrough(ServiceBooking::class, Vehicle::class);
     }
 
-    public function expenses()
+    public function reminders()
     {
-        return $this->hasMany(Expense::class);
+        return $this->hasManyThrough(Reminder::class, Vehicle::class);
+    }
+
+    public function alerts()
+    {
+        return $this->hasManyThrough(Alert::class, Vehicle::class);
     }
 
     public function notifications()
@@ -77,9 +78,25 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
-    public function isAdmin()
+    // public function isAdmin()
+    // {
+    //     return in_array($this->user_type, ['admin', 'support']);
+    // }
+
+    public function serviceProvider(): \Illuminate\Database\Eloquent\Relations\HasOne
     {
-        return in_array($this->user_type, ['admin', 'support']);
+        return $this->hasOne(\App\Models\ServiceProvider::class);
+    }
+
+    // Helper scopes:
+    public function isProvider(): bool
+    {
+        return $this->role === 'provider';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 
 

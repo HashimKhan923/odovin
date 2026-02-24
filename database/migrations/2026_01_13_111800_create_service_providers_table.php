@@ -13,14 +13,14 @@ return new class extends Migration
     {
        Schema::create('service_providers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->enum('type', ['mechanic', 'dealership', 'body_shop', 'detailing', 'towing', 'other']);
-            $table->string('phone');
+            $table->string('name')->nullable();
+            $table->enum('type', ['mechanic', 'dealership', 'body_shop', 'detailing', 'towing','ev_specialist','other'])->nullable();
+            $table->string('phone')->nullable();
             $table->string('email')->nullable();
-            $table->text('address');
-            $table->string('city');
-            $table->string('state');
-            $table->string('zip_code');
+            $table->text('address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('state')->nullable();
+            $table->string('zip_code')->nullable();
             $table->decimal('latitude', 10, 8)->nullable();
             $table->decimal('longitude', 11, 8)->nullable();
             $table->text('services_offered')->nullable();

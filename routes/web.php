@@ -21,7 +21,7 @@ use App\Http\Controllers\{
     AdvancedAnalyticsController,
     TripLogController,
     InsuranceController,
-    AiAnalyticsController
+    AiAnalyticsController,
 };
 
 use App\Http\Controllers\Admin\AuthController;
@@ -30,19 +30,81 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 
 ////////////////////////////////////////////// Admin Routes \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-    Route::prefix('admin')->name('admin.')->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
 
-        // Auth
-        Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+    // Auth Routes (Public)
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+
+    // Protected Admin Routes
+    Route::middleware('admin')->group(function () {
+        
+        // Dashboard
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-        // Protected
-        Route::middleware('admin')->group(function () {
-            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        // User Management
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\UserController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Admin\UserController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Admin\UserController::class, 'store'])->name('store');
+            Route::get('/{user}', [App\Http\Controllers\Admin\UserController::class, 'show'])->name('show');
+            Route::get('/{user}/edit', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('edit');
+            Route::put('/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('destroy');
+            Route::post('/{user}/toggle-status', [App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('toggle-status');
         });
 
+        // Vehicle Management
+        Route::prefix('vehicles')->name('vehicles.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\VehicleController::class, 'index'])->name('index');
+            Route::get('/statistics', [App\Http\Controllers\Admin\VehicleController::class, 'statistics'])->name('statistics');
+            Route::get('/{vehicle}', [App\Http\Controllers\Admin\VehicleController::class, 'show'])->name('show');
+            Route::delete('/{vehicle}', [App\Http\Controllers\Admin\VehicleController::class, 'destroy'])->name('destroy');
+        });
+
+        // Service Provider Management
+        Route::prefix('providers')->name('providers.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\ServiceProviderController::class, 'index'])->name('index');
+            Route::get('/create', [App\Http\Controllers\Admin\ServiceProviderController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Admin\ServiceProviderController::class, 'store'])->name('store');
+            Route::get('/{provider}', [App\Http\Controllers\Admin\ServiceProviderController::class, 'show'])->name('show');
+            Route::get('/{provider}/edit', [App\Http\Controllers\Admin\ServiceProviderController::class, 'edit'])->name('edit');
+            Route::put('/{provider}', [App\Http\Controllers\Admin\ServiceProviderController::class, 'update'])->name('update');
+            Route::delete('/{provider}', [App\Http\Controllers\Admin\ServiceProviderController::class, 'destroy'])->name('destroy');
+            Route::post('/{provider}/toggle-status', [App\Http\Controllers\Admin\ServiceProviderController::class, 'toggleStatus'])->name('toggle-status');
+        });
+
+        // Booking Management
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\BookingController::class, 'index'])->name('index');
+            Route::get('/statistics', [App\Http\Controllers\Admin\BookingController::class, 'statistics'])->name('statistics');
+            Route::get('/{booking}', [App\Http\Controllers\Admin\BookingController::class, 'show'])->name('show');
+            Route::put('/{booking}/status', [App\Http\Controllers\Admin\BookingController::class, 'updateStatus'])->name('update-status');
+            Route::delete('/{booking}', [App\Http\Controllers\Admin\BookingController::class, 'destroy'])->name('destroy');
+        });
+
+        // Reports
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('index');
+            Route::get('/overview', [App\Http\Controllers\Admin\ReportController::class, 'overview'])->name('overview');
+            Route::get('/users', [App\Http\Controllers\Admin\ReportController::class, 'users'])->name('users');
+            Route::get('/revenue', [App\Http\Controllers\Admin\ReportController::class, 'revenue'])->name('revenue');
+            Route::get('/vehicles', [App\Http\Controllers\Admin\ReportController::class, 'vehicles'])->name('vehicles');
+            Route::get('/export', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
+        });
+
+        // Settings
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('index');
+            Route::post('/update', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('update');
+            Route::post('/clear-cache', [App\Http\Controllers\Admin\SettingsController::class, 'clearCache'])->name('clear-cache');
+            Route::get('/system-info', [App\Http\Controllers\Admin\SettingsController::class, 'systemInfo'])->name('system-info');
+        });
     });
+
+});
+
 
 
 
@@ -86,11 +148,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/ai-analytics/export/{vehicle}', [AiAnalyticsController::class, 'exportPDF'])->name('ai-analytics.export');
     
     // Vehicles
-    Route::get(
-    '/vehicles/decode-vin/{vin}',
-    [\App\Http\Controllers\VehicleController::class, 'decodeVin']
-)->middleware(['auth'])
- ->name('vehicles.decode-vin');
+    Route::get('/vehicles/decode-vin/{vin}',[\App\Http\Controllers\VehicleController::class, 'decodeVin'])->middleware(['auth'])->name('vehicles.decode-vin');
 
     Route::prefix('vehicles')->name('vehicles.')->group(function () {
         // Route::get('/decode-vin', [VehicleController::class, 'decodeVin'])->name('decode-vin');
@@ -120,7 +178,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{document}', [VehicleDocumentController::class, 'destroy'])->name('destroy');
             Route::get('/{document}/download', [VehicleDocumentController::class, 'download'])->name('download');
         });
+
+
     });
+
+        Route::post('vehicles/{vehicle}/documents/extract', [VehicleDocumentController::class, 'extractData'])
+        ->name('vehicles.documents.extract');
     
     // Maintenance
     Route::prefix('maintenance')->name('maintenance.')->group(function () {
@@ -162,7 +225,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('providers')->name('providers.')->group(function () {
         Route::get('/', [ServiceProviderController::class, 'index'])->name('index');
         Route::get('/{provider}', [ServiceProviderController::class, 'show'])->name('show');
-        Route::get('/search/nearby', [ServiceProviderController::class, 'searchNearby'])->name('search-nearby');
+        Route::get('/nearby', [ServiceProviderController::class, 'searchNearby'])->name('search-nearby');
     });
 
     // Comparison (NEW)
@@ -267,5 +330,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
         Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+    });
+});
+
+
+////////////////////////////////////////////// Provider Portal Routes \\
+
+use App\Http\Controllers\Provider\AuthController    as ProviderAuthController;
+use App\Http\Controllers\Provider\DashboardController as ProviderDashboardController;
+use App\Http\Controllers\Provider\BookingController   as ProviderBookingController;
+use App\Http\Controllers\Provider\ServiceController   as ProviderServiceController;
+
+Route::prefix('provider')->name('provider.')->group(function () {
+
+    // Public auth
+    Route::get('/login',  [ProviderAuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [ProviderAuthController::class, 'login'])->name('login.submit');
+
+    // Protected
+    Route::middleware('provider')->group(function () {
+        Route::post('/logout', [ProviderAuthController::class, 'logout'])->name('logout');
+
+        // Dashboard
+        Route::get('/dashboard', [ProviderDashboardController::class, 'index'])->name('dashboard');
+
+        // Bookings
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/',           [ProviderBookingController::class, 'index'])->name('index');
+            Route::get('/calendar',   [ProviderBookingController::class, 'calendar'])->name('calendar');
+            Route::get('/{booking}',  [ProviderBookingController::class, 'show'])->name('show');
+            Route::put('/{booking}/status', [ProviderBookingController::class, 'updateStatus'])->name('update-status');
+        });
+
+        // Profile & Services
+        Route::get('/profile',  [ProviderServiceController::class, 'editProfile'])->name('profile');
+        Route::put('/profile',  [ProviderServiceController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/hours',    [ProviderServiceController::class, 'editHours'])->name('hours');
+        Route::put('/hours',    [ProviderServiceController::class, 'updateHours'])->name('hours.update');
+        Route::get('/analytics',[ProviderServiceController::class, 'analytics'])->name('analytics');
     });
 });

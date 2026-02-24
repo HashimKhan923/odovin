@@ -42,4 +42,8 @@ return [
         'base_url' => env('OPENAI_API_BASE', 'https://api.openai.com/v1/'),
     ],
 
+    'google_maps' => [
+        'key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
 ];

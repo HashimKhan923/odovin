@@ -16,6 +16,7 @@
         --accent-cyan: #00d4ff;
         --accent-green: #00ffaa;
         --accent-danger: #ff3366;
+        --accent-electric: #7c3aed;
     }
 
     :root[data-theme="light"] {
@@ -29,6 +30,7 @@
         --accent-cyan: #0066ff;
         --accent-green: #00cc88;
         --accent-danger: #ff3366;
+        --accent-electric: #6d28d9;
     }
 
     .form-container {
@@ -223,6 +225,58 @@
         font-size: 0.75rem;
         color: var(--text-tertiary);
         margin-top: 0.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .input-helper.electric {
+        color: var(--accent-electric);
+        font-weight: 600;
+    }
+
+    /* Service Suggestions */
+    .service-suggestions {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(124, 58, 237, 0.05);
+        border: 1px solid rgba(124, 58, 237, 0.2);
+        border-radius: 10px;
+        display: none;
+    }
+
+    .service-suggestions.show {
+        display: block;
+        animation: slideDown 0.3s ease-out;
+    }
+
+    .suggestion-title {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--accent-electric);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.75rem;
+    }
+
+    .suggestion-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .suggestion-chip {
+        padding: 0.375rem 0.75rem;
+        background: rgba(124, 58, 237, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.3);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        color: var(--accent-electric);
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .suggestion-chip:hover {
+        background: rgba(124, 58, 237, 0.2);
+        transform: translateY(-2px);
     }
 
     /* Responsive */
@@ -278,7 +332,9 @@
                     <select id="vehicle_id" name="vehicle_id" required class="form-select @error('vehicle_id') error @enderror">
                         <option value="">Select a vehicle</option>
                         @foreach($vehicles as $vehicle)
-                            <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
+                            <option value="{{ $vehicle->id }}" 
+                                    data-fuel-type="{{ $vehicle->fuel_type }}"
+                                    {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
                                 {{ $vehicle->full_name ?? ($vehicle->make.' '.$vehicle->model) }}
                             </option>
                         @endforeach
@@ -295,11 +351,18 @@
                     </label>
                     <input type="text" id="service_type" name="service_type" required
                            value="{{ old('service_type') }}"
-                           placeholder="e.g., Oil Change, Tire Rotation, Brake Inspection"
+                           placeholder="e.g., Oil Change, Battery Check, Tire Rotation"
                            class="form-input @error('service_type') error @enderror">
+                    <span class="input-helper" id="service-helper">Select a vehicle to see suggested services</span>
                     @error('service_type')
                         <span class="error-message">{{ $message }}</span>
                     @enderror
+                    
+                    <!-- Service Suggestions -->
+                    <div class="service-suggestions" id="service-suggestions">
+                        <div class="suggestion-title" id="suggestion-title">Common Services:</div>
+                        <div class="suggestion-chips" id="suggestion-chips"></div>
+                    </div>
                 </div>
 
                 <!-- Description -->
@@ -358,4 +421,84 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const vehicleSelect = document.getElementById('vehicle_id');
+    const serviceInput = document.getElementById('service_type');
+    const serviceHelper = document.getElementById('service-helper');
+    const suggestionsBox = document.getElementById('service-suggestions');
+    const suggestionChips = document.getElementById('suggestion-chips');
+    const suggestionTitle = document.getElementById('suggestion-title');
+    
+    // Service suggestions by vehicle type
+    const services = {
+        Electric: [
+            'Battery Health Check',
+            'High Voltage Battery Inspection',
+            'Electric Motor Inspection',
+            'Charging Port Maintenance',
+            'Brake Fluid Check',
+            'Coolant System (Battery)',
+            'Software Update',
+            'Tire Rotation',
+            'Brake Inspection',
+            'Cabin Air Filter'
+        ],
+        Gasoline: [
+            'Oil Change',
+            'Transmission Fluid',
+            'Spark Plug Replacement',
+            'Air Filter Replacement',
+            'Fuel Filter Replacement',
+            'Timing Belt Replacement',
+            'Coolant Flush',
+            'Tire Rotation',
+            'Brake Inspection',
+            'Cabin Air Filter'
+        ]
+    };
+    
+    vehicleSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const fuelType = selectedOption.getAttribute('data-fuel-type');
+        
+        if (!fuelType) {
+            suggestionsBox.classList.remove('show');
+            serviceHelper.textContent = 'Select a vehicle to see suggested services';
+            serviceHelper.classList.remove('electric');
+            return;
+        }
+        
+        // Determine which services to show
+        let serviceList = services.Gasoline;
+        
+        if (fuelType === 'Electric') {
+            serviceList = services.Electric;
+            serviceHelper.innerHTML = '⚡ <strong>Electric Vehicle</strong> - Common EV maintenance services shown below';
+            serviceHelper.classList.add('electric');
+            suggestionTitle.textContent = '⚡ Common EV Services:';
+        } else {
+            serviceHelper.innerHTML = '🔥 <strong>Gasoline Vehicle</strong> - Common maintenance services shown below';
+            serviceHelper.classList.remove('electric');
+            suggestionTitle.textContent = 'Common Services:';
+        }
+        
+        // Clear and populate chips
+        suggestionChips.innerHTML = '';
+        serviceList.forEach(service => {
+            const chip = document.createElement('span');
+            chip.className = 'suggestion-chip';
+            chip.textContent = service;
+            chip.addEventListener('click', function() {
+                serviceInput.value = service;
+                serviceInput.focus();
+            });
+            suggestionChips.appendChild(chip);
+        });
+        
+        suggestionsBox.classList.add('show');
+    });
+});
+</script>
 @endsection

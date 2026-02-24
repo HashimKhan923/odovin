@@ -1328,7 +1328,7 @@
     position: relative;
     overflow: hidden;
     transition: all 0.3s ease;
-    height: 63%;
+    height: 75%;
 }
 
 .vehicle-card-premium:hover {

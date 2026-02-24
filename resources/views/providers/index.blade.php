@@ -34,7 +34,7 @@
     }
 
     .providers-container {
-        max-width: 1400px;
+        max-width: 1600px;
         margin: 0 auto;
         padding: 2rem 1.5rem;
         animation: fadeIn 0.6s ease-out;
@@ -102,7 +102,7 @@
 
     .search-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
         margin-bottom: 1.5rem;
     }
@@ -167,6 +167,7 @@
     .search-actions {
         display: flex;
         gap: 1rem;
+        flex-wrap: wrap;
     }
 
     .btn {
@@ -204,6 +205,120 @@
     .btn-secondary:hover {
         background: rgba(255, 255, 255, 0.1);
         color: var(--text-primary);
+    }
+
+    /* Sort Tabs */
+    .sort-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.2s backwards;
+        flex-wrap: wrap;
+    }
+
+    .sort-tab {
+        padding: 0.75rem 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .sort-tab:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    .sort-tab.active {
+        background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 170, 0.2));
+        border-color: var(--accent-cyan);
+        color: var(--accent-cyan);
+    }
+
+    .sort-tab svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Map & Grid Container */
+    .content-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .content-layout.with-map {
+        grid-template-columns: 1fr 450px;
+    }
+
+    /* Map Card */
+    .map-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1rem;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+        animation: fadeInUp 0.6s ease-out 0.3s backwards;
+    }
+
+    .map-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .map-title {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .map-toggle {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .map-toggle:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+    }
+
+    #map {
+        width: 100%;
+        height: 600px;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .location-status {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: rgba(0, 212, 255, 0.05);
+        border: 1px solid rgba(0, 212, 255, 0.2);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-align: center;
     }
 
     /* Empty State */
@@ -317,7 +432,13 @@
         border: 1px solid rgba(0, 255, 170, 0.3);
     }
 
-    .badge-verified svg {
+    .badge-distance {
+        background: rgba(255, 170, 0, 0.15);
+        color: var(--accent-warning);
+        border: 1px solid rgba(255, 170, 0, 0.3);
+    }
+
+    .badge svg {
         width: 14px;
         height: 14px;
     }
@@ -402,6 +523,21 @@
     }
 
     /* Responsive */
+    @media (max-width: 1200px) {
+        .content-layout.with-map {
+            grid-template-columns: 1fr;
+        }
+
+        .map-card {
+            position: relative;
+            top: 0;
+        }
+
+        #map {
+            height: 400px;
+        }
+    }
+
     @media (max-width: 768px) {
         .providers-container {
             padding: 1.5rem 1rem;
@@ -425,6 +561,16 @@
 
         .btn {
             width: 100%;
+        }
+
+        .sort-tabs {
+            overflow-x: auto;
+            flex-wrap: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sort-tab {
+            white-space: nowrap;
         }
 
         .providers-grid {
@@ -451,7 +597,7 @@
 
     <!-- Search and Filters -->
     <div class="search-card">
-        <form method="GET">
+        <form method="GET" id="search-form">
             <div class="search-grid">
                 <div class="form-group">
                     <label for="search" class="form-label">Search</label>
@@ -476,6 +622,17 @@
                         @endforeach
                     </select>
                 </div>
+
+                <div class="form-group">
+                    <label for="radius" class="form-label">Distance</label>
+                    <select name="radius" id="radius" class="form-select">
+                        <option value="">Any Distance</option>
+                        <option value="5" {{ request('radius') == '5' ? 'selected' : '' }}>Within 5 miles</option>
+                        <option value="10" {{ request('radius') == '10' ? 'selected' : '' }}>Within 10 miles</option>
+                        <option value="25" {{ request('radius') == '25' ? 'selected' : '' }}>Within 25 miles</option>
+                        <option value="50" {{ request('radius') == '50' ? 'selected' : '' }}>Within 50 miles</option>
+                    </select>
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label">Filters</label>
@@ -488,10 +645,13 @@
                             {{ request('verified') ? 'checked' : '' }}
                             class="checkbox-input"
                         />
-                        <label for="verified" class="checkbox-label">Verified Providers Only</label>
+                        <label for="verified" class="checkbox-label">Verified Only</label>
                     </div>
                 </div>
             </div>
+            
+            <input type="hidden" name="latitude" id="latitude" value="{{ request('latitude') }}">
+            <input type="hidden" name="longitude" id="longitude" value="{{ request('longitude') }}">
             
             <div class="search-actions">
                 <button type="submit" class="btn btn-primary">
@@ -500,11 +660,46 @@
                     </svg>
                     Search
                 </button>
+                <button type="button" id="location-btn" class="btn btn-secondary">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 0.5rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Use My Location
+                </button>
                 <a href="{{ route('providers.index') }}" class="btn btn-secondary">
                     Clear Filters
                 </a>
             </div>
         </form>
+    </div>
+
+    <!-- Sort Tabs -->
+    <div class="sort-tabs">
+        <a href="{{ route('providers.index', array_merge(request()->except('sort'), ['sort' => 'rating'])) }}" 
+           class="sort-tab {{ request('sort') === 'rating' || !request('sort') ? 'active' : '' }}">
+            <svg fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            Highest Rated
+        </a>
+        
+        <a href="{{ route('providers.index', array_merge(request()->except('sort'), ['sort' => 'distance'])) }}" 
+           class="sort-tab {{ request('sort') === 'distance' ? 'active' : '' }}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Nearest First
+        </a>
+        
+        <a href="{{ route('providers.index', array_merge(request()->except('sort'), ['sort' => 'reviews'])) }}" 
+           class="sort-tab {{ request('sort') === 'reviews' ? 'active' : '' }}">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+            </svg>
+            Most Reviewed
+        </a>
     </div>
 
     @if($providers->isEmpty())
@@ -517,69 +712,219 @@
             <p>Try adjusting your search filters or check back later</p>
         </div>
     @else
-        <!-- Providers Grid -->
-        <div class="providers-grid">
-            @foreach($providers as $provider)
-            <div class="provider-card">
-                <div class="provider-header">
-                    <div class="provider-title">
-                        <h3 class="provider-name">{{ $provider->name }}</h3>
-                        <div class="provider-badges">
-                            <span class="badge badge-type">
-                                {{ ucfirst(str_replace('_', ' ', $provider->type)) }}
-                            </span>
-                            @if($provider->is_verified)
-                                <span class="badge badge-verified">
-                                    <svg fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
-                                    </svg>
-                                    Verified
-                                </span>
+        <!-- Content Layout -->
+        <div class="content-layout {{ request('latitude') ? 'with-map' : '' }}">
+            <!-- Providers Grid -->
+            <div>
+                <div class="providers-grid">
+                    @foreach($providers as $provider)
+                    <div class="provider-card" data-lat="{{ $provider->latitude }}" data-lng="{{ $provider->longitude }}">
+                        <div class="provider-header">
+                            <div class="provider-title">
+                                <h3 class="provider-name">{{ $provider->name }}</h3>
+                                <div class="provider-badges">
+                                    <span class="badge badge-type">
+                                        {{ ucfirst(str_replace('_', ' ', $provider->type)) }}
+                                    </span>
+                                    @if($provider->is_verified)
+                                        <span class="badge badge-verified">
+                                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
+                                            </svg>
+                                            Verified
+                                        </span>
+                                    @endif
+                                    @if(isset($provider->distance))
+                                        <span class="badge badge-distance">
+                                            📍 {{ number_format($provider->distance, 1) }} mi
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+                            @if($provider->rating > 0)
+                                <div class="provider-rating">
+                                    <div class="rating-value">
+                                        <svg fill="currentColor" viewBox="0 0 20 20">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                        </svg>
+                                        {{ number_format($provider->rating, 1) }}
+                                    </div>
+                                    <p class="rating-reviews">{{ $provider->total_reviews }} reviews</p>
+                                </div>
                             @endif
                         </div>
-                    </div>
-                    @if($provider->rating > 0)
-                        <div class="provider-rating">
-                            <div class="rating-value">
-                                <svg fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+
+                        <div class="provider-info">
+                            <div class="info-item">
+                                <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                                 </svg>
-                                {{ number_format($provider->rating, 1) }}
+                                <span>{{ $provider->city }}, {{ $provider->state }}</span>
                             </div>
-                            <p class="rating-reviews">{{ $provider->total_reviews }} reviews</p>
+                            <div class="info-item">
+                                <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                                </svg>
+                                <span>{{ $provider->phone }}</span>
+                            </div>
                         </div>
-                    @endif
+
+                        <div class="provider-actions">
+                            <a href="{{ route('providers.show', $provider) }}" class="btn-view">
+                                View Details & Book
+                            </a>
+                        </div>
+                    </div>
+                    @endforeach
                 </div>
 
-                <div class="provider-info">
-                    <div class="info-item">
-                        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        <span>{{ $provider->city }}, {{ $provider->state }}</span>
-                    </div>
-                    <div class="info-item">
-                        <svg class="info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                        </svg>
-                        <span>{{ $provider->phone }}</span>
-                    </div>
-                </div>
-
-                <div class="provider-actions">
-                    <a href="{{ route('providers.show', $provider) }}" class="btn-view">
-                        View Details & Book
-                    </a>
+                <!-- Pagination -->
+                <div class="pagination-wrapper">
+                    {{ $providers->appends(request()->query())->links() }}
                 </div>
             </div>
-            @endforeach
-        </div>
 
-        <!-- Pagination -->
-        <div class="pagination-wrapper">
-            {{ $providers->links() }}
+            <!-- Map Sidebar -->
+            @if(request('latitude'))
+            <div class="map-card">
+                <div class="map-header">
+                    <h3 class="map-title">Map View</h3>
+                </div>
+                <div id="map"></div>
+                <div class="location-status" id="location-status">
+                    📍 Showing providers near your location
+                </div>
+            </div>
+            @endif
         </div>
     @endif
 </div>
+
+<script>
+/* ===============================
+   LOCATION BUTTON HANDLING
+=================================*/
+document.getElementById('location-btn')?.addEventListener('click', function () {
+
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+    }
+
+    this.textContent = 'Getting location...';
+    this.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+
+            // Auto-set radius if empty
+            if (!document.getElementById('radius').value) {
+                document.getElementById('radius').value = '25';
+            }
+
+            document.getElementById('search-form').submit();
+        },
+        (error) => {
+            alert('Unable to get your location. Please allow location access.');
+            this.textContent = 'Use My Location';
+            this.disabled = false;
+        }
+    );
+});
+
+
+/* ===============================
+   GOOGLE MAP INITIALIZATION
+=================================*/
+@if(request('latitude') && !$providers->isEmpty())
+
+window.initMap = function () {
+
+    const userLat = parseFloat({{ request('latitude') }});
+    const userLng = parseFloat({{ request('longitude') }});
+
+    const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 11,
+        center: { lat: userLat, lng: userLng }
+    });
+
+    /* ===== USER MARKER ===== */
+    new google.maps.Marker({
+        position: { lat: userLat, lng: userLng },
+        map: map,
+        title: 'Your Location',
+        icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: '#00d4ff',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+        }
+    });
+
+    /* ===== PROVIDER MARKERS ===== */
+    const providers = @json($providers->items());
+
+    providers.forEach(provider => {
+
+        if (!provider.latitude || !provider.longitude) return;
+
+        const marker = new google.maps.Marker({
+            position: {
+                lat: parseFloat(provider.latitude),
+                lng: parseFloat(provider.longitude)
+            },
+            map: map,
+            title: provider.name,
+            icon: {
+                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                scale: 5,
+                fillColor: provider.is_verified ? '#00ffaa' : '#ffaa00',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 1,
+                rotation: 180
+            }
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="padding:8px; color:#000;">
+                    <strong>${provider.name}</strong><br>
+                    <small>${provider.city ?? ''}, ${provider.state ?? ''}</small><br>
+                    <small>Rating: ${provider.rating ?? 0} ⭐</small>
+                </div>
+            `
+        });
+
+        marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+        });
+    });
+};
+
+
+/* ===============================
+   LOAD GOOGLE MAPS SCRIPT
+=================================*/
+if (!window.google || !window.google.maps) {
+
+    const script = document.createElement('script');
+    script.src = "https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&callback=initMap";
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+} else {
+    window.initMap();
+}
+
+@endif
+</script>
+
 @endsection

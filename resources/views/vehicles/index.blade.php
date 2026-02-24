@@ -115,7 +115,7 @@
 
                     <!-- Vehicle Info -->
                     <div class="vehicle-info">
-                        <h3 class="vehicle-name">{{ $vehicle->full_name }}</h3>
+                        <h3 class="vehicle-name">{{ $vehicle->full_name }} ({{ $vehicle->license_plate }})</h3>
                         <p class="vehicle-vin">{{ $vehicle->vin }}</p>
                     </div>
 
