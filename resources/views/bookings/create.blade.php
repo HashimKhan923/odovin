@@ -248,17 +248,29 @@
 
             <div class="form-group">
                 <label>Service Provider <span class="required">*</span></label>
-                <select name="service_provider_id" required>
-                    <option value="">Select a provider</option>
-                    @foreach($providers as $provider)
-                        <option value="{{ $provider->id }}" {{ old('service_provider_id') == $provider->id ? 'selected' : '' }}>
-                            {{ $provider->name }} – {{ $provider->city }}
-                            @if($provider->rating > 0)
-                                (⭐ {{ number_format($provider->rating, 1) }})
-                            @endif
-                        </option>
-                    @endforeach
-                </select>
+            <select name="service_provider_id"
+                    id="providerSelect"
+                    required>
+
+                <option value="">Select a provider</option>
+
+                @foreach($providers as $provider)
+                    <option value="{{ $provider->id }}"
+                            data-services='@json($provider->services_offered)'
+                            {{ old('service_provider_id', $preselectedProvider->id) == $provider->id ? 'selected' : '' }}>
+
+                        {{ $provider->business_name }} – {{ $provider->city }}
+
+                        @if($provider->rating > 0)
+                            (⭐ {{ number_format($provider->rating, 1) }})
+                        @endif
+
+                    </option>
+                @endforeach
+
+            </select>
+
+
                 @error('service_provider_id')
                     <div class="form-error">{{ $message }}</div>
                 @enderror
@@ -269,13 +281,12 @@
 
             <div class="form-group">
                 <label>Service Type <span class="required">*</span></label>
-                <select name="service_type" required>
+                <select name="service_type"
+                        id="serviceTypeSelect"
+                        required>
+
                     <option value="">Select service type</option>
-                    @foreach($serviceTypes as $type)
-                        <option value="{{ $type }}" {{ old('service_type') == $type ? 'selected' : '' }}>
-                            {{ $type }}
-                        </option>
-                    @endforeach
+
                 </select>
                 @error('service_type')
                     <div class="form-error">{{ $message }}</div>
@@ -341,3 +352,42 @@
     </div>
 </div>
 @endsection
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const providerSelect = document.getElementById('providerSelect');
+    const serviceSelect  = document.getElementById('serviceTypeSelect');
+
+    function updateServices() {
+
+        serviceSelect.innerHTML = '<option value="">Select service type</option>';
+
+        const selectedOption = providerSelect.options[providerSelect.selectedIndex];
+
+        if (!selectedOption || !selectedOption.dataset.services) return;
+
+        const services = JSON.parse(selectedOption.dataset.services);
+
+        services.forEach(service => {
+            const option = document.createElement('option');
+            option.value = service;
+            option.textContent = service;
+
+            if ("{{ old('service_type') }}" === service) {
+                option.selected = true;
+            }
+
+            serviceSelect.appendChild(option);
+        });
+    }
+
+    providerSelect.addEventListener('change', updateServices);
+
+    // Auto-load if provider already selected
+    if (providerSelect.value) {
+        updateServices();
+    }
+
+});
+</script>

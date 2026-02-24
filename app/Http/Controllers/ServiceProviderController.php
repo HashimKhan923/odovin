@@ -9,7 +9,11 @@ class ServiceProviderController extends Controller
 {
     public function index(Request $request)
     {
+
+
         $query = ServiceProvider::active();
+
+        
 
         if ($request->latitude && $request->longitude) {
             $lat    = $request->latitude;
@@ -39,11 +43,12 @@ class ServiceProviderController extends Controller
 
         $query->when($request->search, function ($q, $search) {
             return $q->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
+                $query->where('business_name', 'like', "%{$search}%")
                       ->orWhere('city', 'like', "%{$search}%")
                       ->orWhere('services_offered', 'like', "%{$search}%");
             });
         });
+
 
         $sort = $request->sort ?? 'rating';
         switch ($sort) {
@@ -53,7 +58,7 @@ class ServiceProviderController extends Controller
                     : $query->orderByDesc('rating');
                 break;
             case 'reviews': $query->orderByDesc('total_reviews'); break;
-            case 'name':    $query->orderBy('name', 'asc'); break;
+            case 'name':    $query->orderBy('business_name', 'asc'); break;
             default:        $query->orderByDesc('rating')->orderByDesc('is_verified');
         }
 
@@ -74,6 +79,7 @@ class ServiceProviderController extends Controller
             'towing'        => 'Towing',
             'other'         => 'Other',
         ];
+
 
         return view('providers.index', compact('providers', 'types', 'stats'));
     }

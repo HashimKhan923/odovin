@@ -717,11 +717,12 @@
             <!-- Providers Grid -->
             <div>
                 <div class="providers-grid">
+                    
                     @foreach($providers as $provider)
                     <div class="provider-card" data-lat="{{ $provider->latitude }}" data-lng="{{ $provider->longitude }}">
                         <div class="provider-header">
                             <div class="provider-title">
-                                <h3 class="provider-name">{{ $provider->name }}</h3>
+                                <h3 class="provider-name">{{ $provider->business_name }}</h3>
                                 <div class="provider-badges">
                                     <span class="badge badge-type">
                                         {{ ucfirst(str_replace('_', ' ', $provider->type)) }}

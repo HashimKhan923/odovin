@@ -13,7 +13,7 @@ return new class extends Migration
     {
        Schema::create('service_providers', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->nullable();
+            $table->string('business_name')->nullable();
             $table->enum('type', ['mechanic', 'dealership', 'body_shop', 'detailing', 'towing','ev_specialist','other'])->nullable();
             $table->string('phone')->nullable();
             $table->string('email')->nullable();

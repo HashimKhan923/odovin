@@ -5,14 +5,14 @@ namespace App\Http\Controllers\Provider;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceProvider;
 use App\Models\ServiceBooking;
+use App\Services\ProviderNotificationService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Session;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class BookingController extends Controller
 {
-    protected function provider()
+    protected function provider(): ServiceProvider
     {
         return Auth::user()->serviceProvider;
     }
@@ -74,13 +74,17 @@ class BookingController extends Controller
 
         $updateData = ['status' => $validated['status']];
         if (!empty($validated['provider_notes'])) $updateData['provider_notes'] = $validated['provider_notes'];
-        if (!empty($validated['final_cost']))     $updateData['final_cost']     = $validated['final_cost'];
+        if (!empty($validated['final_cost']))      $updateData['final_cost']     = $validated['final_cost'];
 
         $booking->update($updateData);
 
         if ($validated['status'] === 'completed') {
-            $booking->serviceProvider->updateRating();
+            $provider->updateRating();
         }
+
+        // Notify the customer about the status change
+        $booking->refresh()->load(['user', 'serviceProvider', 'vehicle']);
+        ProviderNotificationService::statusUpdated($booking, $validated['status']);
 
         return back()->with('success', 'Booking updated to: ' . ucfirst(str_replace('_', ' ', $validated['status'])));
     }

@@ -23,6 +23,33 @@ class AlertController extends Controller
         return view('alerts.index', compact('alerts'));
     }
 
+    public function fetch(Request $request)
+    {
+        $userId = $request->user()->id;
+
+        $notifications = Alert::where('user_id', $userId)
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn($a) => [
+                'id'         => $a->id,
+                'title'      => $a->title,
+                'message'    => $a->message,
+                'type'       => $a->type,
+                'priority'   => $a->priority,
+                'color'      => $a->color,
+                'icon'       => $a->icon,
+                'action_url' => $a->action_url ?? null,
+                'is_read'    => $a->is_read,
+                'time'       => $a->created_at->diffForHumans(),
+            ]);
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count'  => Alert::where('user_id', $userId)->where('is_read', false)->count(),
+        ]);
+    }
+
     public function markAsRead(Alert $alert)
     { 
         // $this->authorize('update', $alert);

@@ -6,6 +6,8 @@ use App\Models\ServiceBooking;
 use App\Models\Vehicle;
 use App\Models\ServiceProvider;
 use Illuminate\Http\Request;
+use App\Services\ProviderNotificationService;
+use App\Models\Alert;
 
 class ServiceBookingController extends Controller
 {
@@ -39,11 +41,20 @@ class ServiceBookingController extends Controller
 
     public function create(Request $request)
     {
-        $vehicles          = $request->user()->vehicles()->active()->get();
-        $vehicleId         = $request->vehicle_id ?? $vehicles->firstWhere('is_primary', true)?->id;
-        $providers         = ServiceProvider::active()->verified()->orderByDesc('rating')->get();
+        $vehicles  = $request->user()->vehicles()->active()->get();
+
+        $vehicleId = $request->vehicle_id 
+            ?? $vehicles->firstWhere('is_primary', true)?->id;
+
+        $providers = ServiceProvider::active()
+            ->verified()
+            ->orderByDesc('rating')
+            ->get();
+
         $preselectedProvider = $request->service_provider_id
-            ? ServiceProvider::find($request->service_provider_id) : null;
+            ? ServiceProvider::find($request->service_provider_id)
+            : null;
+
 
         $serviceTypes = [
             'Oil Change', 'Tire Rotation', 'Brake Service', 'Battery Replacement',
@@ -53,17 +64,15 @@ class ServiceBookingController extends Controller
             'Windshield Repair', 'Other',
         ];
 
-        $timeSlots = [];
-        for ($h = 7; $h <= 18; $h++) {
-            $timeSlots[] = sprintf('%02d:00', $h);
-            $timeSlots[] = sprintf('%02d:30', $h);
-        }
-
         return view('bookings.create', compact(
-            'vehicles', 'providers', 'serviceTypes',
-            'vehicleId', 'preselectedProvider', 'timeSlots'
+            'vehicles',
+            'providers',
+            'serviceTypes',
+            'vehicleId',
+            'preselectedProvider'
         ));
     }
+
 
     public function store(Request $request)
     {
@@ -81,6 +90,10 @@ class ServiceBookingController extends Controller
         $vehicle = Vehicle::where('id', $validated['vehicle_id'])
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
+
+        $serviceProvider = ServiceProvider::where('id', $validated['service_provider_id'])
+            ->where('is_active', true)
+            ->firstOrFail();    
 
         $scheduledDateTime = $validated['scheduled_date'] . ' ' . $validated['scheduled_time'];
 
@@ -105,6 +118,11 @@ class ServiceBookingController extends Controller
                            . date('M d, Y', strtotime($scheduledDateTime)),
             'priority'   => 'info',
         ]);
+
+        ProviderNotificationService::newBooking($booking->load(['user', 'serviceProvider']));
+
+
+
 
         return redirect()->route('bookings.show', $booking)
             ->with('success', 'Booking created! The service provider will confirm your appointment.');
@@ -193,6 +211,9 @@ class ServiceBookingController extends Controller
             'priority'   => 'info',
         ]);
 
+                ProviderNotificationService::bookingCancelled($booking->load(['user', 'serviceProvider']));
+
+
         return back()->with('success', 'Booking cancelled successfully!');
     }
 
@@ -210,6 +231,9 @@ class ServiceBookingController extends Controller
 
         $booking->update($validated);
         $booking->serviceProvider->updateRating();
+
+                ProviderNotificationService::newReview($booking->load(['user', 'serviceProvider']));
+
 
         return back()->with('success', 'Thank you for your review!');
     }

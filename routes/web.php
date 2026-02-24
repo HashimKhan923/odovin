@@ -306,6 +306,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Alerts/Notifications
     Route::prefix('alerts')->name('alerts.')->group(function () {
         Route::get('/', [AlertController::class, 'index'])->name('index');
+        Route::get('/fetch', [AlertController::class, 'fetch'])->name('fetch');
         Route::get('/{alert}/read', [AlertController::class, 'markAsRead'])->name('mark-read');
         Route::post('/read-all', [AlertController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::delete('/{alert}', [AlertController::class, 'destroy'])->name('destroy');
