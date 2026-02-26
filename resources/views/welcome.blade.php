@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Odovin - Revolutionary Vehicle Management Platform</title>
+    <title>odovin - Revolutionary Vehicle Management Platform</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1173,7 +1173,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                 </div>
-                <span class="logo-text">Odovin</span>
+                <span class="logo-text">odovin</span>
             </div>
             
             <div class="nav-links">
@@ -1472,7 +1472,7 @@
                 Ready to Transform Your Vehicle Experience?
             </h2>
             <p class="cta-subtitle">
-                Join thousands of car owners who've simplified their lives with Odovin. 
+                Join thousands of car owners who've simplified their lives with odovin. 
                 Start managing your vehicle like a pro—completely free.
             </p>
             <a href="{{ route('register') }}" class="cta-button">
@@ -1492,7 +1492,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
                         </div>
-                        <span class="footer-logo-text">Odovin</span>
+                        <span class="footer-logo-text">odovin</span>
                     </div>
                     <p class="footer-description">
                         The most advanced vehicle management platform. Built for car enthusiasts, designed for everyone.
@@ -1531,7 +1531,7 @@
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; 2024 Odovin. All rights reserved. Built with precision and passion.</p>
+                <p>&copy; 2024 odovin. All rights reserved. Built with precision and passion.</p>
             </div>
         </div>
     </footer>

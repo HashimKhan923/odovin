@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('vehicle_documents', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vehicle_id')->constrained()->onDelete('cascade');
-            $table->enum('type', ['registration', 'insurance', 'warranty', 'inspection', 'other']);
+            $table->string('type')->nullable();
             $table->string('title');
             $table->string('file_path');
             $table->string('file_type');

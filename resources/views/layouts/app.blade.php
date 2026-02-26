@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Odovin') }} - @yield('title', 'Dashboard')</title>
+    <title>{{ config('app.name', 'odovin') }} - @yield('title', 'Dashboard')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -546,7 +546,7 @@
     <div class="app-layout">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="{{ route('dashboard') }}" class="logo">Odovin</a>
+                <a href="{{ route('dashboard') }}" class="logo">odovin</a>
                 <button class="sidebar-toggle" onclick="toggleSidebar()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
@@ -578,6 +578,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         <span class="nav-text">Bookings</span>
+                    </a>
+                    <a href="{{ route('jobs.index') }}" class="nav-item {{ request()->routeIs('jobs.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <span class="nav-text">Post a Job</span>
                     </a>
                     <a href="{{ route('maintenance.index') }}" class="nav-item {{ request()->routeIs('maintenance.*') ? 'active' : '' }}">
                         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

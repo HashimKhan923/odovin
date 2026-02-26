@@ -13,9 +13,11 @@ class Alert extends Model
     protected $fillable = [
         'user_id',
         'vehicle_id',
+        'service_booking_id',
         'type',
         'title',
         'message',
+        'action_url',
         'priority',
         'is_read',
         'read_at',

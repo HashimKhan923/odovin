@@ -125,16 +125,16 @@
 
     <div class="main-grid">
         <div>
-            @if(!empty($servicesArray))
+          
             <div class="card">
                 <div class="card-title">Services Offered</div>
                 <div class="services-tags">
-                    @foreach($servicesArray as $svc)
+                    @foreach($provider->services_offered as $svc)
                     <span class="svc-tag">{{ trim($svc) }}</span>
                     @endforeach
                 </div>
             </div>
-            @endif
+            
 
             <div class="card">
                 <div class="card-title">Customer Reviews</div>

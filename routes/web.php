@@ -22,6 +22,7 @@ use App\Http\Controllers\{
     TripLogController,
     InsuranceController,
     AiAnalyticsController,
+    JobPostController,
 };
 
 use App\Http\Controllers\Admin\AuthController;
@@ -221,6 +222,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{booking}/rate', [ServiceBookingController::class, 'rate'])->name('rate');
     });
     
+    // ── Job Posts (InDrive-style) ────────────────────────────────────────────
+    Route::prefix('jobs')->name('jobs.')->group(function () {
+        Route::get('/',                [JobPostController::class, 'index'])->name('index');
+        Route::get('/create',          [JobPostController::class, 'create'])->name('create');
+        Route::post('/',               [JobPostController::class, 'store'])->name('store');
+        Route::get('/{job}',           [JobPostController::class, 'show'])->name('show');
+        Route::post('/{job}/cancel',   [JobPostController::class, 'cancel'])->name('cancel');
+        Route::post('/{job}/complete', [JobPostController::class, 'complete'])->name('complete');
+        Route::post('/{job}/accept-offer/{offer}', [JobPostController::class, 'acceptOffer'])->name('accept-offer');
+    });
+
     // Service Providers
     Route::prefix('providers')->name('providers.')->group(function () {
         Route::get('/', [ServiceProviderController::class, 'index'])->name('index');
@@ -369,5 +381,13 @@ Route::prefix('provider')->name('provider.')->group(function () {
         Route::get('/hours',    [ProviderServiceController::class, 'editHours'])->name('hours');
         Route::put('/hours',    [ProviderServiceController::class, 'updateHours'])->name('hours.update');
         Route::get('/analytics',[ProviderServiceController::class, 'analytics'])->name('analytics');
+
+        // Job Board (InDrive-style)
+        Route::prefix('jobs')->name('jobs.')->group(function () {
+            Route::get('/',                        [\App\Http\Controllers\Provider\JobOfferController::class, 'index'])->name('index');
+            Route::get('/my-offers',               [\App\Http\Controllers\Provider\JobOfferController::class, 'myOffers'])->name('my-offers');
+            Route::get('/{job}',                   [\App\Http\Controllers\Provider\JobOfferController::class, 'show'])->name('show');
+            Route::post('/{job}/submit-offer',     [\App\Http\Controllers\Provider\JobOfferController::class, 'submitOffer'])->name('submit-offer');
+        });
     });
 });

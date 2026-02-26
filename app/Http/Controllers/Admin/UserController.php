@@ -15,7 +15,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('user_type', 'user')
+        $query = User::where('role', 'user')
             ->withCount('vehicles')
             ->with(['vehicles' => function ($q) {
                 $q->withCount(['expenses', 'bookings']);
