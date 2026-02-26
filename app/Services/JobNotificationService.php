@@ -106,18 +106,86 @@ class JobNotificationService
     /**
      * When a job post is cancelled, notify providers who submitted offers.
      */
-    public static function jobCancelled(ServiceJobOffer $offer): void
+public static function jobCancelled(ServiceJobOffer $offer): void
+{
+    $job  = $offer->jobPost;
+    $prov = $offer->serviceProvider;
+    if (!$prov?->user_id) return;
+
+    Alert::create([
+        'user_id'    => $prov->user_id,
+        'type'       => 'booking',
+        'title'      => 'Job Post Cancelled',
+        'message'    => "The {$job->service_type} job you offered on has been cancelled by the customer.",
+        'priority'   => 'info',
+    ]);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Work-status notifications (mirrors ProviderNotificationService for bookings)
+// ─────────────────────────────────────────────────────────────────────
+
+    /**
+     * When provider changes work_status → notify the consumer.
+     */
+    public static function workStatusUpdated(\App\Models\ServiceJobPost $job, string $newStatus): void
     {
-        $job  = $offer->jobPost;
-        $prov = $offer->serviceProvider;
-        if (!$prov?->user_id) return;
+        if (!$job->user_id) return;
+
+        $providerName = $job->acceptedOffer?->serviceProvider?->name ?? 'The service provider';
+
+        $config = match ($newStatus) {
+            'confirmed' => [
+                'title'    => '✅ Job Confirmed',
+                'message'  => "{$providerName} confirmed your {$job->service_type} job. They will start on the agreed date.",
+                'priority' => 'info',
+            ],
+            'in_progress' => [
+                'title'    => '🔧 Work In Progress',
+                'message'  => "{$providerName} has started working on your {$job->service_type}. You'll be notified when done.",
+                'priority' => 'warning',
+            ],
+            'completed' => [
+                'title'    => '🎉 Job Completed!',
+                'message'  => "{$providerName} has completed your {$job->service_type}. Please review the final cost and leave a rating.",
+                'priority' => 'info',
+            ],
+            'cancelled' => [
+                'title'    => '❌ Job Cancelled by Provider',
+                'message'  => "{$providerName} has cancelled your {$job->service_type} job. Please post a new job to find another provider.",
+                'priority' => 'critical',
+            ],
+            default => null,
+        };
+
+        if (!$config) return;
 
         Alert::create([
-            'user_id'    => $prov->user_id,
+            'user_id'    => $job->user_id,
+            'vehicle_id' => $job->vehicle_id,
             'type'       => 'booking',
-            'title'      => 'Job Post Cancelled',
-            'message'    => "The {$job->service_type} job you offered on has been cancelled by the customer.",
-            'priority'   => 'info',
+            'title'      => $config['title'],
+            'message'    => $config['message'],
+            'action_url' => route('jobs.show', $job),
+            'priority'   => $config['priority'],
         ]);
     }
-}
+
+    /**
+     * When consumer submits a rating on a completed job → notify the provider.
+     */
+    public static function jobReviewSubmitted(\App\Models\ServiceJobPost $job): void
+    {
+        $provider = $job->acceptedOffer?->serviceProvider;
+        if (!$provider?->user_id) return;
+
+            Alert::create([
+                'user_id'    => $provider->user_id,
+                'type'       => 'booking',
+                'title'      => "New {$job->rating}★ Review on Job",
+                'message'    => "{$job->user->name} rated your {$job->service_type} job.",
+                'action_url' => route('provider.jobs.my-offers'),
+                'priority'   => 'info',
+            ]);
+        }
+    }

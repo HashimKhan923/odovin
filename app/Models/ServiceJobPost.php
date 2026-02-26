@@ -17,14 +17,20 @@ class ServiceJobPost extends Model
         'budget_min', 'budget_max', 'preferred_date', 'preferred_time',
         'latitude', 'longitude', 'location_address', 'radius',
         'status', 'accepted_offer_id', 'expires_at', 'customer_notes',
+        // Work tracking
+        'work_status', 'final_cost', 'provider_notes',
+        'rating', 'review', 'work_started_at', 'work_completed_at',
     ];
 
     protected $casts = [
-        'budget_min'  => 'decimal:2',
-        'budget_max'  => 'decimal:2',
-        'latitude'    => 'decimal:7',
-        'longitude'   => 'decimal:7',
-        'expires_at'  => 'datetime',
+        'budget_min'        => 'decimal:2',
+        'budget_max'        => 'decimal:2',
+        'final_cost'        => 'decimal:2',
+        'latitude'          => 'decimal:7',
+        'longitude'         => 'decimal:7',
+        'expires_at'        => 'datetime',
+        'work_started_at'   => 'datetime',
+        'work_completed_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -90,5 +96,45 @@ class ServiceJobPost extends Model
             return 'Up to $' . number_format($this->budget_max);
         }
         return 'Flexible';
+    }
+
+    // ── Work status helpers ────────────────────────────────────────────────
+
+    public function workStatusLabel(): string
+    {
+        return match ($this->work_status ?? 'pending') {
+            'pending'     => 'Awaiting Confirmation',
+            'confirmed'   => 'Confirmed',
+            'in_progress' => 'In Progress',
+            'completed'   => 'Completed',
+            'cancelled'   => 'Cancelled',
+            default       => ucfirst($this->work_status),
+        };
+    }
+
+    public function workStatusColor(): string
+    {
+        return match ($this->work_status ?? 'pending') {
+            'pending'     => 'var(--accent-warning)',
+            'confirmed'   => 'var(--accent-cyan)',
+            'in_progress' => '#a855f7',
+            'completed'   => 'var(--accent-green)',
+            'cancelled'   => '#ff3366',
+            default       => 'var(--text-tertiary)',
+        };
+    }
+
+    public function canBeRated(): bool
+    {
+        return $this->work_status === 'completed'
+            && $this->status === 'accepted'
+            && is_null($this->rating);
+    }
+
+    public function updateProviderRating(): void
+    {
+        if ($this->acceptedOffer?->serviceProvider) {
+            $this->acceptedOffer->serviceProvider->updateRating();
+        }
     }
 }

@@ -166,6 +166,9 @@ class JobPostController extends Controller
             JobNotificationService::offerRejected($rej->load(['jobPost', 'serviceProvider']));
         }
 
+        foreach ($job->offers->where('status', 'rejected') as $rej) {
+        }
+
         // Alert the consumer
         auth()->user()->alerts()->create([
             'user_id'    => auth()->id(),
@@ -203,17 +206,62 @@ class JobPostController extends Controller
 
     // ── Consumer: mark job completed ─────────────────────────────────────
 
+    /**
+     * Consumer confirms the job is done (optional — provider marks complete too).
+     */
     public function complete(ServiceJobPost $job)
     {
         abort_unless($job->user_id === auth()->id(), 403);
 
-        if ($job->status !== 'accepted') {
-            return back()->with('error', 'Only accepted jobs can be marked as completed.');
+        if ($job->work_status !== 'completed') {
+            return back()->with('error', 'Job must be completed by the provider first.');
         }
 
-        $job->update(['status' => 'completed']);
+        return redirect()->route('jobs.show', $job);
+    }
 
-        return redirect()->route('jobs.show', $job)->with('success', 'Job marked as completed!');
+    /**
+     * Consumer rates a completed job (mirrors BookingController::rate).
+     */
+    public function rate(Request $request, ServiceJobPost $job)
+    {
+        abort_unless($job->user_id === auth()->id(), 403);
+
+        if ($job->work_status !== 'completed') {
+            return back()->with('error', 'Can only rate completed jobs.');
+        }
+        if (!is_null($job->rating)) {
+            return back()->with('error', 'You have already rated this job.');
+        }
+
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:1000',
+        ]);
+
+        $job->update($validated);
+
+        // Update provider's overall rating
+        $provider = $job->acceptedOffer?->serviceProvider;
+        if ($provider) {
+            // Merge rating from bookings + job posts
+            $bookingAvg = $provider->bookings()->whereNotNull('rating')->avg('rating') ?? 0;
+            $bookingCnt = $provider->bookings()->whereNotNull('rating')->count();
+            $jobAvg = ServiceJobPost::whereHas('offers', fn($q) =>
+                $q->where('service_provider_id', $provider->id)->where('status','accepted'))
+                ->whereNotNull('rating')->avg('rating') ?? 0;
+            $jobCnt = ServiceJobPost::whereHas('offers', fn($q) =>
+                $q->where('service_provider_id', $provider->id)->where('status','accepted'))
+                ->whereNotNull('rating')->count();
+            $total = $bookingCnt + $jobCnt;
+            $avg   = $total > 0 ? (($bookingAvg * $bookingCnt) + ($jobAvg * $jobCnt)) / $total : 0;
+            $provider->update(['rating' => round($avg, 2), 'total_reviews' => $total]);
+        }
+
+        // Notify provider about the new review
+        JobNotificationService::jobReviewSubmitted($job->load(['user', 'acceptedOffer.serviceProvider']));
+
+        return back()->with('success', 'Thank you for your review!');
     }
 
     // ── Private: Haversine distance (miles) ───────────────────────────────

@@ -231,6 +231,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{job}/cancel',   [JobPostController::class, 'cancel'])->name('cancel');
         Route::post('/{job}/complete', [JobPostController::class, 'complete'])->name('complete');
         Route::post('/{job}/accept-offer/{offer}', [JobPostController::class, 'acceptOffer'])->name('accept-offer');
+        Route::post('/{job}/rate', [JobPostController::class, 'rate'])->name('rate');
     });
 
     // Service Providers
@@ -388,6 +389,13 @@ Route::prefix('provider')->name('provider.')->group(function () {
             Route::get('/my-offers',               [\App\Http\Controllers\Provider\JobOfferController::class, 'myOffers'])->name('my-offers');
             Route::get('/{job}',                   [\App\Http\Controllers\Provider\JobOfferController::class, 'show'])->name('show');
             Route::post('/{job}/submit-offer',     [\App\Http\Controllers\Provider\JobOfferController::class, 'submitOffer'])->name('submit-offer');
+        });
+
+        // My Work Queue — accepted jobs the provider is working on
+        Route::prefix('work')->name('jobs.work.')->group(function () {
+            Route::get('/',           [\App\Http\Controllers\Provider\JobWorkController::class, 'index'])->name('index');
+            Route::get('/{job}',      [\App\Http\Controllers\Provider\JobWorkController::class, 'show'])->name('show');
+            Route::post('/{job}/update-status', [\App\Http\Controllers\Provider\JobWorkController::class, 'updateStatus'])->name('update-status');
         });
     });
 });
