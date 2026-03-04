@@ -4,12 +4,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\{Vehicle, MaintenanceSchedule, ServiceBooking, Expense, Alert, Reminder, VehicleRecall , FuelLog};
+use App\Models\{Vehicle, MaintenanceSchedule, ServiceJobPost, Expense, Alert, Reminder, VehicleRecall , FuelLog};
 use Carbon\Carbon;
 use App\Services\{
     DashboardStatsService,
     MaintenanceService,
-    BookingService,
     ExpenseAnalyticsService,
     AlertService,
     ReminderService,
@@ -24,7 +23,6 @@ class DashboardController extends Controller
             Request $request,
             DashboardStatsService $statsService,
             MaintenanceService $maintenanceService,
-            BookingService $bookingService,
             ExpenseAnalyticsService $expenseService,
             AlertService $alertService,
             ReminderService $reminderService,
@@ -43,7 +41,7 @@ class DashboardController extends Controller
 
                 'stats'               => $statsService->get($vehicles, $user->id),
                 'upcomingMaintenance' => $maintenanceService->upcoming($vehicleIds),
-                'recentBookings'      => $bookingService->recent($user->id),
+                'recentJobs'          => ServiceJobPost::where('user_id', $user->id)->with(['acceptedOffer.serviceProvider','vehicle'])->latest()->limit(5)->get(),
                 'recentExpenses'      => $expenseService->recent($vehicleIds),
 
                 'alerts'              => $alertService->unread($user->id),

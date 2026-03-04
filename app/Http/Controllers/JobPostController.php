@@ -9,6 +9,7 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\JobNotificationService;
+use App\Events\NewJobPosted;
 
 class JobPostController extends Controller
 {
@@ -49,7 +50,26 @@ class JobPostController extends Controller
 
         $timePreferences = ['Morning (8am–12pm)', 'Afternoon (12pm–5pm)', 'Evening (5pm–8pm)', 'Any Time'];
 
-        return view('jobs.create', compact('vehicles', 'serviceTypes', 'timePreferences'));
+        // Pre-selected provider (coming from provider profile page)
+        $assignedProvider = $request->provider_id
+            ? ServiceProvider::find($request->provider_id)
+            : null;
+
+        // Recent providers this user has worked with (from completed jobs)
+        $recentProviders = ServiceJobPost::where('user_id', $request->user()->id)
+            ->where('work_status', 'completed')
+            ->with('acceptedOffer.serviceProvider')
+            ->latest()
+            ->get()
+            ->pluck('acceptedOffer.serviceProvider')
+            ->filter()
+            ->unique('id')
+            ->take(5);
+
+        return view('jobs.create', compact(
+            'vehicles', 'serviceTypes', 'timePreferences',
+            'assignedProvider', 'recentProviders'
+        ));
     }
 
     // ── Consumer: store new job post ──────────────────────────────────────
@@ -57,18 +77,19 @@ class JobPostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'vehicle_id'       => 'required|exists:vehicles,id',
-            'service_type'     => 'required|string|max:255',
-            'description'      => 'required|string|max:2000',
-            'budget_min'       => 'nullable|numeric|min:0',
-            'budget_max'       => 'nullable|numeric|min:0',
-            'preferred_date'   => 'nullable|date|after:today',
-            'preferred_time'   => 'nullable|string|max:100',
-            'latitude'         => 'required|numeric',
-            'longitude'        => 'required|numeric',
-            'location_address' => 'nullable|string|max:500',
-            'radius'           => 'nullable|integer|min:5|max:100',
-            'customer_notes'   => 'nullable|string|max:1000',
+            'vehicle_id'           => 'required|exists:vehicles,id',
+            'service_type'         => 'required|string|max:255',
+            'description'          => 'required|string|max:2000',
+            'budget_min'           => 'nullable|numeric|min:0',
+            'budget_max'           => 'nullable|numeric|min:0',
+            'preferred_date'       => 'nullable|date|after:today',
+            'preferred_time'       => 'nullable|string|max:100',
+            'latitude'             => 'required|numeric',
+            'longitude'            => 'required|numeric',
+            'location_address'     => 'nullable|string|max:500',
+            'radius'               => 'nullable|integer|min:5|max:100',
+            'customer_notes'       => 'nullable|string|max:1000',
+            'assigned_provider_id' => 'nullable|exists:service_providers,id',
         ]);
 
         // Make sure vehicle belongs to this user
@@ -78,14 +99,22 @@ class JobPostController extends Controller
 
         $job = ServiceJobPost::create([
             ...$validated,
-            'user_id'   => $request->user()->id,
-            'radius'    => $validated['radius'] ?? 25,
-            'status'    => 'open',
-            'expires_at'=> now()->addHours(24),
+            'user_id'    => $request->user()->id,
+            'radius'     => $validated['radius'] ?? 25,
+            'status'     => 'open',
+            'expires_at' => now()->addHours(24),
         ]);
 
-        // ── Notify nearby providers ──────────────────────────────────────
-        JobNotificationService::notifyNearbyProviders($job);
+        // ── Notify providers ─────────────────────────────────────────────
+        if ($job->assigned_provider_id) {
+            // Direct assignment — only notify that one provider
+            JobNotificationService::notifyAssignedProvider($job);
+        } else {
+            // Open job — notify all nearby providers
+            JobNotificationService::notifyNearbyProviders($job);
+            // Broadcast to all providers listening on job-board channel (WebSocket)
+            broadcast(new NewJobPosted($job));
+        }
 
         $request->user()->alerts()->create([
             'user_id'    => $request->user()->id,

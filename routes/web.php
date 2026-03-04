@@ -7,7 +7,6 @@ use App\Http\Controllers\{
     VehicleController,
     VehicleDocumentController,
     MaintenanceController,
-    ServiceBookingController,
     ExpenseController,
     ServiceProviderController,
     ReminderController,
@@ -209,18 +208,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
     
-    // Service Bookings
-    Route::prefix('bookings')->name('bookings.')->group(function () {
-        Route::get('/', [ServiceBookingController::class, 'index'])->name('index');
-        Route::get('/create', [ServiceBookingController::class, 'create'])->name('create');
-        Route::post('/', [ServiceBookingController::class, 'store'])->name('store');
-        Route::get('/{booking}', [ServiceBookingController::class, 'show'])->name('show');
-        Route::get('/{booking}/edit', [ServiceBookingController::class, 'edit'])->name('edit');
-        Route::put('/{booking}', [ServiceBookingController::class, 'update'])->name('update');
-        Route::delete('/{booking}', [ServiceBookingController::class, 'destroy'])->name('destroy');
-        Route::post('/{booking}/cancel', [ServiceBookingController::class, 'cancel'])->name('cancel');
-        Route::post('/{booking}/rate', [ServiceBookingController::class, 'rate'])->name('rate');
-    });
+    // Bookings removed — use Job Board instead
     
     // ── Job Posts (InDrive-style) ────────────────────────────────────────────
     Route::prefix('jobs')->name('jobs.')->group(function () {
@@ -352,7 +340,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 use App\Http\Controllers\Provider\AuthController    as ProviderAuthController;
 use App\Http\Controllers\Provider\DashboardController as ProviderDashboardController;
-use App\Http\Controllers\Provider\BookingController   as ProviderBookingController;
 use App\Http\Controllers\Provider\ServiceController   as ProviderServiceController;
 
 Route::prefix('provider')->name('provider.')->group(function () {
@@ -368,13 +355,7 @@ Route::prefix('provider')->name('provider.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [ProviderDashboardController::class, 'index'])->name('dashboard');
 
-        // Bookings
-        Route::prefix('bookings')->name('bookings.')->group(function () {
-            Route::get('/',           [ProviderBookingController::class, 'index'])->name('index');
-            Route::get('/calendar',   [ProviderBookingController::class, 'calendar'])->name('calendar');
-            Route::get('/{booking}',  [ProviderBookingController::class, 'show'])->name('show');
-            Route::put('/{booking}/status', [ProviderBookingController::class, 'updateStatus'])->name('update-status');
-        });
+        // Provider bookings removed — use Work Queue instead
 
         // Profile & Services
         Route::get('/profile',  [ProviderServiceController::class, 'editProfile'])->name('profile');
@@ -393,9 +374,30 @@ Route::prefix('provider')->name('provider.')->group(function () {
 
         // My Work Queue — accepted jobs the provider is working on
         Route::prefix('work')->name('jobs.work.')->group(function () {
-            Route::get('/',           [\App\Http\Controllers\Provider\JobWorkController::class, 'index'])->name('index');
-            Route::get('/{job}',      [\App\Http\Controllers\Provider\JobWorkController::class, 'show'])->name('show');
-            Route::post('/{job}/update-status', [\App\Http\Controllers\Provider\JobWorkController::class, 'updateStatus'])->name('update-status');
+            Route::get('/',                        [\App\Http\Controllers\Provider\JobWorkController::class, 'index'])->name('index');
+            Route::get('/{job}',                   [\App\Http\Controllers\Provider\JobWorkController::class, 'show'])->name('show');
+            Route::post('/{job}/update-status',    [\App\Http\Controllers\Provider\JobWorkController::class, 'updateStatus'])->name('update-status');
+            Route::get('/{job}/complete',          [\App\Http\Controllers\Provider\JobWorkController::class, 'completeForm'])->name('complete-form');
+            Route::post('/{job}/complete',         [\App\Http\Controllers\Provider\JobWorkController::class, 'completeSubmit'])->name('complete-submit');
+        });
+
+        // Service Records
+        Route::prefix('service-records')->name('service-records.')->group(function () {
+            Route::get('/',                [\App\Http\Controllers\Provider\ServiceRecordController::class, 'index'])->name('index');
+            Route::get('/create',          [\App\Http\Controllers\Provider\ServiceRecordController::class, 'create'])->name('create');
+            Route::post('/',               [\App\Http\Controllers\Provider\ServiceRecordController::class, 'store'])->name('store');
+            Route::get('/{serviceRecord}/edit',   [\App\Http\Controllers\Provider\ServiceRecordController::class, 'edit'])->name('edit');
+            Route::put('/{serviceRecord}',        [\App\Http\Controllers\Provider\ServiceRecordController::class, 'update'])->name('update');
+            Route::delete('/{serviceRecord}',     [\App\Http\Controllers\Provider\ServiceRecordController::class, 'destroy'])->name('destroy');
         });
     });
+});
+
+// ── Real-Time Polling Endpoints ──────────────────────────────────────────────
+// Uses web middleware so Laravel session auth works with fetch() calls from Blade.
+// Prefix /api/realtime keeps URLs identical to what the JS expects.
+Route::middleware(['web', 'auth'])->prefix('api/realtime')->name('api.realtime.')->group(function () {
+    Route::get('/jobs/live',              [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveJobs'])->name('jobs.live');
+    Route::get('/jobs/{job}/offers/live', [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveOffers'])->name('offers.live');
+    Route::get('/provider/offers/live',   [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveProviderOffers'])->name('provider.offers.live');
 });

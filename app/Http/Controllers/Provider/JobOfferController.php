@@ -8,6 +8,7 @@ use App\Models\ServiceJobOffer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\JobNotificationService;
+use App\Events\NewOfferReceived;
 
 class JobOfferController extends Controller
 {
@@ -119,6 +120,8 @@ class JobOfferController extends Controller
 
         // Alert the consumer
         JobNotificationService::newOffer($offer->load(['jobPost.user', 'serviceProvider']));
+        // Broadcast to consumer's private channel (WebSocket)
+        broadcast(new NewOfferReceived($offer));
 
         return redirect()->route('provider.jobs.show', $job)
             ->with('success', 'Your offer has been submitted! The customer will review it shortly.');

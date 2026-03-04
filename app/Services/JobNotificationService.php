@@ -50,6 +50,25 @@ class JobNotificationService
     /**
      * When a provider submits an offer, alert the consumer.
      */
+
+    /**
+     * When a consumer assigns a job directly to one provider.
+     */
+    public static function notifyAssignedProvider(ServiceJobPost $job): void
+    {
+        $provider = $job->assignedProvider;
+        if (!$provider?->user_id) return;
+
+        Alert::create([
+            'user_id'    => $provider->user_id,
+            'type'       => 'booking',
+            'title'      => '🎯 Job Assigned Directly to You!',
+            'message'    => "A customer has specifically chosen you for a {$job->service_type} job. View and submit your offer.",
+            'action_url' => route('provider.jobs.show', $job),
+            'priority'   => 'critical',
+        ]);
+    }
+
     public static function newOffer(ServiceJobOffer $offer): void
     {
         $job  = $offer->jobPost;
@@ -106,24 +125,25 @@ class JobNotificationService
     /**
      * When a job post is cancelled, notify providers who submitted offers.
      */
-public static function jobCancelled(ServiceJobOffer $offer): void
-{
-    $job  = $offer->jobPost;
-    $prov = $offer->serviceProvider;
-    if (!$prov?->user_id) return;
+    public static function jobCancelled(ServiceJobOffer $offer): void
+    {
+        $job  = $offer->jobPost;
+        $prov = $offer->serviceProvider;
+        if (!$prov?->user_id) return;
 
-    Alert::create([
-        'user_id'    => $prov->user_id,
-        'type'       => 'booking',
-        'title'      => 'Job Post Cancelled',
-        'message'    => "The {$job->service_type} job you offered on has been cancelled by the customer.",
-        'priority'   => 'info',
-    ]);
-}
+        Alert::create([
+            'user_id'    => $prov->user_id,
+            'type'       => 'booking',
+            'title'      => 'Job Post Cancelled',
+            'message'    => "The {$job->service_type} job you offered on has been cancelled by the customer.",
+            'priority'   => 'info',
+        ]);
+    }
 
-// ─────────────────────────────────────────────────────────────────────
-// Work-status notifications (mirrors ProviderNotificationService for bookings)
-// ─────────────────────────────────────────────────────────────────────
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Work-status notifications (mirrors ProviderNotificationService for bookings)
+    // ─────────────────────────────────────────────────────────────────────
 
     /**
      * When provider changes work_status → notify the consumer.
@@ -179,13 +199,14 @@ public static function jobCancelled(ServiceJobOffer $offer): void
         $provider = $job->acceptedOffer?->serviceProvider;
         if (!$provider?->user_id) return;
 
-            Alert::create([
-                'user_id'    => $provider->user_id,
-                'type'       => 'booking',
-                'title'      => "New {$job->rating}★ Review on Job",
-                'message'    => "{$job->user->name} rated your {$job->service_type} job.",
-                'action_url' => route('provider.jobs.my-offers'),
-                'priority'   => 'info',
-            ]);
-        }
+        Alert::create([
+            'user_id'    => $provider->user_id,
+            'type'       => 'booking',
+            'title'      => "New {$job->rating}★ Review on Job",
+            'message'    => "{$job->user->name} rated your {$job->service_type} job.",
+            'action_url' => route('provider.jobs.my-offers'),
+            'priority'   => 'info',
+        ]);
     }
+
+}

@@ -151,56 +151,48 @@
                     @endforeach
                 </div>
                 @endif
-                @forelse($provider->bookings as $booking)
+                @forelse($completedJobs as $job)
                 <div class="review-item">
                     <div class="rev-head">
                         <div class="rev-stars">
                             @for($i=1;$i<=5;$i++)
-                            <svg fill="{{ $i<=$booking->rating ? 'var(--accent-warning)' : 'rgba(255,255,255,.15)' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            <svg fill="{{ $i<=$job->rating ? 'var(--accent-warning)' : 'rgba(255,255,255,.15)' }}" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                             @endfor
                         </div>
-                        <span class="rev-date">{{ $booking->updated_at->format('M d, Y') }}</span>
+                        <span class="rev-date">{{ $job->updated_at->format('M d, Y') }}</span>
                     </div>
-                    @if($booking->review)<p class="rev-text">{{ $booking->review }}</p>@endif
-                    <div class="rev-svc">Service: {{ $booking->service_type }}</div>
+                    @if($job->review)<p class="rev-text">{{ $job->review }}</p>@endif
+                    <div class="rev-svc">Service: {{ $job->service_type }}</div>
                 </div>
                 @empty
-                <p style="color:var(--text-tertiary);font-size:.875rem;text-align:center;padding:2rem 0;">No reviews yet — be the first to book!</p>
+                <p style="color:var(--text-tertiary);font-size:.875rem;text-align:center;padding:2rem 0;">No reviews yet. Post a job to be the first!</p>
                 @endforelse
             </div>
         </div>
 
         <div class="booking-sticky">
             <div class="card">
-                <div class="card-title">Book a Service</div>
-                <form action="{{ route('bookings.create') }}" method="GET">
-                    <input type="hidden" name="service_provider_id" value="{{ $provider->id }}">
-                    <div class="form-group">
-                        <label class="form-label">Select Your Vehicle</label>
-                        <select name="vehicle_id" class="form-select" required>
-                            <option value="">Choose a vehicle...</option>
-                            @foreach($userVehicles as $v)
-                            <option value="{{ $v->id }}">{{ $v->full_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    @if(!empty($bookedSlots))
-                    <div class="form-group">
-                        <div class="form-label">Busy Dates (next 14 days)</div>
-                        <div class="booked-dates">
-                            @foreach(array_unique($bookedSlots) as $slot)
-                            <span class="booked-date">{{ \Carbon\Carbon::parse($slot)->format('M d') }}</span>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endif
-                    <button type="submit" class="btn-book">Continue to Booking →</button>
-                </form>
-                <div class="phone-cta">
-                    <div style="font-size:.8rem;color:var(--text-tertiary);margin-bottom:.5rem;">Or call directly</div>
+                <div class="card-title">🎯 Post a Job for this Provider</div>
+                <p style="font-size:.825rem;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;">Directly assign your job to <strong>{{ $provider->name }}</strong>. They'll receive a priority notification and submit their offer.</p>
+                <a href="{{ route('jobs.create', ['provider_id' => $provider->id]) }}"
+                   class="btn-book" style="display:block;text-align:center;text-decoration:none;">
+                    Post a Job → Direct Assign
+                </a>
+                <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-color);text-align:center;">
+                    <a href="{{ route('jobs.create') }}" style="font-size:.8rem;color:var(--text-tertiary);text-decoration:none;">
+                        Or post to all nearby providers →
+                    </a>
+                </div>
+            </div>
+
+            @if($provider->phone)
+            <div class="card" style="margin-top:1rem;">
+                <div class="phone-cta" style="padding:0;border:none;margin:0;">
+                    <div style="font-size:.8rem;color:var(--text-tertiary);margin-bottom:.5rem;text-align:center;">Contact directly</div>
                     <a href="tel:{{ $provider->phone }}" class="phone-num">{{ $provider->phone }}</a>
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>

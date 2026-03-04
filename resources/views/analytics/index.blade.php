@@ -139,7 +139,7 @@
                     </div>
 
                     <div class="prediction-footer">
-                        <a href="{{ route('bookings.create', ['vehicle_id' => $selectedVehicle->id]) }}" class="btn-book">
+                        <a href="{{ route('jobs.create', ['vehicle_id' => $selectedVehicle->id]) }}" class="btn-book">
                             Book Service
                         </a>
                     </div>

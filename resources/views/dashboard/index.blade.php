@@ -116,8 +116,8 @@
                     <span class="stat-trend neutral">On schedule</span>
                 </div>
                 <div class="stat-body">
-                    <h3 class="stat-title">Active Bookings</h3>
-                    <p class="stat-number">{{ $stats['active_bookings'] }}</p>
+                    <h3 class="stat-title">Active Jobs</h3>
+                    <p class="stat-number">{{ $stats['active_jobs'] }}</p>
                     <p class="stat-subtitle">Scheduled Services</p>
                 </div>
                 <div class="stat-footer">
@@ -398,7 +398,7 @@
 
         <!-- Activity Grid -->
         <div class="activity-grid fade-in-up" style="animation-delay: 0.5s;">
-            <!-- Recent Bookings -->
+            <!-- Recent Jobs -->
             <div class="activity-panel">
                 <div class="panel-header">
                     <div class="header-left">
@@ -407,21 +407,21 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                         </div>
-                        <h2 class="panel-title">Recent Bookings</h2>
+                        <h2 class="panel-title">Recent Jobs</h2>
                     </div>
-                    <a href="{{ route('bookings.index') }}" class="panel-link">View All</a>
+                    <a href="{{ route('jobs.index') }}" class="panel-link">View All</a>
                 </div>
                 <div class="activity-list">
-                    @forelse($recentBookings as $booking)
+                    @forelse($recentJobs as $job)
                     <div class="activity-item">
                         <div class="activity-dot"></div>
                         <div class="activity-content">
-                            <h4>{{ $booking->service_type }}</h4>
-                            <p class="activity-subtitle">{{ $booking->serviceProvider->name }}</p>
-                            <p class="activity-time">{{ $booking->scheduled_date->format('M d, Y g:i A') }}</p>
+                            <h4>{{ $job->service_type }}</h4>
+                            <p class="activity-subtitle">{{ $job->acceptedOffer?->serviceProvider?->name ?? "Open" }}</p>
+                            <p class="activity-time">{{ $job->created_at->format('M d, Y') }}</p>
                         </div>
-                        <span class="activity-badge {{ $booking->status }}">
-                            {{ ucfirst($booking->status) }}
+                        <span class="activity-badge {{ $job->status }}">
+                            {{ ucfirst($job->status) }}
                         </span>
                     </div>
                     @empty
@@ -429,7 +429,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
-                        <p>No bookings yet</p>
+                        <p>No jobs posted yet</p>
                     </div>
                     @endforelse
                 </div>
@@ -533,13 +533,13 @@
                 <h2 class="section-title">Quick Actions</h2>
             </div>
             <div class="actions-grid">
-                <a href="{{ route('bookings.create') }}" class="action-card">
+                <a href="{{ route('jobs.create') }}" class="action-card">
                     <div class="action-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <span>Book Service</span>
+                    <span>Post a Job</span>
                     <div class="action-arrow">→</div>
                 </a>
 

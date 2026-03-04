@@ -3,17 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\ServiceProvider;
+use App\Models\ServiceJobPost;
 use Illuminate\Http\Request;
 
 class ServiceProviderController extends Controller
 {
     public function index(Request $request)
     {
-
-
         $query = ServiceProvider::active();
-
-        
 
         if ($request->latitude && $request->longitude) {
             $lat    = $request->latitude;
@@ -34,8 +31,8 @@ class ServiceProviderController extends Controller
             $query->select('*');
         }
 
-        $query->when($request->type, fn($q, $type) => $q->where('type', $type));
-        $query->when($request->verified, fn($q) => $q->verified());
+        $query->when($request->type,     fn($q, $type) => $q->where('type', $type));
+        $query->when($request->verified, fn($q)        => $q->verified());
 
         if ($request->min_rating) {
             $query->where('rating', '>=', $request->min_rating);
@@ -48,7 +45,6 @@ class ServiceProviderController extends Controller
                       ->orWhere('services_offered', 'like', "%{$search}%");
             });
         });
-
 
         $sort = $request->sort ?? 'rating';
         switch ($sort) {
@@ -80,44 +76,41 @@ class ServiceProviderController extends Controller
             'other'         => 'Other',
         ];
 
-
         return view('providers.index', compact('providers', 'types', 'stats'));
     }
 
     public function show(ServiceProvider $provider)
     {
-        $provider->load(['bookings' => function ($query) {
-            $query->where('status', 'completed')
-                  ->whereNotNull('rating')
-                  ->latest()
-                  ->limit(15);
-        }]);
+        // Reviews: from completed job posts rated by customers
+        $completedJobs = ServiceJobPost::whereHas('offers', function ($q) use ($provider) {
+                $q->where('service_provider_id', $provider->id)->where('status', 'accepted');
+            })
+            ->where('work_status', 'completed')
+            ->whereNotNull('rating')
+            ->latest()
+            ->limit(15)
+            ->get();
 
+        // Rating breakdown from job posts
         $ratingBreakdown = [];
         for ($i = 5; $i >= 1; $i--) {
-            $ratingBreakdown[$i] = $provider->bookings()
-                ->where('status', 'completed')
+            $ratingBreakdown[$i] = ServiceJobPost::whereHas('offers', function ($q) use ($provider) {
+                    $q->where('service_provider_id', $provider->id)->where('status', 'accepted');
+                })
+                ->where('work_status', 'completed')
                 ->where('rating', $i)
                 ->count();
         }
         $totalRated = array_sum($ratingBreakdown);
 
-        $bookedSlots = $provider->bookings()
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where('scheduled_date', '>=', now())
-            ->where('scheduled_date', '<=', now()->addDays(14))
-            ->pluck('scheduled_date')
-            ->map(fn($d) => $d->format('Y-m-d'))
-            ->toArray();
-
-        $userVehicles   = auth()->user()->vehicles()->active()->get();
-        $servicesArray  = is_array($provider->services_offered)
+        $userVehicles  = auth()->user()->vehicles()->active()->get();
+        $servicesArray = is_array($provider->services_offered)
             ? $provider->services_offered
             : array_filter(explode(',', $provider->services_offered ?? ''));
 
         return view('providers.show', compact(
             'provider', 'userVehicles', 'ratingBreakdown',
-            'totalRated', 'bookedSlots', 'servicesArray'
+            'totalRated', 'servicesArray', 'completedJobs'
         ));
     }
 

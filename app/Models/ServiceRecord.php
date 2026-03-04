@@ -42,4 +42,9 @@ class ServiceRecord extends Model
     {
         return $this->belongsTo(ServiceProvider::class);
     }
+
+    public function expense(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Expense::class);
+    }
 }

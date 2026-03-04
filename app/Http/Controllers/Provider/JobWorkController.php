@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceJobPost;
 use App\Models\ServiceJobOffer;
 use App\Models\ServiceRecord;
+use App\Models\MaintenanceSchedule;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\JobNotificationService;
@@ -78,6 +80,7 @@ class JobWorkController extends Controller
      */
     public function updateStatus(Request $request, ServiceJobPost $job)
     {
+        return 1;
         $provider = $this->provider();
 
         $offer = ServiceJobOffer::where('job_post_id', $job->id)
@@ -139,6 +142,178 @@ class JobWorkController extends Controller
         return redirect()->route('provider.jobs.work.show', $job)
             ->with('success', $this->successMessage($new));
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Completion flow: GET shows combined form, POST saves everything
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function completeForm(ServiceJobPost $job)
+    {
+        $provider = $this->provider();
+
+        // Must be accepted offer for this provider
+        $offer = ServiceJobOffer::where('job_post_id', $job->id)
+            ->where('service_provider_id', $provider->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        // Only allow from in_progress
+        abort_unless(($job->work_status ?? 'pending') === 'in_progress', 403, 'Job must be in progress to complete.');
+
+        // Load existing service record if already created (re-edit scenario)
+        $existingRecord = ServiceRecord::where('job_post_id', $job->id)->first();
+
+        $job->load(['vehicle', 'user', 'acceptedOffer.serviceProvider']);
+
+        return view('provider.jobs.complete', compact('job', 'offer', 'provider', 'existingRecord'));
+    }
+
+    public function completeSubmit(Request $request, ServiceJobPost $job)
+    {
+        $provider = $this->provider();
+
+        $offer = ServiceJobOffer::where('job_post_id', $job->id)
+            ->where('service_provider_id', $provider->id)
+            ->where('status', 'accepted')
+            ->firstOrFail();
+
+        abort_unless(($job->work_status ?? 'pending') === 'in_progress', 403);
+
+        $validated = $request->validate([
+            // Job completion fields
+            'final_cost'           => 'required|numeric|min:0.01',
+            'provider_notes'       => 'nullable|string|max:1000',
+            // Service record fields
+            'service_type'         => 'required|string|max:255',
+            'description'          => 'required|string|max:2000',
+            'service_date'         => 'required|date',
+            'mileage_at_service'   => 'nullable|integer|min:0',
+            'invoice_number'       => 'nullable|string|max:100',
+            'parts_replaced'       => 'nullable|string|max:1000',
+            'notes'                => 'nullable|string|max:2000',
+            'next_service_date'    => 'nullable|date',
+            'next_service_mileage' => 'nullable|integer|min:0',
+        ]);
+
+        DB::transaction(function () use ($validated, $job, $provider) {
+
+            // ── 1. Mark job complete ─────────────────────────────────────────────
+            $job->update([
+                'work_status'        => 'completed',
+                'status'             => 'completed',
+                'final_cost'         => $validated['final_cost'],
+                'provider_notes'     => $validated['provider_notes'] ?? null,
+                'work_completed_at'  => now(),
+            ]);
+
+            // ── 2. Upsert service record (create or update existing) ─────────────
+            $partsArray = !empty($validated['parts_replaced'])
+                ? array_values(array_filter(array_map('trim', explode(',', $validated['parts_replaced']))))
+                : null;
+
+            $record = ServiceRecord::updateOrCreate(
+                ['job_post_id' => $job->id],
+                [
+                    'vehicle_id'           => $job->vehicle_id,
+                    'service_provider_id'  => $provider->id,
+                    'service_type'         => $validated['service_type'],
+                    'description'          => $validated['description'],
+                    'service_date'         => $validated['service_date'],
+                    'mileage_at_service'   => $validated['mileage_at_service'] ?? null,
+                    'cost'                 => $validated['final_cost'],
+                    'invoice_number'       => $validated['invoice_number'] ?? null,
+                    'parts_replaced'       => $partsArray,
+                    'notes'                => $validated['notes'] ?? null,
+                    'next_service_date'    => $validated['next_service_date'] ?? null,
+                    'next_service_mileage' => $validated['next_service_mileage'] ?? null,
+                ]
+            );
+
+            // ── 3. Update vehicle mileage ────────────────────────────────────────
+            $vehicle = $job->vehicle;
+            if ($vehicle && !empty($validated['mileage_at_service'])) {
+                $vehicle->updateMileage((int) $validated['mileage_at_service']);
+            }
+
+            // ── 4. Upsert expense record ─────────────────────────────────────────
+            if ($vehicle) {
+                $expense = $record->expense;
+                $expenseData = [
+                    'category'         => 'maintenance',
+                    'description'      => $validated['service_type'] . ' — ' . $validated['description'],
+                    'amount'           => $validated['final_cost'],
+                    'expense_date'     => $validated['service_date'],
+                    'odometer_reading' => $validated['mileage_at_service'] ?? null,
+                ];
+                if ($expense) {
+                    $expense->update($expenseData);
+                } else {
+                    $vehicle->expenses()->create(array_merge(
+                        $expenseData,
+                        ['service_record_id' => $record->id]
+                    ));
+                }
+            }
+
+            // ── 5. Maintenance: complete matching schedule, schedule next ────────
+            if ($vehicle) {
+                $this->handleMaintenanceOnComplete($vehicle, $validated);
+            }
+
+            // ── 6. Notify consumer + refresh provider rating ─────────────────────
+            $job->refresh()->load(['user', 'vehicle', 'acceptedOffer.serviceProvider']);
+            JobNotificationService::workStatusUpdated($job, 'completed');
+            $this->refreshProviderRating($provider);
+        });
+
+        return redirect()->route('provider.jobs.work.show', $job)
+            ->with('success', '🎉 Job completed! Service record, expenses, and maintenance all updated.');
+    }
+
+    protected function handleMaintenanceOnComplete(\App\Models\Vehicle $vehicle, array $data): void
+    {
+        $serviceType    = $data['service_type'];
+        $hasNextDate    = !empty($data['next_service_date']);
+        $hasNextMileage = !empty($data['next_service_mileage']);
+
+        $schedule = MaintenanceSchedule::where('vehicle_id', $vehicle->id)
+            ->where('service_type', $serviceType)
+            ->whereIn('status', ['pending', 'overdue', 'scheduled'])
+            ->orderByRaw("FIELD(status, 'overdue', 'pending', 'scheduled')")
+            ->orderBy('due_date')
+            ->first();
+
+        if ($schedule) {
+            $schedule->markCompleted(); // auto-creates next if recurring
+
+            if ($hasNextDate || $hasNextMileage) {
+                $next = MaintenanceSchedule::where('vehicle_id', $vehicle->id)
+                    ->where('service_type', $serviceType)
+                    ->where('status', 'pending')
+                    ->latest()->first();
+
+                if ($next) {
+                    $updates = [];
+                    if ($hasNextDate)    $updates['due_date']    = $data['next_service_date'];
+                    if ($hasNextMileage) $updates['due_mileage'] = $data['next_service_mileage'];
+                    $next->update($updates);
+                }
+            }
+        } elseif ($hasNextDate || $hasNextMileage) {
+            MaintenanceSchedule::create([
+                'vehicle_id'   => $vehicle->id,
+                'service_type' => $serviceType,
+                'description'  => "Next {$serviceType} — scheduled after service on " .
+                                   \Carbon\Carbon::parse($data['service_date'])->format('M d, Y'),
+                'due_date'     => $hasNextDate    ? $data['next_service_date']    : null,
+                'due_mileage'  => $hasNextMileage ? $data['next_service_mileage'] : null,
+                'priority'     => 'medium',
+                'status'       => 'pending',
+                'is_recurring' => false,
+            ]);
+        }
+    }
+
 
     private function generateRevenueRecord(ServiceJobPost $job, $provider): void
     {

@@ -59,10 +59,41 @@
     <div class="page-title">Post a <span>Service Job</span></div>
     <p class="page-sub">Tell us what you need — nearby providers will compete to offer you the best price.</p>
 
+    {{-- Assigned Provider Banner --}}
+    @if($assignedProvider)
+    <div style="background:linear-gradient(135deg,rgba(0,255,170,.1),rgba(0,212,255,.06));border:1px solid rgba(0,255,170,.3);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <span style="font-size:2rem;">🎯</span>
+            <div>
+                <div style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:.9rem;color:var(--accent-green);">Direct Job Assignment</div>
+                <div style="font-size:.825rem;color:var(--text-secondary);">This job will be sent directly to <strong>{{ $assignedProvider->name }}</strong> ({{ ucfirst(str_replace('_',' ',$assignedProvider->type)) }})</div>
+            </div>
+        </div>
+        <a href="{{ route('jobs.create') }}" style="font-size:.8rem;color:var(--text-tertiary);text-decoration:none;white-space:nowrap;">✕ Post to all providers instead</a>
+    </div>
+    @elseif($recentProviders->isNotEmpty())
+    <div style="background:var(--card-bg);border:1px solid var(--border-color);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:700;margin-bottom:1rem;color:var(--text-secondary);">🔄 Recent Providers — Post Again?</div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+            @foreach($recentProviders as $rp)
+            <a href="{{ route('jobs.create', ['provider_id' => $rp->id]) }}"
+               style="display:inline-flex;align-items:center;gap:.625rem;padding:.625rem 1rem;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:10px;text-decoration:none;transition:all .3s;"
+               onmouseover="this.style.borderColor='rgba(0,212,255,.5)'" onmouseout="this.style.borderColor='rgba(0,212,255,.2)'">
+                <div>
+                    <div style="font-size:.8rem;font-weight:700;color:var(--text-primary);">{{ $rp->name }}</div>
+                    <div style="font-size:.72rem;color:var(--text-tertiary);">{{ ucfirst(str_replace('_',' ',$rp->type)) }}@if($rp->rating > 0) · ★{{ number_format($rp->rating,1) }}@endif</div>
+                </div>
+                <svg width="14" height="14" fill="none" stroke="var(--accent-cyan)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            @endforeach
+        </div>
+    </div>
+    @else
     <div class="info-box">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <div>Your job post will be visible to verified service providers within your selected radius for <strong>24 hours</strong>. Once you accept an offer, the rest are automatically declined.</div>
     </div>
+    @endif
 
     <form method="POST" action="{{ route('jobs.store') }}" id="jobForm">
         @csrf
@@ -70,6 +101,10 @@
         {{-- Hidden location fields --}}
         <input type="hidden" name="latitude"  id="lat_input"  value="{{ old('latitude') }}">
         <input type="hidden" name="longitude" id="lng_input"  value="{{ old('longitude') }}">
+        {{-- Assigned provider (if coming from provider profile) --}}
+        @if($assignedProvider)
+        <input type="hidden" name="assigned_provider_id" value="{{ $assignedProvider->id }}">
+        @endif
 
         {{-- Vehicle & Service --}}
         <div class="form-card">

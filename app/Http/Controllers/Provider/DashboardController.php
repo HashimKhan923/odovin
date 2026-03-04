@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Provider;
 
 use App\Http\Controllers\Controller;
+use App\Models\ServiceJobOffer;
+use App\Models\ServiceJobPost;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
@@ -13,54 +15,64 @@ class DashboardController extends Controller
         return Auth::user()->serviceProvider;
     }
 
-    // rest of the index() method stays identical — just the provider() helper changed
     public function index()
     {
         $provider = $this->provider();
         $month    = Carbon::now()->startOfMonth();
 
+        // All accepted offers for this provider
+        $acceptedOfferIds = ServiceJobOffer::where('service_provider_id', $provider->id)
+            ->where('status', 'accepted')
+            ->pluck('job_post_id');
+
         $stats = [
-            'total_bookings'  => $provider->bookings()->count(),
-            'pending'         => $provider->bookings()->where('status', 'pending')->count(),
-            'confirmed'       => $provider->bookings()->where('status', 'confirmed')->count(),
-            'in_progress'     => $provider->bookings()->where('status', 'in_progress')->count(),
-            'completed'       => $provider->bookings()->where('status', 'completed')->count(),
-            'today'           => $provider->bookings()->whereDate('scheduled_date', today())->count(),
-            'this_week'       => $provider->bookings()
-                ->whereBetween('scheduled_date', [now()->startOfWeek(), now()->endOfWeek()])->count(),
-            'this_month'      => $provider->bookings()->where('scheduled_date', '>=', $month)->count(),
-            'monthly_revenue' => $provider->bookings()
-                ->where('status', 'completed')->where('scheduled_date', '>=', $month)->sum('final_cost'),
-            'total_revenue'   => $provider->bookings()->where('status', 'completed')->sum('final_cost'),
+            'total_jobs'      => $acceptedOfferIds->count(),
+            'pending'         => ServiceJobPost::whereIn('id', $acceptedOfferIds)->where('work_status', 'pending')->count(),
+            'confirmed'       => ServiceJobPost::whereIn('id', $acceptedOfferIds)->where('work_status', 'confirmed')->count(),
+            'in_progress'     => ServiceJobPost::whereIn('id', $acceptedOfferIds)->where('work_status', 'in_progress')->count(),
+            'completed'       => ServiceJobPost::whereIn('id', $acceptedOfferIds)->where('work_status', 'completed')->count(),
+            'cancelled'       => ServiceJobPost::whereIn('id', $acceptedOfferIds)->where('work_status', 'cancelled')->count(),
+            'monthly_revenue' => ServiceJobPost::whereIn('id', $acceptedOfferIds)
+                ->where('work_status', 'completed')->where('work_completed_at', '>=', $month)->sum('final_cost'),
+            'total_revenue'   => ServiceJobPost::whereIn('id', $acceptedOfferIds)
+                ->where('work_status', 'completed')->sum('final_cost'),
             'avg_rating'      => $provider->rating,
             'total_reviews'   => $provider->total_reviews,
-            'cancelled'       => $provider->bookings()->where('status', 'cancelled')->count(),
+            'open_offers'     => ServiceJobOffer::where('service_provider_id', $provider->id)
+                ->where('status', 'pending')->count(),
         ];
 
-        $recentBookings = $provider->bookings()
-            ->with(['vehicle', 'user'])->latest('scheduled_date')->limit(8)->get();
+        // Recent work queue items
+        $recentJobs = ServiceJobPost::whereIn('id', $acceptedOfferIds)
+            ->with(['vehicle', 'user',
+                'offers' => fn($q) => $q->where('service_provider_id', $provider->id)])
+            ->latest()->limit(8)->get();
 
-        $todayBookings = $provider->bookings()
-            ->with(['vehicle', 'user'])->whereDate('scheduled_date', today())->orderBy('scheduled_date')->get();
+        // Active jobs (in queue right now)
+        $activeJobs = ServiceJobPost::whereIn('id', $acceptedOfferIds)
+            ->whereIn('work_status', ['pending', 'confirmed', 'in_progress'])
+            ->with(['vehicle', 'user'])
+            ->latest()->limit(5)->get();
 
+        // Revenue chart (last 6 months)
         $revenueChart = [];
         for ($i = 5; $i >= 0; $i--) {
             $m = Carbon::now()->subMonths($i);
+            $monthIds = ServiceJobPost::whereIn('id', $acceptedOfferIds)
+                ->where('work_status', 'completed')
+                ->whereYear('work_completed_at', $m->year)
+                ->whereMonth('work_completed_at', $m->month)
+                ->pluck('id');
+
             $revenueChart[] = [
                 'month'   => $m->format('M'),
-                'revenue' => $provider->bookings()
-                    ->where('status', 'completed')
-                    ->whereYear('scheduled_date', $m->year)
-                    ->whereMonth('scheduled_date', $m->month)
-                    ->sum('final_cost'),
-                'count' => $provider->bookings()
-                    ->whereYear('scheduled_date', $m->year)
-                    ->whereMonth('scheduled_date', $m->month)
-                    ->count(),
+                'revenue' => ServiceJobPost::whereIn('id', $monthIds)->sum('final_cost'),
+                'count'   => $monthIds->count(),
             ];
         }
 
-        $topServices = $provider->bookings()
+        // Top services
+        $topServices = ServiceJobPost::whereIn('id', $acceptedOfferIds)
             ->selectRaw('service_type, count(*) as count')
             ->groupBy('service_type')
             ->orderByDesc('count')
@@ -68,25 +80,18 @@ class DashboardController extends Controller
             ->pluck('count', 'service_type')
             ->toArray();
 
-        $recentReviews = $provider->bookings()
+        // Recent reviews
+        $recentReviews = ServiceJobPost::whereIn('id', $acceptedOfferIds)
             ->with(['user', 'vehicle'])
-            ->where('status', 'completed')
+            ->where('work_status', 'completed')
             ->whereNotNull('rating')
             ->latest()
             ->limit(5)
             ->get();
 
-        $upcomingBookings = $provider->bookings()
-            ->with(['vehicle', 'user'])
-            ->whereIn('status', ['confirmed', 'pending'])
-            ->where('scheduled_date', '>=', now())
-            ->orderBy('scheduled_date')
-            ->limit(5)
-            ->get();
-
         return view('provider.dashboard.index', compact(
-            'provider', 'stats', 'recentBookings', 'todayBookings',
-            'revenueChart', 'topServices', 'recentReviews', 'upcomingBookings'
+            'provider', 'stats', 'recentJobs', 'activeJobs',
+            'revenueChart', 'topServices', 'recentReviews'
         ));
     }
 }

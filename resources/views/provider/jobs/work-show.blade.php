@@ -156,12 +156,12 @@
                 $nextOptions = match($ws) {
                     'pending'     => ['confirmed' => '✅ Confirm Job', 'cancelled' => '✕ Cancel'],
                     'confirmed'   => ['in_progress' => '🔧 Start Work', 'cancelled' => '✕ Cancel'],
-                    'in_progress' => ['completed' => '🎉 Mark Completed'],
+                    'in_progress' => [],  // completed handled by dedicated form link below
                     default => [],
                 };
             @endphp
 
-            @if(!empty($nextOptions) && !in_array($ws, ['completed','cancelled']))
+            @if(!in_array($ws, ['completed','cancelled']))
             <form action="{{ route('provider.jobs.work.update-status', $job) }}" method="POST" id="statusForm">
                 @csrf
 
@@ -214,9 +214,15 @@
                 Start the work when you're ready. The customer will be notified when you begin.
             </div>
             @elseif($ws === 'in_progress')
+            <a href="{{ route('provider.jobs.work.complete-form', $job) }}"
+               style="display:block;width:100%;padding:1rem;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));border:none;border-radius:12px;color:#000;font-family:'Orbitron',sans-serif;font-weight:800;font-size:.875rem;letter-spacing:.05em;text-align:center;text-decoration:none;transition:all .3s;margin-bottom:1rem;"
+               onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 25px rgba(0,212,255,.4)'"
+               onmouseout="this.style.transform='';this.style.boxShadow=''">
+                🎉 Complete &amp; Fill Service Record
+            </a>
             <div class="hint-box hint-warning">
                 <strong>🔧 Work in Progress</strong><br>
-                Enter the final cost and mark as completed when the job is done. A service record will be automatically generated.
+                Click above to complete the job and fill in the full service record — mileage, parts, next service, and more — all in one step.
             </div>
             @endif
 

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use App\Models\ServiceProvider;
 
 class ServiceJobPost extends Model
 {
@@ -17,6 +18,8 @@ class ServiceJobPost extends Model
         'budget_min', 'budget_max', 'preferred_date', 'preferred_time',
         'latitude', 'longitude', 'location_address', 'radius',
         'status', 'accepted_offer_id', 'expires_at', 'customer_notes',
+        // Work tracking
+        'assigned_provider_id',
         // Work tracking
         'work_status', 'final_cost', 'provider_notes',
         'rating', 'review', 'work_started_at', 'work_completed_at',
@@ -62,6 +65,11 @@ class ServiceJobPost extends Model
     public function acceptedOffer(): BelongsTo
     {
         return $this->belongsTo(ServiceJobOffer::class, 'accepted_offer_id');
+    }
+
+    public function assignedProvider(): BelongsTo
+    {
+        return $this->belongsTo(ServiceProvider::class, 'assigned_provider_id');
     }
 
     // ── Scopes ─────────────────────────────────────────────────────────────

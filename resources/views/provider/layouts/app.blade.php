@@ -256,20 +256,6 @@
             </div>
 
             <div class="sp-nav-section">
-                <div class="sp-nav-label">Bookings</div>
-                <a href="{{ route('provider.bookings.index') }}" class="sp-nav-link {{ request()->routeIs('provider.bookings.index') ? 'active' : '' }}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    All Bookings
-                    @php $pending = Auth::user()->serviceProvider ? \App\Models\ServiceBooking::where('service_provider_id', Auth::user()->serviceProvider->id)->where('status','pending')->count() : 0 @endphp
-                    @if($pending > 0)<span class="sp-badge">{{ $pending }}</span>@endif
-                </a>
-                <a href="{{ route('provider.bookings.calendar') }}" class="sp-nav-link {{ request()->routeIs('provider.bookings.calendar') ? 'active' : '' }}">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    Calendar View
-                </a>
-            </div>
-
-            <div class="sp-nav-section">
                 <div class="sp-nav-label">Job Board</div>
                 <a href="{{ route('provider.jobs.index') }}" class="sp-nav-link {{ request()->routeIs('provider.jobs.index') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -291,6 +277,10 @@
 
             <div class="sp-nav-section">
                 <div class="sp-nav-label">Management</div>
+                <a href="{{ route('provider.service-records.index') }}" class="sp-nav-link {{ request()->routeIs('provider.service-records.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Service Records
+                </a>
                 <a href="{{ route('provider.profile') }}" class="sp-nav-link {{ request()->routeIs('provider.profile') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     Business Profile

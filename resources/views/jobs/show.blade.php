@@ -215,14 +215,14 @@
             </div>
             @endif
 
-            <div class="card">
+            <div class="card" id="offersCard">
                 <div class="card-title">
                     Offers Received
-                    <span style="font-family:'Chakra Petch',sans-serif;font-size:.8rem;font-weight:400;color:var(--text-tertiary);">({{ $pendingOffers->count() + ($acceptedOffer?1:0) + $rejectedOffers->count() }})</span>
+                    <span id="offerCount" style="font-family:'Chakra Petch',sans-serif;font-size:.8rem;font-weight:400;color:var(--text-tertiary);">({{ $pendingOffers->count() + ($acceptedOffer?1:0) + $rejectedOffers->count() }})</span>
                 </div>
 
                 @if($job->isOpen() && $pendingOffers->isEmpty() && !$acceptedOffer)
-                <div class="waiting-hint">
+                <div class="waiting-hint" id="waitingHint">
                     <div class="spinner"></div>
                     <p>Waiting for providers to send offers...<br><small style="color:var(--text-tertiary);">Nearby providers have been notified</small></p>
                 </div>
@@ -252,6 +252,7 @@
                 @endif
 
                 {{-- Pending offers (only visible before acceptance) --}}
+                <div id="pendingOffersList">
                 @foreach($pendingOffers as $offer)
                 @php $prov = $offer->serviceProvider; @endphp
                 <div class="offer-card" id="offer-{{ $offer->id }}">
@@ -284,6 +285,7 @@
                     @endif
                 </div>
                 @endforeach
+                </div>{{-- #pendingOffersList --}}
 
                 @if($rejectedOffers->isNotEmpty())
                 <details style="margin-top:1rem;">
@@ -362,4 +364,131 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
     });
 });
 </script>
+<script>
+(function() {
+    // ── Consumer job page: real-time offer polling ──────────────────────
+    // Runs only on open jobs. Polls every 5s for new offers.
+    // No WebSocket needed — pure HTTP polling fallback.
+
+    const IS_OPEN  = {{ $job->isOpen() ? 'true' : 'false' }};
+    const JOB_ID   = {{ $job->id }};
+    const CSRF     = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+    if (!IS_OPEN) return; // job already accepted/cancelled — stop
+
+    // Seed with already-rendered offer IDs so we don't duplicate them
+    const seen = new Set([
+        @foreach($pendingOffers as $o){{ (int)$o->id }},@endforeach
+        @if($acceptedOffer){{ (int)$acceptedOffer->id }},@endif
+    ]);
+
+    // ── Toast notification ──────────────────────────────────────────────
+    function toast(title, body) {
+        const el = document.createElement('div');
+        el.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:var(--card-bg,#1a2235);border:1px solid rgba(0,212,255,.4);border-radius:14px;padding:1rem 1.25rem;min-width:280px;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .4s ease;';
+        el.innerHTML = `<div style="font-weight:700;font-size:.875rem;color:#fff;margin-bottom:.25rem;">${title}</div><div style="font-size:.8rem;color:#aaa;">${body}</div>`;
+        document.body.appendChild(el);
+        setTimeout(() => { el.style.animation = 'toastOut .4s ease forwards'; setTimeout(() => el.remove(), 400); }, 5000);
+    }
+
+    // ── Build offer card HTML ───────────────────────────────────────────
+    function buildCard(o) {
+        const p = o.provider;
+        const badge = p.is_verified ? `<span style="font-size:.72rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent-cyan);padding:.15rem .5rem;border-radius:10px;">✓ Verified</span>` : '';
+        const stars = p.rating ? `<span style="font-size:.78rem;color:#ffaa00;">★ ${parseFloat(p.rating).toFixed(1)}</span>` : '';
+        const url   = o.accept_url || `/jobs/${JOB_ID}/accept-offer/${o.offer_id}`;
+        return `<div class="offer-card" id="offer-${o.offer_id}" style="animation:offerSlideIn .5s ease;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;">
+                <div>
+                    <div style="font-weight:700;font-size:.95rem;color:var(--text-primary);">${p.name}</div>
+                    <div style="display:flex;gap:.5rem;align-items:center;margin-top:.35rem;flex-wrap:wrap;">
+                        <span style="font-size:.78rem;color:var(--text-tertiary);">${p.type||''}</span>
+                        ${badge}${stars}
+                        ${p.total_reviews?`<span style="font-size:.72rem;color:var(--text-tertiary);">(${p.total_reviews} reviews)</span>`:''}
+                    </div>
+                </div>
+                <div class="offer-price">$${parseFloat(o.offered_price).toFixed(2)}</div>
+            </div>
+            <div class="offer-details">
+                <div><span style="color:var(--text-tertiary);">Available</span><br><strong>${o.available_date}${o.available_time?' · '+o.available_time:''}</strong></div>
+                ${o.estimated_duration?`<div><span style="color:var(--text-tertiary);">Duration</span><br><strong>${o.estimated_duration} min</strong></div>`:''}
+            </div>
+            ${o.message?`<div class="offer-message">"${o.message}"</div>`:''}
+            <div style="margin-top:1rem;">
+                <form method="POST" action="${url}">
+                    <input type="hidden" name="_token" value="${CSRF}">
+                    <button type="submit" style="width:100%;padding:.75rem;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));border:none;border-radius:10px;color:#000;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.8rem;cursor:pointer;">✓ Accept Offer</button>
+                </form>
+            </div>
+        </div>`;
+    }
+
+    // ── Insert offer into DOM ───────────────────────────────────────────
+    function addOffer(o) {
+        const id = parseInt(o.offer_id);
+        if (seen.has(id)) return;
+        seen.add(id);
+
+        // Hide the "waiting" spinner if visible
+        const hint = document.getElementById('waitingHint');
+        if (hint) hint.style.display = 'none';
+
+        // Ensure the list container exists — create it if not
+        let list = document.getElementById('pendingOffersList');
+        if (!list) {
+            const card = document.querySelector('.card'); // fallback: first card
+            list = document.createElement('div');
+            list.id = 'pendingOffersList';
+            if (card) card.appendChild(list);
+            else document.body.appendChild(list);
+        }
+
+        list.insertAdjacentHTML('beforeend', buildCard(o));
+
+        // Update the count badge
+        const badge = document.getElementById('offerCount');
+        if (badge) {
+            const cur = parseInt(badge.textContent.replace(/\D/g,'')) || 0;
+            badge.textContent = `(${cur + 1})`;
+        }
+
+        toast(`💰 New offer from ${o.provider.name}`, `$${parseFloat(o.offered_price).toFixed(2)} — review below`);
+    }
+
+    // ── Poll endpoint ───────────────────────────────────────────────────
+    let since = Math.floor(Date.now() / 1000) - 15;
+
+    async function poll() {
+        try {
+            const res = await fetch(`/api/realtime/jobs/${JOB_ID}/offers/live?since=${since}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF }
+            });
+            if (!res.ok) {
+                console.warn('[Offers] poll HTTP', res.status);
+                return;
+            }
+            const data = await res.json();
+            if (data.server_time) since = data.server_time - 2;
+            (data.new_offers || []).forEach(addOffer);
+        } catch (e) {
+            console.error('[Offers] poll error', e);
+        }
+    }
+
+    // Start immediately then every 5s
+    poll();
+    setInterval(poll, 5000);
+
+    // Pause when tab hidden, resume when visible
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) { since = Math.floor(Date.now()/1000) - 15; poll(); }
+    });
+})();
+</script>
+<style>
+@keyframes offerSlideIn { from { opacity:0; transform:translateY(-12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes toastIn  { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+@keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(20px); } }
+</style>
+
 @endsection

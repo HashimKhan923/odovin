@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\{
-    ServiceBooking,
+    ServiceJobPost,
     MaintenanceSchedule,
     Expense,
     FuelLog,
@@ -22,8 +22,8 @@ class DashboardStatsService
         return [
             'total_vehicles' => $vehicles->count(),
 
-            'active_bookings' => ServiceBooking::where('user_id', $userId)
-                ->whereIn('status', ['pending', 'confirmed', 'in_progress'])
+            'active_jobs' => ServiceJobPost::where('user_id', $userId)
+                ->whereIn('status', ['open', 'accepted'])
                 ->count(),
 
             'pending_maintenance' => MaintenanceSchedule::whereIn('vehicle_id', $vehicleIds)
