@@ -80,7 +80,7 @@ class JobWorkController extends Controller
      */
     public function updateStatus(Request $request, ServiceJobPost $job)
     {
-        return 1;
+    
         $provider = $this->provider();
 
         $offer = ServiceJobOffer::where('job_post_id', $job->id)
