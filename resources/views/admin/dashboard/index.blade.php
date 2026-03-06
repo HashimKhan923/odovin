@@ -163,7 +163,7 @@
                 <div class="u-name">{{ $u->name }}</div>
                 <div class="u-meta">{{ $u->email }}</div>
             </div>
-            <div style="margin-left:auto;font-size:.7rem;color:var(--text-tertiary);">{{ $u->created_at->diffForHumans() }}</div>
+            <div style="margin-left:auto;font-size:.7rem;color:var(--text-tertiary);">{{ $u->created_at?->diffForHumans() ?? '—' }}</div>
         </div>
         @empty
         <div style="text-align:center;padding:2rem;color:var(--text-tertiary);">No users yet</div>
