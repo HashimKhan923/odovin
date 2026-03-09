@@ -107,6 +107,58 @@
         @endif
     </div>
 
+
+    {{-- ── Media Gallery ──────────────────────────────────────────────────── --}}
+    @if($job->media && count($job->media) > 0)
+    <div class="desc-card">
+        <div class="section-title">📸 Photos & Videos from Customer</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;">
+            @foreach($job->media as $item)
+            @if($item['type'] === 'video')
+            <div style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;background:#000;cursor:pointer;" onclick="openLightbox('{{ $item['url'] }}','video')">
+                <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;">
+                    <div style="font-size:2.5rem;">▶️</div>
+                    <div style="font-size:.7rem;margin-top:.35rem;opacity:.7;">{{ $item['name'] }}</div>
+                </div>
+            </div>
+            @else
+            <div style="border-radius:10px;overflow:hidden;aspect-ratio:1;cursor:pointer;" onclick="openLightbox('{{ $item['url'] }}','image')">
+                <img src="{{ $item['url'] }}" alt="{{ $item['name'] }}" style="width:100%;height:100%;object-fit:cover;transition:.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform=''">
+            </div>
+            @endif
+            @endforeach
+        </div>
+    </div>
+
+    {{-- Lightbox --}}
+    <div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeLightbox()">
+        <button onclick="closeLightbox()" style="position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:42px;height:42px;color:#fff;font-size:1.25rem;cursor:pointer;">✕</button>
+        <img id="lbImg" src="" style="display:none;max-width:92vw;max-height:88vh;border-radius:10px;object-fit:contain;">
+        <video id="lbVid" src="" controls style="display:none;max-width:92vw;max-height:88vh;border-radius:10px;"></video>
+    </div>
+    <script>
+    function openLightbox(url, type) {
+        const lb = document.getElementById('lightbox');
+        document.getElementById('lightbox').style.display = 'flex';
+        if (type === 'video') {
+            document.getElementById('lbVid').src = url;
+            document.getElementById('lbVid').style.display = 'block';
+            document.getElementById('lbImg').style.display = 'none';
+            document.getElementById('lbVid').play();
+        } else {
+            document.getElementById('lbImg').src = url;
+            document.getElementById('lbImg').style.display = 'block';
+            document.getElementById('lbVid').style.display = 'none';
+        }
+    }
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = 'none';
+        document.getElementById('lbVid').pause();
+    }
+    document.addEventListener('keydown', e => { if(e.key==='Escape') closeLightbox(); });
+    </script>
+    @endif
+
     {{-- Offer form or already-submitted banner --}}
     @if($myOffer)
     <div class="offer-submitted-card">

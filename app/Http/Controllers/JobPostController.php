@@ -8,6 +8,7 @@ use App\Models\ServiceProvider;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Services\JobNotificationService;
 use App\Events\NewJobPosted;
 
@@ -90,6 +91,7 @@ class JobPostController extends Controller
             'radius'               => 'nullable|integer|min:5|max:100',
             'customer_notes'       => 'nullable|string|max:1000',
             'assigned_provider_id' => 'nullable|exists:service_providers,id',
+            'media.*'              => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,mkv|max:51200',
         ]);
 
         // Make sure vehicle belongs to this user
@@ -97,12 +99,28 @@ class JobPostController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
+        // ── Handle media uploads ─────────────────────────────────────────
+        $mediaFiles = [];
+        if ($request->hasFile('media')) {
+            foreach ($request->file('media') as $file) {
+                $path = $file->store('job-media', 'public');
+                $mediaFiles[] = [
+                    'path' => $path,
+                    'url'  => Storage::disk('public')->url($path),
+                    'type' => str_starts_with($file->getMimeType(), 'video') ? 'video' : 'image',
+                    'name' => $file->getClientOriginalName(),
+                    'size' => $file->getSize(),
+                ];
+            }
+        }
+
         $job = ServiceJobPost::create([
             ...$validated,
             'user_id'    => $request->user()->id,
             'radius'     => $validated['radius'] ?? 25,
             'status'     => 'open',
             'expires_at' => now()->addHours(24),
+            'media'      => !empty($mediaFiles) ? $mediaFiles : null,
         ]);
 
         // ── Notify providers ─────────────────────────────────────────────

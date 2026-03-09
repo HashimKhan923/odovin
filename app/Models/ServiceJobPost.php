@@ -23,6 +23,7 @@ class ServiceJobPost extends Model
         // Work tracking
         'work_status', 'final_cost', 'provider_notes',
         'rating', 'review', 'work_started_at', 'work_completed_at',
+        'media',
     ];
 
     protected $casts = [
@@ -34,6 +35,7 @@ class ServiceJobPost extends Model
         'expires_at'        => 'datetime',
         'work_started_at'   => 'datetime',
         'work_completed_at' => 'datetime',
+        'media'             => 'array',
     ];
 
     protected static function boot()

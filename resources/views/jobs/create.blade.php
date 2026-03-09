@@ -95,7 +95,7 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('jobs.store') }}" id="jobForm">
+    <form method="POST" action="{{ route('jobs.store') }}" id="jobForm" enctype="multipart/form-data">
         @csrf
 
         {{-- Hidden location fields --}}
@@ -208,6 +208,35 @@
             </div>
         </div>
 
+
+        {{-- ── Media Upload ──────────────────────────────────────────────── --}}
+        <div class="form-card">
+            <div class="section-title">📸 Photos & Videos <span style="font-size:.75rem;font-weight:400;color:var(--text-tertiary);text-transform:none;letter-spacing:0;">(optional — helps providers understand the job)</span></div>
+
+            <div class="form-group full">
+                <label class="form-label">Upload Images or Videos</label>
+
+                {{-- Drop zone --}}
+                <div id="dropZone" style="border:2px dashed var(--border-color);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all .3s;position:relative;"
+                     onclick="document.getElementById('mediaInput').click()"
+                     ondragover="event.preventDefault();this.style.borderColor='var(--accent-cyan)'"
+                     ondragleave="this.style.borderColor='var(--border-color)'"
+                     ondrop="handleDrop(event)">
+                    <div style="font-size:2rem;margin-bottom:.5rem;">📷</div>
+                    <div style="font-size:.875rem;color:var(--text-secondary);margin-bottom:.25rem;">Click to upload or drag & drop</div>
+                    <div style="font-size:.75rem;color:var(--text-tertiary);">Images: JPG, PNG, GIF, WEBP · Videos: MP4, MOV, AVI · Max 50MB each · Up to 10 files</div>
+                    <input type="file" id="mediaInput" name="media[]" multiple accept="image/*,video/*" style="display:none" onchange="handleFiles(this.files)">
+                </div>
+
+                {{-- Preview grid --}}
+                <div id="previewGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:.75rem;margin-top:1rem;"></div>
+
+                @error('media.*')
+                <p style="color:#ff8099;font-size:.78rem;margin-top:.5rem;">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
         <button type="submit" class="btn-submit" id="submitBtn">
             🚀 Post My Job
         </button>
@@ -282,4 +311,66 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+<script>
+// ── Media upload preview ────────────────────────────────────────────────
+const dt = new DataTransfer();
+
+function handleFiles(files) {
+    Array.from(files).forEach(addFile);
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').style.borderColor = 'var(--border-color)';
+    handleFiles(e.dataTransfer.files);
+}
+
+function addFile(file) {
+    if (dt.files.length >= 10) return alert('Maximum 10 files allowed.');
+    if (file.size > 52428800) return alert(`${file.name} is too large. Max 50MB per file.`);
+    dt.items.add(file);
+    document.getElementById('mediaInput').files = dt.files;
+    renderPreview(file, dt.files.length - 1);
+}
+
+function removeFile(index) {
+    const newDt = new DataTransfer();
+    Array.from(dt.files).forEach((f, i) => { if (i !== index) newDt.items.add(f); });
+    dt.items.clear();
+    Array.from(newDt.files).forEach(f => dt.items.add(f));
+    document.getElementById('mediaInput').files = dt.files;
+    renderAllPreviews();
+}
+
+function renderPreview(file, index) {
+    const grid = document.getElementById('previewGrid');
+    const isVideo = file.type.startsWith('video');
+    const wrap = document.createElement('div');
+    wrap.id = `preview-${index}`;
+    wrap.style.cssText = 'position:relative;border-radius:10px;overflow:hidden;background:var(--border-color);aspect-ratio:1;';
+    wrap.innerHTML = `
+        <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:2rem;">${isVideo ? '🎬' : '🖼️'}</div>
+        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);padding:.25rem .5rem;font-size:.65rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.name}</div>
+        <button type="button" onclick="removeFile(${index})" style="position:absolute;top:.35rem;right:.35rem;background:rgba(255,51,102,.8);border:none;border-radius:50%;width:22px;height:22px;color:#fff;font-size:.75rem;cursor:pointer;line-height:1;">✕</button>
+    `;
+    // Image preview
+    if (!isVideo) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;';
+            wrap.insertBefore(img, wrap.firstChild);
+        };
+        reader.readAsDataURL(file);
+    }
+    grid.appendChild(wrap);
+}
+
+function renderAllPreviews() {
+    document.getElementById('previewGrid').innerHTML = '';
+    Array.from(dt.files).forEach((f, i) => renderPreview(f, i));
+}
+</script>
+
 @endsection
