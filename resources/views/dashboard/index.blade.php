@@ -1681,6 +1681,11 @@
     color: var(--accent-warning);
 }
 
+.maintenance-badge.pending {
+    background: rgba(255, 170, 0, 0.1);
+    color: var(--accent-warning);
+}
+
 .empty-list {
     display: flex;
     flex-direction: column;
@@ -1837,12 +1842,12 @@
     color: var(--accent-success);
 }
 
-.activity-badge.confirmed {
+.activity-badge.accepted {
     background: rgba(0, 212, 255, 0.1);
     color: var(--accent-primary);
 }
 
-.activity-badge.pending {
+.activity-badge.open {
     background: rgba(255, 170, 0, 0.1);
     color: var(--accent-warning);
 }

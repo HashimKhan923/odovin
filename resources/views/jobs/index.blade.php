@@ -16,7 +16,7 @@
 }
 .pg-container { max-width:1200px; margin:0 auto; padding:2rem 1.5rem; }
 .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2rem; flex-wrap:wrap; gap:1rem; }
-.page-title { font-family:'Orbitron',sans-serif; font-size:1.75rem; font-weight:800; }
+.page-title { font-family:'Orbitron',sans-serif; font-size:1.75rem; font-weight:800; color:var(--accent-cyan) }
 .page-title span { color:var(--accent-cyan); }
 .btn-primary { display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.5rem; background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green)); border:none; border-radius:10px; color:#000; font-family:'Orbitron',sans-serif; font-weight:700; font-size:.8rem; letter-spacing:.05em; cursor:pointer; text-decoration:none; transition:all .3s; box-shadow:0 4px 15px rgba(0,212,255,.3); }
 .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 25px rgba(0,212,255,.5); }

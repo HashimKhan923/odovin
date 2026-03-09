@@ -10,7 +10,8 @@
 .hero { background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; padding:2rem; margin-bottom:1.5rem; position:relative; overflow:hidden; }
 .hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent-cyan),var(--accent-green)); }
 .hero-top { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; }
-.job-title { font-family:'Orbitron',sans-serif; font-size:1.75rem; font-weight:800; margin-bottom:.25rem; }
+.job-title { font-family:'Orbitron',sans-serif; font-size:1.75rem; font-weight:800; margin-bottom:.25rem;     color: var(--text-primary);
+ }
 .job-num { font-size:.8rem; color:var(--text-tertiary); font-family:'Chakra Petch',sans-serif; }
 .pill { display:inline-flex; align-items:center; gap:.35rem; padding:.375rem 1rem; border-radius:20px; font-size:.8rem; font-weight:700; }
 .pill-open        { background:rgba(255,170,0,.12); color:#ffaa00; border:1px solid rgba(255,170,0,.3); }
@@ -21,7 +22,8 @@
 .meta-item { display:flex; align-items:center; gap:.5rem; }
 /* Status timeline */
 .timeline-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:1.75rem; margin-bottom:1.5rem; }
-.tl-title { font-family:'Orbitron',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:1.5rem; }
+.tl-title { font-family:'Orbitron',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:1.5rem;     color: var(--text-primary);
+}
 .timeline { position:relative; }
 .timeline::before { content:''; position:absolute; left:18px; top:0; bottom:0; width:2px; background:linear-gradient(to bottom, var(--accent-cyan), rgba(0,212,255,.1)); }
 .tl-step { display:flex; gap:1rem; align-items:flex-start; margin-bottom:1.5rem; position:relative; }
@@ -39,14 +41,16 @@
 /* Layout */
 .main-layout { display:grid; grid-template-columns:1fr 320px; gap:1.5rem; }
 .card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:1.75rem; margin-bottom:1.5rem; }
-.card-title { font-family:'Orbitron',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:1.25rem; padding-bottom:.75rem; border-bottom:1px solid var(--border-color); }
+.card-title { font-family:'Orbitron',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:1.25rem; padding-bottom:.75rem; border-bottom:1px solid var(--border-color);     color: var(--text-primary);
+ }
 /* Offer cards */
 .offer-card { border:1px solid var(--border-color); border-radius:14px; padding:1.5rem; margin-bottom:1rem; transition:all .3s; position:relative; overflow:hidden; }
 .offer-card:hover { border-color:rgba(0,212,255,.3); }
 .offer-card.winner { border-color:rgba(0,255,170,.4); background:rgba(0,255,170,.03); }
 .offer-card.winner::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent-green); }
 .offer-card.rejected { opacity:.45; }
-.provider-name { font-weight:700; font-size:1rem; }
+.provider-name { font-weight:700; font-size:1rem;     color: var(--text-primary);
+ }
 .offer-price { font-family:'Orbitron',sans-serif; font-size:1.75rem; font-weight:900; color:var(--accent-warning); }
 .offer-details { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-color); font-size:.825rem; color:var(--text-secondary); }
 .offer-message { font-size:.825rem; color:var(--text-secondary); margin-top:.875rem; padding:.875rem; background:rgba(0,212,255,.04); border-left:2px solid rgba(0,212,255,.25); border-radius:0 8px 8px 0; line-height:1.6; }
@@ -323,7 +327,7 @@
             </div>
 
             <div class="sidebar-card">
-                <h3>Description</h3>
+                <h3 style="color: var(--text-primary);">Description</h3>
                 <p style="font-size:.875rem;color:var(--text-secondary);line-height:1.7;">{{ $job->description }}</p>
                 @if($job->customer_notes)<p style="font-size:.825rem;color:var(--text-secondary);margin-top:.875rem;padding-top:.875rem;border-top:1px solid var(--border-color);font-style:italic;">{{ $job->customer_notes }}</p>@endif
             </div>
