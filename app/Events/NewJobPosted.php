@@ -5,32 +5,19 @@ namespace App\Events;
 use App\Models\ServiceJobPost;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Fired when a consumer posts a new job.
- * Broadcasts on the public "job-board" channel so ALL active providers
- * can receive it in real time without being pre-subscribed to a user channel.
- */
 class NewJobPosted implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public ServiceJobPost $job)
-    {
-        //
-    }
+    public function __construct(public ServiceJobPost $job) {}
 
     public function broadcastOn(): array
     {
-        return [
-            // Public channel — any provider listening will get this
-            new Channel('job-board'),
-        ];
+        return [new Channel('job-board')];
     }
 
     public function broadcastAs(): string
@@ -61,7 +48,7 @@ class NewJobPosted implements ShouldBroadcastNow
                 'make'  => $this->job->vehicle->make,
                 'model' => $this->job->vehicle->model,
             ],
-            'show_url'         => route('provider.jobs.show', $this->job),
+            'show_url' => route('provider.jobs.show', $this->job),
         ];
     }
 }

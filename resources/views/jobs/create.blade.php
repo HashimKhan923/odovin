@@ -144,9 +144,9 @@
 
         {{-- Budget & Schedule --}}
         <div class="form-card">
-            <div class="section-title">Budget & Schedule</div>
+            <div class="section-title">Schedule</div>
             <div class="form-grid">
-                <div class="form-group full">
+                <!-- <div class="form-group full">
                     <label class="form-label">Your Budget Range (optional)</label>
                     <div class="budget-row">
                         <input type="number" name="budget_min" class="form-input" placeholder="Min $" min="0" step="5" value="{{ old('budget_min') }}">
@@ -154,7 +154,7 @@
                         <input type="number" name="budget_max" class="form-input" placeholder="Max $" min="0" step="5" value="{{ old('budget_max') }}">
                     </div>
                     @error('budget_max')<p class="error-msg">{{ $message }}</p>@enderror
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label class="form-label">Preferred Date</label>

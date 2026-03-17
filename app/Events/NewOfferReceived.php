@@ -10,24 +10,20 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Fired when a provider submits an offer on a job.
- * Broadcasts on a PRIVATE channel for the job owner (consumer) only.
- */
 class NewOfferReceived implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public ServiceJobOffer $offer)
-    {
-        //
-    }
+    public function __construct(public ServiceJobOffer $offer) {}
 
     public function broadcastOn(): array
     {
-        // Private channel scoped to the job owner's user ID
+        $consumerId = $this->offer->jobPost->user_id;
         return [
-            new PrivateChannel('job.' . $this->offer->jobPost->id),
+            // Private channel for the specific job page
+            new PrivateChannel('job.' . $this->offer->job_post_id),
+            // Private channel for the consumer's global badge (any dashboard page)
+            new PrivateChannel('user.' . $consumerId),
         ];
     }
 
@@ -39,7 +35,6 @@ class NewOfferReceived implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         $provider = $this->offer->serviceProvider;
-
         return [
             'offer_id'           => $this->offer->id,
             'job_id'             => $this->offer->job_post_id,
@@ -57,10 +52,6 @@ class NewOfferReceived implements ShouldBroadcastNow
                 'is_verified'   => $provider->is_verified,
                 'rating'        => $provider->rating,
                 'total_reviews' => $provider->total_reviews,
-                'city'          => $provider->city,
-                'state'         => $provider->state,
-                'latitude'      => $provider->latitude,
-                'longitude'     => $provider->longitude,
             ],
         ];
     }

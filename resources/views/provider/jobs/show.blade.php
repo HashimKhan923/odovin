@@ -195,12 +195,12 @@
 
     @elseif($job->isOpen())
     {{-- Budget hint --}}
-    @if($job->budget_max)
+    <!-- @if($job->budget_max)
     <div class="budget-hint">
         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         Customer's budget: <strong>{{ $job->budgetLabel() }}</strong>. Try to stay competitive to increase your chance of being selected.
     </div>
-    @endif
+    @endif -->
 
     <div class="offer-form-card">
         <div class="section-title">Submit Your Offer</div>

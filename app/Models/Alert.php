@@ -13,19 +13,19 @@ class Alert extends Model
     protected $fillable = [
         'user_id',
         'vehicle_id',
-        'service_booking_id',
         'type',
         'title',
         'message',
-        'action_url',
         'priority',
         'is_read',
         'read_at',
+        'for_provider',
     ];
 
     protected $casts = [
-        'is_read' => 'boolean',
-        'read_at' => 'datetime',
+        'is_read'      => 'boolean',
+        'read_at'      => 'datetime',
+        'for_provider' => 'boolean',
     ];
 
     public function user(): BelongsTo

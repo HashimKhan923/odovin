@@ -409,6 +409,9 @@
             font-size: 0.65rem;
             font-weight: 700;
             border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             animation: pulse 2s ease-in-out infinite;
         }
 
@@ -652,30 +655,21 @@
                         </svg>
                     </button>
 
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="alert-button">
+                    {{-- ── Notification Bell ─────────────────────────────────── --}}
+                    <div class="relative" id="consumerNotifWrap">
+                        <button class="alert-button" id="consumerNotifBtn" onclick="toggleConsumerNotif()">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                             </svg>
-                            @if($unreadAlerts = auth()->user()->alerts()->where('is_read', false)->count())
-                                <span class="alert-badge">{{ $unreadAlerts }}</span>
-                            @endif
+                            <span class="alert-badge" id="consumerNotifBadge" style="display:none;">0</span>
                         </button>
 
-                        <div x-show="open" @click.away="open = false" x-cloak class="alert-dropdown">
+                        <div id="consumerNotifDropdown" style="display:none;" class="alert-dropdown">
                             <div class="dropdown-header">
                                 <h3>Notifications</h3>
                             </div>
-                            <div style="max-height: 320px; overflow-y: auto;">
-                                @forelse(auth()->user()->alerts()->latest()->limit(5)->get() as $alert)
-                                    <a href="{{ route('alerts.mark-read', $alert) }}" class="alert-item {{ $alert->is_read ? '' : 'unread' }}">
-                                        <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">{{ $alert->title }}</div>
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">{{ $alert->message }}</div>
-                                        <div style="font-size: 0.7rem; color: var(--text-tertiary);">{{ $alert->created_at->diffForHumans() }}</div>
-                                    </a>
-                                @empty
-                                    <div style="padding: 3rem 1.5rem; text-align: center; color: var(--text-tertiary);">No notifications</div>
-                                @endforelse
+                            <div id="consumerNotifList" style="max-height: 320px; overflow-y: auto;">
+                                <div style="padding:2rem;text-align:center;color:var(--text-tertiary);font-size:.8rem;">Loading…</div>
                             </div>
                             <div style="padding: 1rem 1.25rem; border-top: 1px solid var(--border-color); text-align: center;">
                                 <a href="{{ route('alerts.index') }}" style="color: var(--accent-primary); text-decoration: none; font-size: 0.8rem;">View All</a>
@@ -759,6 +753,104 @@
 
         initTheme();
         initSidebar();
+    </script>
+
+    <script>
+    // ── Consumer Global Notification Bell ────────────────────────────────────
+    // Polls every 8s so badge updates on ANY page — not just the job page.
+    // When Reverb is running, Echo triggers an instant poll too.
+    (function() {
+        const FETCH_URL      = '{{ route("alerts.fetch") }}';
+        const MARK_READ_BASE = '{{ url("/alerts") }}';
+        const CSRF           = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+        let   dropdownOpen   = false;
+
+        // ── Badge update ────────────────────────────────────────────────────
+        function updateBadge(count) {
+            const badge = document.getElementById('consumerNotifBadge');
+            if (!badge) return;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // ── Render notifications in dropdown ────────────────────────────────
+        function renderList(notifications) {
+            const list = document.getElementById('consumerNotifList');
+            if (!notifications.length) {
+                list.innerHTML = '<div style="padding:3rem 1.5rem;text-align:center;color:var(--text-tertiary);">No notifications</div>';
+                return;
+            }
+            list.innerHTML = notifications.map(n => `
+                <a href="#" class="alert-item ${n.is_read ? '' : 'unread'}"
+                   onclick="consumerNotifClick(event,${n.id},'${n.action_url ?? ''}')">
+                    <div style="font-size:.8rem;font-weight:600;color:var(--text-primary);margin-bottom:.25rem;">${n.title}</div>
+                    <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.35rem);">${n.message}</div>
+                    <div style="font-size:.7rem;color:var(--text-tertiary);">${n.time}</div>
+                </a>
+            `).join('');
+        }
+
+        // ── Poll: refresh badge (and list if open) ──────────────────────────
+        async function poll() {
+            try {
+                const res  = await fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                const data = await res.json();
+                updateBadge(data.unread_count || 0);
+                if (dropdownOpen) renderList(data.notifications || []);
+            } catch(e) {}
+        }
+
+        // ── Toggle dropdown ─────────────────────────────────────────────────
+        window.toggleConsumerNotif = function() {
+            dropdownOpen = !dropdownOpen;
+            const dd = document.getElementById('consumerNotifDropdown');
+            dd.style.display = dropdownOpen ? 'block' : 'none';
+            if (dropdownOpen) {
+                fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(data => { updateBadge(data.unread_count||0); renderList(data.notifications||[]); });
+            }
+        };
+
+        // ── Click notification ──────────────────────────────────────────────
+        window.consumerNotifClick = async function(e, id, url) {
+            e.preventDefault();
+            await fetch(`${MARK_READ_BASE}/${id}/read`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+            });
+            if (url && url !== '') window.location.href = url;
+            else poll();
+        };
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            if (dropdownOpen && !document.getElementById('consumerNotifWrap').contains(e.target)) {
+                dropdownOpen = false;
+                document.getElementById('consumerNotifDropdown').style.display = 'none';
+            }
+        });
+
+        // ── Start polling ────────────────────────────────────────────────────
+        document.addEventListener('DOMContentLoaded', function() {
+            poll();
+            setInterval(poll, 8000);
+
+            // ── WebSocket: instant badge update when new offer arrives ────────
+            setTimeout(() => {
+                if (window.Echo) {
+                    try {
+                        Echo.private('user.{{ auth()->id() }}')
+                            .listen('.new-offer', () => poll());
+                    } catch(e) {}
+                }
+            }, 1000);
+        });
+    })();
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>

@@ -382,10 +382,10 @@
 
     <script>
     // ── Provider Notification Bell ───────────────────────────────────────────
-    const FETCH_URL      = '{{ route("alerts.fetch") }}';
-    const MARK_ALL_URL   = '{{ route("alerts.mark-all-read") }}';
+    const FETCH_URL      = '{{ route("alerts.fetch") }}?provider=1';
+    const MARK_ALL_URL   = '{{ route("alerts.mark-all-read") }}?provider=1';
     const MARK_READ_BASE = '{{ url("/alerts") }}';
-    const CSRF          = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CSRF           = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
     let notifOpen = false;
     let notifData = [];
@@ -396,7 +396,6 @@
         if (notifOpen) fetchNotifications();
     }
 
-    // Close on outside click
     document.addEventListener('click', function(e) {
         if (notifOpen && !document.getElementById('notifWrap').contains(e.target)) {
             notifOpen = false;
@@ -416,14 +415,13 @@
     }
 
     function renderNotifications(data) {
-        const list = document.getElementById('notifList');
-        const badge = document.getElementById('notifBadge');
-        const btn   = document.getElementById('notifBtn');
+        const list   = document.getElementById('notifList');
+        const badge  = document.getElementById('notifBadge');
+        const btn    = document.getElementById('notifBtn');
         const footer = document.getElementById('notifFooterCount');
         const unread = data.unread_count;
         notifData = data.notifications;
 
-        // Update badge
         if (unread > 0) {
             badge.textContent = unread > 99 ? '99+' : unread;
             badge.style.display = 'flex';
@@ -444,7 +442,7 @@
         }
 
         list.innerHTML = notifData.map(n => {
-            const url = n.action_url ?? '#';
+            const url      = n.action_url ?? '#';
             const colorHex = n.color ?? '#00d4ff';
             const alpha18  = colorHex + '1e';
             return `<a href="${url}" class="notif-item ${n.is_read ? '' : 'unread'}"
@@ -477,7 +475,6 @@
 
     async function handleNotifClick(e, id, url) {
         e.preventDefault();
-        // Mark as read via POST
         await fetch(`${MARK_READ_BASE}/${id}/read`, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
@@ -494,7 +491,7 @@
         fetchNotifications();
     }
 
-    // Poll for new notifications every 45 seconds
+    // ── Poll every 8s + WebSocket instant update ─────────────────────────────
     function pollNotifications() {
         fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
@@ -510,16 +507,26 @@
                     badge.style.display = 'none';
                     btn.classList.remove('has-unread');
                 }
-                // If dropdown is open, refresh list too
                 if (notifOpen) renderNotifications(data);
             })
             .catch(() => {});
     }
 
-    // Initial badge load on page ready
     document.addEventListener('DOMContentLoaded', function() {
         pollNotifications();
-        setInterval(pollNotifications, 45000);
+        setInterval(pollNotifications, 8000);
+
+        // ── WebSocket: instant badge bump when new job posted ─────────────
+        setTimeout(() => {
+            if (window.Echo) {
+                try {
+                    Echo.channel('job-board')
+                        .listen('.new-job', () => pollNotifications());
+                    Echo.private('provider.{{ auth()->user()->serviceProvider?->id ?? 0 }}')
+                        .listen('.offer-status-changed', () => pollNotifications());
+                } catch(e) {}
+            }
+        }, 1000);
     });
     </script>
 

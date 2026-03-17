@@ -25,9 +25,11 @@ class AlertController extends Controller
 
     public function fetch(Request $request)
     {
-        $userId = $request->user()->id;
+        $userId     = $request->user()->id;
+        $forProvider = $request->boolean('provider'); // provider layout sends ?provider=1
 
         $notifications = Alert::where('user_id', $userId)
+            ->where('for_provider', $forProvider)
             ->latest()
             ->limit(10)
             ->get()
@@ -37,8 +39,8 @@ class AlertController extends Controller
                 'message'    => $a->message,
                 'type'       => $a->type,
                 'priority'   => $a->priority,
-                'color'      => $a->color,
-                'icon'       => $a->icon,
+                'color'      => $a->color ?? null,
+                'icon'       => $a->icon ?? null,
                 'action_url' => $a->action_url ?? null,
                 'is_read'    => $a->is_read,
                 'time'       => $a->created_at->diffForHumans(),
@@ -46,37 +48,41 @@ class AlertController extends Controller
 
         return response()->json([
             'notifications' => $notifications,
-            'unread_count'  => Alert::where('user_id', $userId)->where('is_read', false)->count(),
+            'unread_count'  => Alert::where('user_id', $userId)
+                                    ->where('for_provider', $forProvider)
+                                    ->where('is_read', false)
+                                    ->count(),
         ]);
     }
 
     public function markAsRead(Alert $alert)
-    { 
-        // $this->authorize('update', $alert);
-
+    {
         $alert->markAsRead();
-
         return back();
     }
 
     public function markAllAsRead(Request $request)
     {
+        $forProvider = $request->boolean('provider');
+
         Alert::where('user_id', $request->user()->id)
+            ->where('for_provider', $forProvider)
             ->where('is_read', false)
             ->update([
                 'is_read' => true,
                 'read_at' => now(),
             ]);
 
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return back()->with('success', 'All alerts marked as read!');
     }
 
     public function destroy(Alert $alert)
     {
-        // $this->authorize('delete', $alert);
-
         $alert->delete();
-
         return back()->with('success', 'Alert deleted!');
     }
 }
