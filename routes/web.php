@@ -106,23 +106,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ///////////////////////////////////////////////////// User Routes \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 // Public Routes
@@ -130,7 +113,7 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Authentication Routes (using Laravel Breeze or Jetstream)
+// Authentication Routes
 require __DIR__.'/auth.php';
 
 // Protected Routes
@@ -139,19 +122,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // Advanced Analytics Dashboard
-            // Route::get('/analytics/dashboard', [AdvancedAnalyticsController::class, 'index'])->name('analytics.dashboard');
-            // Route::get('/analytics/export/{vehicle}', [AdvancedAnalyticsController::class, 'exportPDF'])->name('analytics.export');
-
-            // AI Analytics Dashboard
-            Route::get('/ai-analytics/dashboard', [AiAnalyticsController::class, 'index'])->name('ai-analytics.dashboard'); 
-            Route::get('/ai-analytics/export/{vehicle}', [AiAnalyticsController::class, 'exportPDF'])->name('ai-analytics.export');
+    // AI Analytics Dashboard
+    Route::get('/ai-analytics/dashboard', [AiAnalyticsController::class, 'index'])->name('ai-analytics.dashboard'); 
+    Route::get('/ai-analytics/export/{vehicle}', [AiAnalyticsController::class, 'exportPDF'])->name('ai-analytics.export');
     
     // Vehicles
-    Route::get('/vehicles/decode-vin/{vin}',[\App\Http\Controllers\VehicleController::class, 'decodeVin'])->middleware(['auth'])->name('vehicles.decode-vin');
+    Route::get('/vehicles/decode-vin/{vin}', [\App\Http\Controllers\VehicleController::class, 'decodeVin'])->middleware(['auth'])->name('vehicles.decode-vin');
 
     Route::prefix('vehicles')->name('vehicles.')->group(function () {
-        // Route::get('/decode-vin', [VehicleController::class, 'decodeVin'])->name('decode-vin');
         Route::get('/', [VehicleController::class, 'index'])->name('index');
         Route::get('/create', [VehicleController::class, 'create'])->name('create');
         Route::post('/', [VehicleController::class, 'store'])->name('store');
@@ -161,11 +139,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{vehicle}', [VehicleController::class, 'destroy'])->name('destroy');
         Route::post('/{vehicle}/set-primary', [VehicleController::class, 'setPrimary'])->name('set-primary');
         Route::post('/{vehicle}/update-mileage', [VehicleController::class, 'updateMileage'])->name('update-mileage');
-
-    // Vehicle Recalls
-        // Route::get('/recalls', [RecallController::class, 'index'])->name('recalls.index');
-        // Route::get('/recalls/{vehicle}', [RecallController::class, 'check'])->name('recalls.check');
-        // Route::post('/recalls/sync/{vehicle}', [RecallController::class, 'sync'])->name('recalls.sync');
 
         // Vehicle Documents
         Route::prefix('{vehicle}/documents')->name('documents.')->group(function () {
@@ -178,11 +151,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{document}', [VehicleDocumentController::class, 'destroy'])->name('destroy');
             Route::get('/{document}/download', [VehicleDocumentController::class, 'download'])->name('download');
         });
-
-
     });
 
-        Route::post('vehicles/{vehicle}/documents/extract', [VehicleDocumentController::class, 'extractData'])
+    Route::post('vehicles/{vehicle}/documents/extract', [VehicleDocumentController::class, 'extractData'])
         ->name('vehicles.documents.extract');
     
     // Maintenance
@@ -207,9 +178,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/{record}', [MaintenanceController::class, 'destroyRecord'])->name('destroy');
         });
     });
-    
-    // Bookings removed — use Job Board instead
-    
+
     // ── Job Posts (InDrive-style) ────────────────────────────────────────────
     Route::prefix('jobs')->name('jobs.')->group(function () {
         Route::get('/',                [JobPostController::class, 'index'])->name('index');
@@ -229,13 +198,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/nearby', [ServiceProviderController::class, 'searchNearby'])->name('search-nearby');
     });
 
-    // Comparison (NEW)
-    Route::prefix('comparison')->name('comparison.')->group(function () {
-        Route::get('/', [VehicleComparisonController::class, 'index'])->name('index');
-        Route::post('/comparison', [VehicleComparisonController::class, 'compare'])->name('compare');
-    });
-
-    // Fuel Tracking (NEW)
+    // Fuel Tracking
     Route::prefix('fuel')->name('fuel.')->group(function () {
         Route::get('/', [FuelLogController::class, 'index'])->name('index');
         Route::get('/create', [FuelLogController::class, 'create'])->name('create');
@@ -249,16 +212,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/export/pdf/{vehicle_id?}', [FuelLogController::class, 'exportPdf'])->name('export.pdf');
     });
     
-    // Trip Logs (NEW)
+    // Trip Logs
     Route::prefix('trips')->name('trips.')->group(function () {
-        Route::get('/', [TripLogController::class, 'index'])->name('index');
-        Route::get('/create', [TripLogController::class, 'create'])->name('create');
-        Route::post('/', [TripLogController::class, 'store'])->name('store');
-        Route::get('/export', [TripLogController::class, 'export'])->name('export');
-        Route::delete('/{tripLog}', [TripLogController::class, 'destroy'])->name('destroy');
+        Route::get('/',                  [TripLogController::class, 'index'])->name('index');
+        Route::get('/create',            [TripLogController::class, 'create'])->name('create');
+        Route::post('/',                 [TripLogController::class, 'store'])->name('store');
+        Route::get('/export',            [TripLogController::class, 'export'])->name('export');
+        Route::get('/{tripLog}/edit',    [TripLogController::class, 'edit'])->name('edit');
+        Route::put('/{tripLog}',         [TripLogController::class, 'update'])->name('update');
+        Route::delete('/{tripLog}',      [TripLogController::class, 'destroy'])->name('destroy');
     });
     
-    // Insurance Management (NEW)
+    // Insurance Management
     Route::prefix('insurance')->name('insurance.')->group(function () {
         Route::get('/', [InsuranceController::class, 'index'])->name('index');
         Route::get('/create', [InsuranceController::class, 'create'])->name('create');
@@ -267,14 +232,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{insurance}', [InsuranceController::class, 'destroy'])->name('destroy');
     });
     
-    // Recall Check (NEW)
+    // Recall Check
     Route::prefix('recalls')->name('recalls.')->group(function () {
         Route::get('/', [RecallController::class, 'index'])->name('index');
         Route::get('/{vehicle}/check', [RecallController::class, 'check'])->name('check');
         Route::post('/{vehicle}/sync', [RecallController::class, 'sync'])->name('sync');
     });
     
-    // Vehicle Comparison (NEW)
+    // Vehicle Comparison
     Route::prefix('comparison')->name('comparison.')->group(function () {
         Route::get('/', [VehicleComparisonController::class, 'index'])->name('index');
         Route::post('/compare', [VehicleComparisonController::class, 'compare'])->name('compare');
@@ -304,13 +269,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{reminder}/complete', [ReminderController::class, 'markComplete'])->name('complete');
     });
     
-    // Alerts/Notifications
+    // Alerts / Notifications
     Route::prefix('alerts')->name('alerts.')->group(function () {
-        Route::get('/', [AlertController::class, 'index'])->name('index');
-        Route::get('/fetch', [AlertController::class, 'fetch'])->name('fetch');
-        Route::get('/{alert}/read', [AlertController::class, 'markAsRead'])->name('mark-read');
+        Route::get('/',          [AlertController::class, 'index'])->name('index');
+        Route::get('/fetch',     [AlertController::class, 'fetch'])->name('fetch');
+        Route::get('/counts',    [AlertController::class, 'counts'])->name('counts');   // ← NEW: sidebar badge counts
+        Route::get('/{alert}/read',  [AlertController::class, 'markAsRead'])->name('mark-read');
         Route::post('/read-all', [AlertController::class, 'markAllAsRead'])->name('mark-all-read');
-        Route::delete('/{alert}', [AlertController::class, 'destroy'])->name('destroy');
+        Route::delete('/{alert}',[AlertController::class, 'destroy'])->name('destroy');
     });
     
     // Reports
@@ -355,47 +321,44 @@ Route::prefix('provider')->name('provider.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [ProviderDashboardController::class, 'index'])->name('dashboard');
 
-        // Provider bookings removed — use Work Queue instead
-
         // Profile & Services
-        Route::get('/profile',  [ProviderServiceController::class, 'editProfile'])->name('profile');
-        Route::put('/profile',  [ProviderServiceController::class, 'updateProfile'])->name('profile.update');
-        Route::get('/hours',    [ProviderServiceController::class, 'editHours'])->name('hours');
-        Route::put('/hours',    [ProviderServiceController::class, 'updateHours'])->name('hours.update');
-        Route::get('/analytics',[ProviderServiceController::class, 'analytics'])->name('analytics');
+        Route::get('/profile',   [ProviderServiceController::class, 'editProfile'])->name('profile');
+        Route::put('/profile',   [ProviderServiceController::class, 'updateProfile'])->name('profile.update');
+        Route::get('/hours',     [ProviderServiceController::class, 'editHours'])->name('hours');
+        Route::put('/hours',     [ProviderServiceController::class, 'updateHours'])->name('hours.update');
+        Route::get('/analytics', [ProviderServiceController::class, 'analytics'])->name('analytics');
 
         // Job Board (InDrive-style)
         Route::prefix('jobs')->name('jobs.')->group(function () {
-            Route::get('/',                        [\App\Http\Controllers\Provider\JobOfferController::class, 'index'])->name('index');
-            Route::get('/my-offers',               [\App\Http\Controllers\Provider\JobOfferController::class, 'myOffers'])->name('my-offers');
-            Route::get('/{job}',                   [\App\Http\Controllers\Provider\JobOfferController::class, 'show'])->name('show');
-            Route::post('/{job}/submit-offer',     [\App\Http\Controllers\Provider\JobOfferController::class, 'submitOffer'])->name('submit-offer');
+            Route::get('/',                    [\App\Http\Controllers\Provider\JobOfferController::class, 'index'])->name('index');
+            Route::get('/my-offers',           [\App\Http\Controllers\Provider\JobOfferController::class, 'myOffers'])->name('my-offers');
+            Route::get('/{job}',               [\App\Http\Controllers\Provider\JobOfferController::class, 'show'])->name('show');
+            Route::post('/{job}/submit-offer', [\App\Http\Controllers\Provider\JobOfferController::class, 'submitOffer'])->name('submit-offer');
         });
 
-        // My Work Queue — accepted jobs the provider is working on
+        // My Work Queue
         Route::prefix('work')->name('jobs.work.')->group(function () {
-            Route::get('/',                        [\App\Http\Controllers\Provider\JobWorkController::class, 'index'])->name('index');
-            Route::get('/{job}',                   [\App\Http\Controllers\Provider\JobWorkController::class, 'show'])->name('show');
-            Route::post('/{job}/update-status',    [\App\Http\Controllers\Provider\JobWorkController::class, 'updateStatus'])->name('update-status');
-            Route::get('/{job}/complete',          [\App\Http\Controllers\Provider\JobWorkController::class, 'completeForm'])->name('complete-form');
-            Route::post('/{job}/complete',         [\App\Http\Controllers\Provider\JobWorkController::class, 'completeSubmit'])->name('complete-submit');
+            Route::get('/',                     [\App\Http\Controllers\Provider\JobWorkController::class, 'index'])->name('index');
+            Route::get('/{job}',                [\App\Http\Controllers\Provider\JobWorkController::class, 'show'])->name('show');
+            Route::post('/{job}/update-status', [\App\Http\Controllers\Provider\JobWorkController::class, 'updateStatus'])->name('update-status');
+            Route::get('/{job}/complete',       [\App\Http\Controllers\Provider\JobWorkController::class, 'completeForm'])->name('complete-form');
+            Route::post('/{job}/complete',      [\App\Http\Controllers\Provider\JobWorkController::class, 'completeSubmit'])->name('complete-submit');
         });
 
         // Service Records
         Route::prefix('service-records')->name('service-records.')->group(function () {
-            Route::get('/',                [\App\Http\Controllers\Provider\ServiceRecordController::class, 'index'])->name('index');
-            Route::get('/create',          [\App\Http\Controllers\Provider\ServiceRecordController::class, 'create'])->name('create');
-            Route::post('/',               [\App\Http\Controllers\Provider\ServiceRecordController::class, 'store'])->name('store');
-            Route::get('/{serviceRecord}/edit',   [\App\Http\Controllers\Provider\ServiceRecordController::class, 'edit'])->name('edit');
-            Route::put('/{serviceRecord}',        [\App\Http\Controllers\Provider\ServiceRecordController::class, 'update'])->name('update');
-            Route::delete('/{serviceRecord}',     [\App\Http\Controllers\Provider\ServiceRecordController::class, 'destroy'])->name('destroy');
+            Route::get('/',                           [\App\Http\Controllers\Provider\ServiceRecordController::class, 'index'])->name('index');
+            Route::get('/create',                     [\App\Http\Controllers\Provider\ServiceRecordController::class, 'create'])->name('create');
+            Route::post('/',                          [\App\Http\Controllers\Provider\ServiceRecordController::class, 'store'])->name('store');
+            Route::get('/{serviceRecord}/edit',       [\App\Http\Controllers\Provider\ServiceRecordController::class, 'edit'])->name('edit');
+            Route::put('/{serviceRecord}',            [\App\Http\Controllers\Provider\ServiceRecordController::class, 'update'])->name('update');
+            Route::delete('/{serviceRecord}',         [\App\Http\Controllers\Provider\ServiceRecordController::class, 'destroy'])->name('destroy');
         });
     });
 });
 
 // ── Real-Time Polling Endpoints ──────────────────────────────────────────────
 // Uses web middleware so Laravel session auth works with fetch() calls from Blade.
-// Prefix /api/realtime keeps URLs identical to what the JS expects.
 Route::middleware(['web', 'auth'])->prefix('api/realtime')->name('api.realtime.')->group(function () {
     Route::get('/jobs/live',              [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveJobs'])->name('jobs.live');
     Route::get('/jobs/{job}/offers/live', [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveOffers'])->name('offers.live');

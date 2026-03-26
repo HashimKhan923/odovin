@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Alert;
 
 class Vehicle extends Model
 {
@@ -140,11 +141,48 @@ class Vehicle extends Model
 
     protected function checkMaintenanceSchedules()
     {
-        $this->maintenanceSchedules()
+        // Find pending schedules that are now overdue based on new mileage
+        $nowOverdue = $this->maintenanceSchedules()
             ->where('status', 'pending')
             ->whereNotNull('due_mileage')
             ->where('due_mileage', '<=', $this->current_mileage)
+            ->get();
+
+        if ($nowOverdue->isEmpty()) return;
+
+        // Mark them all overdue
+        $this->maintenanceSchedules()
+            ->whereIn('id', $nowOverdue->pluck('id'))
             ->update(['status' => 'overdue']);
+
+        // Create one alert per overdue schedule
+        foreach ($nowOverdue as $schedule) {
+            // Avoid duplicate alerts — skip if an unread alert already exists for this schedule
+            $alreadyAlerted = Alert::where('user_id', $this->user_id)
+                ->where('type', 'maintenance')
+                ->where('for_provider', false)
+                ->where('is_read', false)
+                ->where('title', 'like', '%' . $schedule->service_type . '%')
+                ->where('vehicle_id', $this->id)
+                ->exists();
+
+            if ($alreadyAlerted) continue;
+
+            $overdueMiles = $this->current_mileage - $schedule->due_mileage;
+
+            Alert::create([
+                'user_id'      => $this->user_id,
+                'vehicle_id'   => $this->id,
+                'type'         => 'maintenance',
+                'title'        => '⚠️ Maintenance Due: ' . $schedule->service_type,
+                'message'      => "{$this->year} {$this->make} {$this->model} — {$schedule->service_type} was due at "
+                                . number_format($schedule->due_mileage) . ' mi. '
+                                . 'You are now ' . number_format($overdueMiles) . ' mi overdue.',
+                'action_url'   => route('maintenance.index'),
+                'priority'     => $overdueMiles > 500 ? 'critical' : 'warning',
+                'for_provider' => false,
+            ]);
+        }
     }
 
     public function fuelLogs(): HasMany

@@ -17,7 +17,7 @@ class JobPostController extends Controller
     // ── Consumer: list own job posts ──────────────────────────────────────
 
     public function index(Request $request)
-    {
+    { 
         $query = ServiceJobPost::where('user_id', $request->user()->id)
             ->with(['vehicle', 'offers'])
             ->latest();

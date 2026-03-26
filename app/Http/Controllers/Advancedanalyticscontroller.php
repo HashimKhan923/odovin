@@ -80,7 +80,7 @@ class AdvancedAnalyticsController extends Controller
 
         // 1. OIL CHANGE PREDICTION
         $lastOilChange = $maintenanceHistory->first(function ($record) {
-            return stripos($record->service_type, 'oil') !== false;
+            return stripos($record->service_type, 'Oil Change') !== false;
         });
 
         $milesSinceOilChange = $lastOilChange 
@@ -106,7 +106,7 @@ class AdvancedAnalyticsController extends Controller
 
         // 2. BRAKE PAD PREDICTION
         $lastBrakeService = $maintenanceHistory->first(function ($record) {
-            return stripos($record->service_type, 'brake') !== false;
+            return stripos($record->service_type, 'Brake Service') !== false;
         });
 
         $milesSinceBrakeService = $lastBrakeService 
@@ -134,7 +134,7 @@ class AdvancedAnalyticsController extends Controller
 
         // 3. TIRE REPLACEMENT PREDICTION
         $lastTireService = $maintenanceHistory->first(function ($record) {
-            return stripos($record->service_type, 'tire') !== false;
+            return stripos($record->service_type, 'Tire Rotation') !== false;
         });
 
         $milesSinceTireService = $lastTireService 
@@ -175,7 +175,7 @@ class AdvancedAnalyticsController extends Controller
 
         // 5. TRANSMISSION FLUID
         $lastTransmissionService = $maintenanceHistory->first(function ($record) {
-            return stripos($record->service_type, 'transmission') !== false;
+            return stripos($record->service_type, 'Transmission Service') !== false;
         });
 
         $milesSinceTransmission = $lastTransmissionService 

@@ -582,6 +582,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
                         <span class="nav-text">Post a Job</span>
+                        @php $activeJobs = \App\Models\ServiceJobPost::where('user_id', auth()->id())->whereIn('status',['open','accepted'])->count(); @endphp
+                        <span id="activeJobsBadge" style="margin-left:auto;background:var(--accent-warning);color:#000;border-radius:20px;font-size:0.65rem;padding:2px 7px;font-weight:700;{{ $activeJobs > 0 ? '' : 'display:none;' }}">{{ $activeJobs }}</span>
                     </a>
                     <a href="{{ route('maintenance.index') }}" class="nav-item {{ request()->routeIs('maintenance.*') ? 'active' : '' }}">
                         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -595,6 +597,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                         <span class="nav-text">Fuel</span>
+                    </a>
+                    <a href="{{ route('trips.index') }}" class="nav-item {{ request()->routeIs('trips.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"/>
+                        </svg>
+                        <span class="nav-text">Trip Log</span>
                     </a>
                 </div>
 
@@ -761,6 +769,7 @@
     // When Reverb is running, Echo triggers an instant poll too.
     (function() {
         const FETCH_URL      = '{{ route("alerts.fetch") }}';
+        const COUNTS_URL     = '{{ route("alerts.counts") }}';
         const MARK_READ_BASE = '{{ url("/alerts") }}';
         const CSRF           = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
         let   dropdownOpen   = false;
@@ -775,6 +784,20 @@
             } else {
                 badge.style.display = 'none';
             }
+        }
+
+        // ── Sidebar jobs badge update ───────────────────────────────────────
+        function updateJobsBadge() {
+            fetch(COUNTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    const b = document.getElementById('activeJobsBadge');
+                    if (!b) return;
+                    const n = data.active_jobs_count || 0;
+                    if (n > 0) { b.textContent = n; b.style.display = ''; }
+                    else        { b.style.display = 'none'; }
+                })
+                .catch(() => {});
         }
 
         // ── Render notifications in dropdown ────────────────────────────────
@@ -838,7 +861,9 @@
         // ── Start polling ────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', function() {
             poll();
+            updateJobsBadge();
             setInterval(poll, 8000);
+            setInterval(updateJobsBadge, 8000);
 
             // ── WebSocket: instant badge update when new offer arrives ────────
             setTimeout(() => {

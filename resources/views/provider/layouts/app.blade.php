@@ -261,7 +261,7 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                     Browse Open Jobs
                     @php $openJobs = \App\Models\ServiceJobPost::open()->count(); @endphp
-                    @if($openJobs > 0)<span class="sp-badge" style="background:var(--accent-warning);color:#000;">{{ $openJobs }}</span>@endif
+                    <span id="openJobsBadge" style="margin-left:auto;background:var(--accent-warning);color:#000;border-radius:20px;font-size:0.65rem;padding:2px 7px;font-weight:700;{{ $openJobs > 0 ? '' : 'display:none;' }}">{{ $openJobs }}</span>
                 </a>
                 <a href="{{ route('provider.jobs.my-offers') }}" class="sp-nav-link {{ request()->routeIs('provider.jobs.my-offers') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -492,6 +492,8 @@
     }
 
     // ── Poll every 8s + WebSocket instant update ─────────────────────────────
+    const COUNTS_URL = '{{ route("alerts.counts") }}?provider=1';
+
     function pollNotifications() {
         fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
@@ -508,6 +510,18 @@
                     btn.classList.remove('has-unread');
                 }
                 if (notifOpen) renderNotifications(data);
+            })
+            .catch(() => {});
+
+        // Also update open jobs sidebar badge
+        fetch(COUNTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => {
+                const b = document.getElementById('openJobsBadge');
+                if (!b) return;
+                const n = data.open_jobs_count || 0;
+                if (n > 0) { b.textContent = n; b.style.display = ''; }
+                else        { b.style.display = 'none'; }
             })
             .catch(() => {});
     }
