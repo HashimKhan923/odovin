@@ -44,7 +44,7 @@ class JobNotificationService
                 'message'      => "A customer needs {$job->service_type} within " . round($provider->distance, 1) . " miles. Budget: {$job->budgetLabel()}.",
                 'action_url'   => route('provider.jobs.show', $job),
                 'priority'     => 'warning',
-                'for_provider' => true,  // ← provider only
+                'for_provider' => true,
             ]);
         }
     }
@@ -66,7 +66,7 @@ class JobNotificationService
             'message'      => "{$prov->name} submitted an offer of \${$offer->offered_price} for your {$job->service_type} job.",
             'action_url'   => route('jobs.show', $job),
             'priority'     => 'info',
-            'for_provider' => false,  // ← consumer only
+            'for_provider' => false,
         ]);
     }
 
@@ -87,7 +87,7 @@ class JobNotificationService
             'message'      => "{$job->user->name} accepted your offer of \${$offer->offered_price} for {$job->service_type}.",
             'action_url'   => route('provider.jobs.my-offers'),
             'priority'     => 'info',
-            'for_provider' => true,  // ← provider only
+            'for_provider' => true,
         ]);
     }
 
@@ -107,7 +107,7 @@ class JobNotificationService
             'title'        => 'Offer Not Selected',
             'message'      => "Another provider was selected for the {$job->service_type} job. Keep looking for new jobs!",
             'priority'     => 'info',
-            'for_provider' => true,  // ← provider only
+            'for_provider' => true,
         ]);
     }
 
@@ -127,12 +127,13 @@ class JobNotificationService
             'title'        => 'Job Post Cancelled',
             'message'      => "The {$job->service_type} job you offered on has been cancelled by the customer.",
             'priority'     => 'info',
-            'for_provider' => true,  // ← provider only
+            'for_provider' => true,
         ]);
     }
 
     /**
-     * Alias used by some controllers — same as notifyNearbyProviders.
+     * When a job is directly assigned to a provider.
+     * for_provider = true — only shows in provider dashboard bell.
      */
     public static function notifyAssignedProvider(ServiceJobPost $job): void
     {
@@ -148,12 +149,12 @@ class JobNotificationService
             'message'      => "A customer has assigned a {$job->service_type} job directly to you.",
             'action_url'   => route('provider.jobs.show', $job),
             'priority'     => 'warning',
-            'for_provider' => true,  // ← provider only
+            'for_provider' => true,
         ]);
     }
 
     /**
-     * When a provider updates work status, notify the consumer.
+     * When provider changes work_status → notify the consumer.
      * for_provider = false — only shows in consumer dashboard bell.
      */
     public static function workStatusUpdated(ServiceJobPost $job, string $newStatus): void
@@ -163,46 +164,63 @@ class JobNotificationService
         $providerName = $job->acceptedOffer?->serviceProvider?->name ?? 'Your provider';
         $vehicleName  = "{$job->vehicle->year} {$job->vehicle->make} {$job->vehicle->model}";
 
-        [$title, $message, $priority] = match ($newStatus) {
+        $config = match ($newStatus) {
             'confirmed'   => [
-                '✅ Job Confirmed',
-                "{$providerName} confirmed your {$job->service_type} job for {$vehicleName}. They will be in touch soon.",
-                'info',
+                'title'    => '✅ Job Confirmed',
+                'message'  => "{$providerName} confirmed your {$job->service_type} job for {$vehicleName}. They will be in touch soon.",
+                'priority' => 'info',
             ],
             'in_progress' => [
-                '🔧 Work In Progress',
-                "{$providerName} has started working on your {$job->service_type} for {$vehicleName}.",
-                'info',
+                'title'    => '🔧 Work In Progress',
+                'message'  => "{$providerName} has started working on your {$job->service_type} for {$vehicleName}.",
+                'priority' => 'warning',
             ],
             'completed'   => [
-                '🎉 Service Completed',
-                "{$providerName} completed your {$job->service_type} for {$vehicleName}."
-                . ($job->final_cost ? " Final cost: \${$job->final_cost}." : '')
-                . " Please leave a review!",
-                'info',
+                'title'    => '🎉 Service Completed',
+                'message'  => "{$providerName} completed your {$job->service_type} for {$vehicleName}."
+                            . ($job->final_cost ? " Final cost: \${$job->final_cost}." : '')
+                            . " Please leave a review!",
+                'priority' => 'info',
             ],
             'cancelled'   => [
-                '❌ Job Cancelled',
-                "{$providerName} cancelled the {$job->service_type} job for {$vehicleName}. You can post a new job to find another provider.",
-                'critical',
+                'title'    => '❌ Job Cancelled by Provider',
+                'message'  => "{$providerName} cancelled the {$job->service_type} job for {$vehicleName}. You can post a new job to find another provider.",
+                'priority' => 'critical',
             ],
-            default => [
-                '📋 Job Status Updated',
-                "Your {$job->service_type} job status changed to {$newStatus}.",
-                'info',
-            ],
+            default => null,
         };
+
+        if (!$config) return;
 
         Alert::create([
             'user_id'      => $job->user_id,
             'vehicle_id'   => $job->vehicle_id,
             'type'         => 'booking',
-            'title'        => $title,
-            'message'      => $message,
+            'title'        => $config['title'],
+            'message'      => $config['message'],
             'action_url'   => route('jobs.show', $job),
-            'priority'     => $priority,
-            'for_provider' => false,  // ← consumer only
+            'priority'     => $config['priority'],
+            'for_provider' => false,
         ]);
     }
 
+    /**
+     * When consumer submits a rating on a completed job → notify the provider.
+     * for_provider = true — only shows in provider dashboard bell.
+     */
+    public static function jobReviewSubmitted(ServiceJobPost $job): void
+    {
+        $provider = $job->acceptedOffer?->serviceProvider;
+        if (!$provider?->user_id) return;
+
+        Alert::create([
+            'user_id'      => $provider->user_id,
+            'type'         => 'booking',
+            'title'        => "New {$job->rating}⭐ Review on Job",
+            'message'      => "{$job->user->name} rated your {$job->service_type} job for {$job->vehicle->year} {$job->vehicle->make} {$job->vehicle->model}.",
+            'action_url'   => route('provider.jobs.my-offers'),
+            'priority'     => 'info',
+            'for_provider' => true,
+        ]);
+    }
 }
