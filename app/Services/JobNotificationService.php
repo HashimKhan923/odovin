@@ -151,4 +151,58 @@ class JobNotificationService
             'for_provider' => true,  // ← provider only
         ]);
     }
+
+    /**
+     * When a provider updates work status, notify the consumer.
+     * for_provider = false — only shows in consumer dashboard bell.
+     */
+    public static function workStatusUpdated(ServiceJobPost $job, string $newStatus): void
+    {
+        if (!$job->user_id) return;
+
+        $providerName = $job->acceptedOffer?->serviceProvider?->name ?? 'Your provider';
+        $vehicleName  = "{$job->vehicle->year} {$job->vehicle->make} {$job->vehicle->model}";
+
+        [$title, $message, $priority] = match ($newStatus) {
+            'confirmed'   => [
+                '✅ Job Confirmed',
+                "{$providerName} confirmed your {$job->service_type} job for {$vehicleName}. They will be in touch soon.",
+                'info',
+            ],
+            'in_progress' => [
+                '🔧 Work In Progress',
+                "{$providerName} has started working on your {$job->service_type} for {$vehicleName}.",
+                'info',
+            ],
+            'completed'   => [
+                '🎉 Service Completed',
+                "{$providerName} completed your {$job->service_type} for {$vehicleName}."
+                . ($job->final_cost ? " Final cost: \${$job->final_cost}." : '')
+                . " Please leave a review!",
+                'info',
+            ],
+            'cancelled'   => [
+                '❌ Job Cancelled',
+                "{$providerName} cancelled the {$job->service_type} job for {$vehicleName}. You can post a new job to find another provider.",
+                'critical',
+            ],
+            default => [
+                '📋 Job Status Updated',
+                "Your {$job->service_type} job status changed to {$newStatus}.",
+                'info',
+            ],
+        };
+
+        Alert::create([
+            'user_id'      => $job->user_id,
+            'vehicle_id'   => $job->vehicle_id,
+            'type'         => 'booking',
+            'title'        => $title,
+            'message'      => $message,
+            'action_url'   => route('jobs.show', $job),
+            'priority'     => $priority,
+            'for_provider' => false,  // ← consumer only
+        ]);
+    }
+
 }
