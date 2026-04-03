@@ -237,7 +237,7 @@
             <div class="form-group" style="margin-top:1.25rem;margin-bottom:0;">
                 <label class="form-label">Notification Radius</label>
                 <select name="radius" id="radiusSelect" class="form-select">
-                    @foreach([10, 15, 25, 40, 60] as $r)
+                    @foreach([1, 5, 10, 15, 25, 40, 60] as $r)
                     <option value="{{ $r }}" {{ old('radius', 25) == $r ? 'selected' : '' }}>{{ $r }} miles</option>
                     @endforeach
                 </select>
