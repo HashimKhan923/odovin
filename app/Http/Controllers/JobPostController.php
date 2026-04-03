@@ -88,7 +88,7 @@ class JobPostController extends Controller
             'latitude'             => 'required|numeric',
             'longitude'            => 'required|numeric',
             'location_address'     => 'nullable|string|max:500',
-            'radius'               => 'nullable|integer|min:5|max:100',
+            'radius'               => 'nullable|integer|min:1|max:100',
             'customer_notes'       => 'nullable|string|max:1000',
             'assigned_provider_id' => 'nullable|exists:service_providers,id',
             'media.*'              => 'nullable|file|mimes:jpg,jpeg,png,gif,webp,mp4,mov,avi,mkv|max:51200',
