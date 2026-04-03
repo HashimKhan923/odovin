@@ -76,6 +76,30 @@ class JobNotificationService
     }
 
     /**
+     * Notify the consumer's preferred provider (from prior diagnosis) about the job.
+     */
+    public static function notifyPreferredProvider(ServiceJobPost $job): void
+    {
+        if (!$job->preferred_provider_id) return;
+
+        $provider = \App\Models\ServiceProvider::with('user')->find($job->preferred_provider_id);
+        if (!$provider || !$provider->user_id) return;
+
+        $vehicle  = $job->vehicle;
+        $vehName  = $vehicle ? "{$vehicle->year} {$vehicle->make} {$vehicle->model}" : 'a vehicle';
+
+        Alert::create([
+            'user_id'      => $provider->user_id,
+            'type'         => 'job_assignment',
+            'title'        => "⭐ Preferred Provider — {$job->service_type}",
+            'message'      => "A customer who previously used your services has posted a {$job->service_type} job for {$vehName} and selected you as their preferred provider.",
+            'action_url'   => route('provider.jobs.show', $job),
+            'priority'     => 'high',
+            'for_provider' => true,
+        ]);
+    }
+
+    /**
      * When a provider submits an offer, alert the consumer.
      * for_provider = false — only shows in consumer dashboard bell.
      */

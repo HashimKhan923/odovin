@@ -78,6 +78,16 @@
 .legend-item { display:flex; align-items:center; gap:.4rem; font-size:.75rem; color:var(--text-tertiary); }
 .legend-dot { width:10px; height:10px; border-radius:50%; }
 
+/* ── Diagnostics ── */
+.diag-check { background:var(--input-bg); border:1px solid var(--border-color); border-radius:10px; padding:.875rem 1rem; cursor:pointer; transition:all .25s; display:flex; align-items:flex-start; gap:.875rem; }
+.diag-check:hover { border-color:rgba(255,102,0,.4); }
+.diag-check.selected { background:rgba(255,102,0,.07); border-color:#ff6600; }
+.diag-check.safety { border-color:rgba(255,51,102,.4); background:rgba(255,51,102,.04); }
+.diag-check.safety.selected { background:rgba(255,51,102,.1); }
+.diag-sev { display:inline-flex; align-items:center; font-size:.68rem; font-weight:700; padding:.15rem .5rem; border-radius:5px; white-space:nowrap; flex-shrink:0; }
+.checkbox-custom { width:18px; height:18px; border-radius:5px; border:2px solid var(--border-color); flex-shrink:0; margin-top:2px; display:flex; align-items:center; justify-content:center; transition:all .25s; }
+.diag-check.selected .checkbox-custom { background:#ff6600; border-color:#ff6600; }
+
 /* ── Media upload ── */
 .preview-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:.75rem; margin-top:1rem; }
 </style>
@@ -237,7 +247,7 @@
             <div class="form-group" style="margin-top:1.25rem;margin-bottom:0;">
                 <label class="form-label">Notification Radius</label>
                 <select name="radius" id="radiusSelect" class="form-select">
-                    @foreach([1, 5, 10, 15, 25, 40, 60] as $r)
+                    @foreach([10, 15, 25, 40, 60] as $r)
                     <option value="{{ $r }}" {{ old('radius', 25) == $r ? 'selected' : '' }}>{{ $r }} miles</option>
                     @endforeach
                 </select>
@@ -276,6 +286,36 @@
                 </div>
                 <div id="previewGrid" class="preview-grid"></div>
                 @error('media.*')<p style="color:#ff8099;font-size:.78rem;margin-top:.5rem;">{{ $message }}</p>@enderror
+            </div>
+        </div>
+
+
+        {{-- ── Known Issues / Service Diagnostics ──────────────────────────── --}}
+        <div class="form-card" id="diagCard" style="border-color:rgba(255,102,0,.2);display:none;">
+            <div class="section-title" style="color:#ff9944;">
+                <svg style="display:inline;width:16px;height:16px;vertical-align:-3px;margin-right:.4rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Known Issues <span style="font-size:.72rem;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text-tertiary);">(optional — attach existing diagnostics)</span>
+            </div>
+            <p style="font-size:.825rem;color:var(--text-secondary);margin-bottom:1.25rem;">
+                Select any known issues from previous service visits so providers know exactly what to address.
+            </p>
+            <div id="diagLoading" style="text-align:center;padding:1.5rem;color:var(--text-tertiary);font-size:.8rem;">Loading…</div>
+            <div id="diagList" style="display:flex;flex-direction:column;gap:.625rem;margin-bottom:1rem;"></div>
+            <div id="diagEmpty" style="text-align:center;padding:1.5rem;color:var(--text-tertiary);font-size:.825rem;display:none;">
+                ✅ No open diagnostic findings for this vehicle.
+            </div>
+            {{-- Preferred Provider --}}
+            <div id="prefProviderWrap" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-color);">
+                <label class="form-label">
+                    Preferred Provider
+                    <span style="font-weight:400;color:var(--text-tertiary);"> — optional</span>
+                </label>
+                <select name="preferred_provider_id" id="preferredProvider" class="form-select">
+                    <option value="">No preference — show to all nearby providers</option>
+                </select>
+                <div style="font-size:.75rem;color:var(--text-tertiary);margin-top:.375rem;">
+                    💡 This provider diagnosed your vehicle before — they get a priority notification.
+                </div>
             </div>
         </div>
 
@@ -558,6 +598,103 @@ function darkMapStyles() {
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────
+
+// ── Vehicle diagnostics loader ──────────────────────────────────────────────
+const DIAG_URL = '{{ route("jobs.vehicle-diagnostics") }}';
+
+function loadDiagnostics(vehicleId) {
+    if (!vehicleId) {
+        document.getElementById('diagCard').style.display = 'none';
+        return;
+    }
+
+    const card    = document.getElementById('diagCard');
+    const loading = document.getElementById('diagLoading');
+    const list    = document.getElementById('diagList');
+    const empty   = document.getElementById('diagEmpty');
+    const provWrap = document.getElementById('prefProviderWrap');
+    const provSel  = document.getElementById('preferredProvider');
+
+    card.style.display = '';
+    loading.style.display = '';
+    list.innerHTML = '';
+    empty.style.display = 'none';
+
+    fetch(`${DIAG_URL}?vehicle_id=${vehicleId}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(data => {
+        loading.style.display = 'none';
+
+        if (!data.diagnostics.length) {
+            empty.style.display = '';
+            provWrap.style.display = 'none';
+            return;
+        }
+
+        const sevColor = { low:'#00ffaa', medium:'#ffaa00', high:'#ff6600', critical:'#ff3366' };
+        const sevBg    = { low:'rgba(0,255,170,.12)', medium:'rgba(255,170,0,.12)', high:'rgba(255,102,0,.12)', critical:'rgba(255,51,102,.12)' };
+
+        list.innerHTML = data.diagnostics.map(d => `
+            <label class="diag-check ${d.is_safety_critical ? 'safety' : ''}" onclick="toggleDiag(this)">
+                <input type="checkbox" name="attached_diagnostic_ids[]" value="${d.id}"
+                    style="display:none;" onchange="">
+                <div class="checkbox-custom">
+                    <svg width="10" height="10" fill="none" stroke="white" viewBox="0 0 24 24" style="display:none;" class="check-icon">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem;flex-wrap:wrap;">
+                        <span style="font-weight:700;font-size:.875rem;color:var(--text-primary);">${d.title}</span>
+                        <span class="diag-sev" style="background:${sevBg[d.severity]||sevBg.medium};color:${sevColor[d.severity]||sevColor.medium};">
+                            ${d.severity.toUpperCase()}
+                        </span>
+                        ${d.is_safety_critical ? '<span style="font-size:.68rem;font-weight:700;color:#ff3366;">⚠️ SAFETY</span>' : ''}
+                    </div>
+                    <div style="font-size:.78rem;color:var(--text-secondary);line-height:1.5;">${d.description}</div>
+                    ${d.provider_name ? `<div style="font-size:.72rem;color:var(--text-tertiary);margin-top:.25rem;">Diagnosed by: ${d.provider_name}</div>` : ''}
+                    ${d.estimated_cost_min || d.estimated_cost_max ? `<div style="font-size:.72rem;color:var(--text-tertiary);margin-top:.2rem;">💰 Est: $${d.estimated_cost_min||'?'} – $${d.estimated_cost_max||'?'}</div>` : ''}
+                </div>
+            </label>
+        `).join('');
+
+        // Populate preferred provider dropdown
+        if (data.providers.length) {
+            provSel.innerHTML = '<option value="">No preference — show to all nearby providers</option>';
+            data.providers.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                provSel.appendChild(opt);
+            });
+            provWrap.style.display = '';
+        } else {
+            provWrap.style.display = 'none';
+        }
+    })
+    .catch(() => {
+        loading.style.display = 'none';
+        empty.style.display = '';
+    });
+}
+
+function toggleDiag(label) {
+    const cb = label.querySelector('input[type=checkbox]');
+    const icon = label.querySelector('.check-icon');
+    cb.checked = !cb.checked;
+    label.classList.toggle('selected', cb.checked);
+    if (icon) icon.style.display = cb.checked ? '' : 'none';
+}
+
+// Hook into vehicle selector
+document.addEventListener('change', function(e) {
+    if (e.target && e.target.name === 'vehicle_id') {
+        loadDiagnostics(e.target.value);
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     renderLocTabs();
 

@@ -20,6 +20,8 @@ class ServiceJobPost extends Model
         'status', 'accepted_offer_id', 'expires_at', 'customer_notes',
         // Work tracking
         'assigned_provider_id',
+        'preferred_provider_id',
+        'attached_diagnostic_ids',
         // Work tracking
         'work_status', 'final_cost', 'provider_notes',
         'rating', 'review', 'work_started_at', 'work_completed_at',
@@ -35,7 +37,8 @@ class ServiceJobPost extends Model
         'expires_at'        => 'datetime',
         'work_started_at'   => 'datetime',
         'work_completed_at' => 'datetime',
-        'media'             => 'array',
+        'media'                   => 'array',
+        'attached_diagnostic_ids' => 'array',
     ];
 
     protected static function boot()
@@ -67,6 +70,16 @@ class ServiceJobPost extends Model
     public function acceptedOffer(): BelongsTo
     {
         return $this->belongsTo(ServiceJobOffer::class, 'accepted_offer_id');
+    }
+
+    public function preferredProvider(): BelongsTo
+    {
+        return $this->belongsTo(ServiceProvider::class, 'preferred_provider_id');
+    }
+
+    public function attachedDiagnostics()
+    {
+        return \App\Models\ServiceDiagnostic::whereIn('id', $this->attached_diagnostic_ids ?? [])->get();
     }
 
     public function assignedProvider(): BelongsTo
