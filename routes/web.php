@@ -179,6 +179,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
+    // Service History (Consumer view of all service records across their vehicles)
+
+    Route::prefix('service-history')->name('service-history.')->group(function () {
+        Route::get('/',             [\App\Http\Controllers\ServiceHistoryController::class, 'index'])->name('index');
+        Route::get('/diagnostics',  [\App\Http\Controllers\ServiceHistoryController::class, 'diagnostics'])->name('diagnostics');
+        Route::get('/{record}',     [\App\Http\Controllers\ServiceHistoryController::class, 'show'])->name('show');
+    });
+
     // ── Job Posts (InDrive-style) ────────────────────────────────────────────
     Route::prefix('jobs')->name('jobs.')->group(function () {
         Route::get('/',                [JobPostController::class, 'index'])->name('index');

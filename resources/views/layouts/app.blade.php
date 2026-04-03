@@ -91,7 +91,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         
-        /* Smooth theme transitions for all elements */
         *,
         *::before,
         *::after {
@@ -100,7 +99,6 @@
             transition-timing-function: ease;
         }
         
-        /* Don't transition animations and transforms */
         * {
             transition-property: background-color, color, border-color, box-shadow;
         }
@@ -126,18 +124,10 @@
             box-shadow: 4px 0 30px rgba(0, 212, 255, 0.1);
         }
 
-        .sidebar.collapsed {
-            width: 80px;
-        }
+        .sidebar.collapsed { width: 80px; }
 
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
         .sidebar-header {
             padding: 1.5rem;
@@ -160,11 +150,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .sidebar.collapsed .logo {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-        }
+        .sidebar.collapsed .logo { opacity: 0; width: 0; overflow: hidden; }
 
         .sidebar-toggle {
             padding: 0.5rem;
@@ -175,29 +161,12 @@
             transition: all 0.3s ease;
         }
 
-        .sidebar-toggle:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--accent-primary);
-        }
+        .sidebar-toggle:hover { background: rgba(0, 212, 255, 0.1); border-color: var(--accent-primary); }
+        .sidebar-toggle svg { width: 20px; height: 20px; color: var(--text-secondary); transition: transform 0.3s ease; }
+        .sidebar.collapsed .sidebar-toggle svg { transform: rotate(180deg); }
 
-        .sidebar-toggle svg {
-            width: 20px;
-            height: 20px;
-            color: var(--text-secondary);
-            transition: transform 0.3s ease;
-        }
-
-        .sidebar.collapsed .sidebar-toggle svg {
-            transform: rotate(180deg);
-        }
-
-        .sidebar-nav {
-            padding: 1rem;
-        }
-
-        .nav-section {
-            margin-bottom: 2rem;
-        }
+        .sidebar-nav { padding: 1rem; }
+        .nav-section { margin-bottom: 2rem; }
 
         .nav-section-title {
             font-size: 0.75rem;
@@ -210,12 +179,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .sidebar.collapsed .nav-section-title {
-            opacity: 0;
-            height: 0;
-            margin: 0;
-            overflow: hidden;
-        }
+        .sidebar.collapsed .nav-section-title { opacity: 0; height: 0; margin: 0; overflow: hidden; }
 
         .nav-item {
             display: flex;
@@ -230,10 +194,7 @@
             margin-bottom: 0.25rem;
         }
 
-        .nav-item:hover {
-            background: rgba(0, 212, 255, 0.05);
-            color: var(--text-primary);
-        }
+        .nav-item:hover { background: rgba(0, 212, 255, 0.05); color: var(--text-primary); }
 
         .nav-item.active {
             background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 255, 170, 0.15));
@@ -253,16 +214,8 @@
             border-radius: 0 2px 2px 0;
         }
 
-        .nav-icon {
-            width: 22px;
-            height: 22px;
-            flex-shrink: 0;
-            transition: transform 0.3s ease;
-        }
-
-        .nav-item:hover .nav-icon {
-            transform: scale(1.1);
-        }
+        .nav-icon { width: 22px; height: 22px; flex-shrink: 0; transition: transform 0.3s ease; }
+        .nav-item:hover .nav-icon { transform: scale(1.1); }
 
         .nav-text {
             font-size: 0.875rem;
@@ -271,11 +224,7 @@
             transition: opacity 0.3s ease;
         }
 
-        .sidebar.collapsed .nav-text {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-        }
+        .sidebar.collapsed .nav-text { opacity: 0; width: 0; overflow: hidden; }
 
         .sidebar-footer {
             position: sticky;
@@ -302,44 +251,15 @@
             margin-bottom: 0.5rem;
         }
 
-        .footer-button:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--accent-primary);
-            color: var(--text-primary);
-        }
-
-        .footer-button svg {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .footer-button span {
-            white-space: nowrap;
-            transition: opacity 0.3s ease;
-        }
-
-        .sidebar.collapsed .footer-button span {
-            opacity: 0;
-            width: 0;
-            overflow: hidden;
-        }
-
-        .sidebar.collapsed .footer-button {
-            padding: 0.75rem;
-            justify-content: center;
-        }
+        .footer-button:hover { background: rgba(0, 212, 255, 0.1); border-color: var(--accent-primary); color: var(--text-primary); }
+        .footer-button svg { width: 20px; height: 20px; flex-shrink: 0; }
+        .footer-button span { white-space: nowrap; transition: opacity 0.3s ease; }
+        .sidebar.collapsed .footer-button span { opacity: 0; width: 0; overflow: hidden; }
+        .sidebar.collapsed .footer-button { padding: 0.75rem; justify-content: center; }
 
         /* Main Content */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            transition: margin-left 0.3s ease;
-        }
-
-        .sidebar.collapsed ~ .main-content {
-            margin-left: 80px;
-        }
+        .main-content { flex: 1; margin-left: 280px; transition: margin-left 0.3s ease; }
+        .sidebar.collapsed ~ .main-content { margin-left: 80px; }
 
         .top-bar {
             background: var(--sidebar-bg);
@@ -355,19 +275,8 @@
             box-shadow: 0 4px 30px rgba(0, 212, 255, 0.1);
         }
 
-        .top-bar-left h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-        }
-
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+        .top-bar-left h1 { font-family: 'Orbitron', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+        .top-bar-right { display: flex; align-items: center; gap: 1rem; }
 
         .theme-toggle, .alert-button, .user-button {
             padding: 0.625rem;
@@ -381,16 +290,8 @@
             gap: 0.5rem;
         }
 
-        .theme-toggle:hover, .alert-button:hover, .user-button:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--accent-primary);
-        }
-
-        .theme-toggle svg, .alert-button svg {
-            width: 20px;
-            height: 20px;
-            color: var(--text-secondary);
-        }
+        .theme-toggle:hover, .alert-button:hover, .user-button:hover { background: rgba(0, 212, 255, 0.1); border-color: var(--accent-primary); }
+        .theme-toggle svg, .alert-button svg { width: 20px; height: 20px; color: var(--text-secondary); }
 
         [data-theme="dark"] .sun-icon { display: block; }
         [data-theme="dark"] .moon-icon { display: none; }
@@ -415,10 +316,7 @@
             animation: pulse 2s ease-in-out infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 
         .alert-dropdown, .user-dropdown {
             position: absolute;
@@ -433,27 +331,11 @@
             z-index: 1001;
         }
 
-        .alert-dropdown {
-            width: 360px;
-            max-height: 480px;
-        }
+        .alert-dropdown { width: 360px; max-height: 480px; }
+        .user-dropdown { width: 200px; }
 
-        .user-dropdown {
-            width: 200px;
-        }
-
-        .dropdown-header {
-            padding: 1.25rem;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .dropdown-header h3 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-        }
+        .dropdown-header { padding: 1.25rem; border-bottom: 1px solid var(--border-color); }
+        .dropdown-header h3 { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0; }
 
         .alert-item {
             padding: 1rem 1.25rem;
@@ -465,14 +347,8 @@
             color: inherit;
         }
 
-        .alert-item:hover {
-            background: rgba(0, 212, 255, 0.05);
-        }
-
-        .alert-item.unread {
-            background: rgba(0, 212, 255, 0.03);
-            border-left: 3px solid var(--accent-primary);
-        }
+        .alert-item:hover { background: rgba(0, 212, 255, 0.05); }
+        .alert-item.unread { background: rgba(0, 212, 255, 0.03); border-left: 3px solid var(--accent-primary); }
 
         .user-dropdown a, .user-dropdown button {
             display: block;
@@ -489,14 +365,9 @@
             font-family: 'Chakra Petch', sans-serif;
         }
 
-        .user-dropdown a:hover, .user-dropdown button:hover {
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--text-primary);
-        }
+        .user-dropdown a:hover, .user-dropdown button:hover { background: rgba(0, 212, 255, 0.1); color: var(--text-primary); }
 
-        .flash-message {
-            margin: 1.5rem 2rem;
-        }
+        .flash-message { margin: 1.5rem 2rem; }
 
         .alert {
             padding: 1rem 1.25rem;
@@ -507,41 +378,18 @@
             animation: slideInDown 0.4s ease-out;
         }
 
-        @keyframes slideInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .alert-success {
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            color: #00ff88;
-        }
-
-        .alert-error {
-            background: rgba(255, 51, 102, 0.1);
-            border: 1px solid rgba(255, 51, 102, 0.3);
-            color: #ff3366;
-        }
+        .alert-success { background: rgba(0, 255, 136, 0.1); border: 1px solid rgba(0, 255, 136, 0.3); color: #00ff88; }
+        .alert-error   { background: rgba(255, 51, 102, 0.1); border: 1px solid rgba(255, 51, 102, 0.3); color: #ff3366; }
 
         .relative { position: relative; }
 
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .top-bar {
-                padding: 1rem;
-            }
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .top-bar { padding: 1rem; }
         }
     </style>
 </head>
@@ -603,6 +451,16 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 9m0 8V9m0 0L9 7"/>
                         </svg>
                         <span class="nav-text">Trip Log</span>
+                    </a>
+                    <a href="{{ route('service-history.index') }}" class="nav-item {{ request()->routeIs('service-history.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="nav-text">Service History</span>
+                        @php $openDiag = \App\Models\ServiceDiagnostic::whereIn('vehicle_id', auth()->user()->vehicles()->pluck('id'))->whereIn('status',['open','acknowledged','in_progress'])->count(); @endphp
+                        @if($openDiag > 0)
+                        <span style="margin-left:auto;background:#ff6600;color:#fff;border-radius:10px;font-size:.6rem;padding:1px 6px;font-weight:700;">{{ $openDiag }}</span>
+                        @endif
                     </a>
                 </div>
 
@@ -754,9 +612,7 @@
         function initSidebar() {
             const sidebar = document.getElementById('sidebar');
             const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-            if (isCollapsed) {
-                sidebar.classList.add('collapsed');
-            }
+            if (isCollapsed) sidebar.classList.add('collapsed');
         }
 
         initTheme();
@@ -765,8 +621,6 @@
 
     <script>
     // ── Consumer Global Notification Bell ────────────────────────────────────
-    // Polls every 8s so badge updates on ANY page — not just the job page.
-    // When Reverb is running, Echo triggers an instant poll too.
     (function() {
         const FETCH_URL      = '{{ route("alerts.fetch") }}';
         const COUNTS_URL     = '{{ route("alerts.counts") }}';
@@ -774,7 +628,6 @@
         const CSRF           = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
         let   dropdownOpen   = false;
 
-        // ── Badge update ────────────────────────────────────────────────────
         function updateBadge(count) {
             const badge = document.getElementById('consumerNotifBadge');
             if (!badge) return;
@@ -786,7 +639,6 @@
             }
         }
 
-        // ── Sidebar jobs badge update ───────────────────────────────────────
         function updateJobsBadge() {
             fetch(COUNTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
@@ -800,7 +652,6 @@
                 .catch(() => {});
         }
 
-        // ── Render notifications in dropdown ────────────────────────────────
         function renderList(notifications) {
             const list = document.getElementById('consumerNotifList');
             if (!notifications.length) {
@@ -811,13 +662,12 @@
                 <a href="#" class="alert-item ${n.is_read ? '' : 'unread'}"
                    onclick="consumerNotifClick(event,${n.id},'${n.action_url ?? ''}')">
                     <div style="font-size:.8rem;font-weight:600;color:var(--text-primary);margin-bottom:.25rem;">${n.title}</div>
-                    <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.35rem);">${n.message}</div>
+                    <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.35rem;">${n.message}</div>
                     <div style="font-size:.7rem;color:var(--text-tertiary);">${n.time}</div>
                 </a>
             `).join('');
         }
 
-        // ── Poll: refresh badge (and list if open) ──────────────────────────
         async function poll() {
             try {
                 const res  = await fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
@@ -827,7 +677,6 @@
             } catch(e) {}
         }
 
-        // ── Toggle dropdown ─────────────────────────────────────────────────
         window.toggleConsumerNotif = function() {
             dropdownOpen = !dropdownOpen;
             const dd = document.getElementById('consumerNotifDropdown');
@@ -839,7 +688,6 @@
             }
         };
 
-        // ── Click notification ──────────────────────────────────────────────
         window.consumerNotifClick = async function(e, id, url) {
             e.preventDefault();
             await fetch(`${MARK_READ_BASE}/${id}/read`, {
@@ -850,7 +698,6 @@
             else poll();
         };
 
-        // Close dropdown on outside click
         document.addEventListener('click', function(e) {
             if (dropdownOpen && !document.getElementById('consumerNotifWrap').contains(e.target)) {
                 dropdownOpen = false;
@@ -858,14 +705,12 @@
             }
         });
 
-        // ── Start polling ────────────────────────────────────────────────────
         document.addEventListener('DOMContentLoaded', function() {
             poll();
             updateJobsBadge();
             setInterval(poll, 8000);
             setInterval(updateJobsBadge, 8000);
 
-            // ── WebSocket: instant badge update when new offer arrives ────────
             setTimeout(() => {
                 if (window.Echo) {
                     try {
