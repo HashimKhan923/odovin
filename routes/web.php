@@ -346,16 +346,27 @@ Route::prefix('provider')->name('provider.')->group(function () {
         });
 
         // Service Records
-        Route::prefix('service-records')->name('service-records.')->group(function () {
-            Route::get('/',                           [\App\Http\Controllers\Provider\ServiceRecordController::class, 'index'])->name('index');
-            Route::get('/create',                     [\App\Http\Controllers\Provider\ServiceRecordController::class, 'create'])->name('create');
-            Route::post('/',                          [\App\Http\Controllers\Provider\ServiceRecordController::class, 'store'])->name('store');
-            Route::get('/{serviceRecord}/edit',       [\App\Http\Controllers\Provider\ServiceRecordController::class, 'edit'])->name('edit');
-            Route::put('/{serviceRecord}',            [\App\Http\Controllers\Provider\ServiceRecordController::class, 'update'])->name('update');
-            Route::delete('/{serviceRecord}',         [\App\Http\Controllers\Provider\ServiceRecordController::class, 'destroy'])->name('destroy');
+Route::prefix('service-records')->name('service-records.')->group(function () {
+    Route::get('/create', [\App\Http\Controllers\Provider\ServiceRecordController::class, 'create'])->name('create');
+    Route::get('/{serviceRecord}/edit', [\App\Http\Controllers\Provider\ServiceRecordController::class, 'edit'])->name('edit');
+    Route::get('/', [\App\Http\Controllers\Provider\ServiceRecordController::class, 'index'])->name('index');
+    Route::post('/', [\App\Http\Controllers\Provider\ServiceRecordController::class, 'store'])->name('store');
+    Route::get('/{serviceRecord}', [\App\Http\Controllers\Provider\ServiceRecordController::class, 'show'])->name('show');
+    Route::put('/{serviceRecord}', [ServiceRecordController::class, 'update'])->name('update');
+    Route::delete('/{serviceRecord}', [\App\Http\Controllers\Provider\ServiceRecordController::class, 'destroy'])->name('destroy');
+});
+
+        // Service Diagnostics (flagged during service)
+        Route::prefix('service-diagnostics')->name('service-diagnostics.')->group(function () {
+            Route::get('/',                          [\App\Http\Controllers\Provider\ServiceDiagnosticController::class, 'index'])->name('index');
+            Route::patch('/{issue}/status',          [\App\Http\Controllers\Provider\ServiceDiagnosticController::class, 'updateStatus'])->name('updateStatus');
         });
+        
     });
 });
+
+// Nearby Providers Map API
+Route::middleware(['web', 'auth'])->get('/api/providers/nearby-map', \App\Http\Controllers\Api\NearbyMapController::class)->name('api.providers.nearby-map');
 
 // ── Real-Time Polling Endpoints ──────────────────────────────────────────────
 // Uses web middleware so Laravel session auth works with fetch() calls from Blade.

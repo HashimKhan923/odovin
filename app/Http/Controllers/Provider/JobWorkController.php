@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceJobPost;
 use App\Models\ServiceJobOffer;
 use App\Models\ServiceRecord;
+use App\Models\ServiceDiagnostic;
 use App\Models\MaintenanceSchedule;
+use App\Models\Alert;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,9 +21,6 @@ class JobWorkController extends Controller
         return Auth::user()->serviceProvider;
     }
 
-    /**
-     * My Work Queue — all accepted jobs for this provider.
-     */
     public function index(Request $request)
     {
         $provider = $this->provider();
@@ -57,9 +56,6 @@ class JobWorkController extends Controller
             ->count();
     }
 
-    /**
-     * Show detail of a specific accepted job + status update form.
-     */
     public function show(ServiceJobPost $job)
     {
         $provider = $this->provider();
@@ -74,13 +70,8 @@ class JobWorkController extends Controller
         return view('provider.jobs.work-show', compact('provider', 'job', 'offer'));
     }
 
-    /**
-     * Update the work status of a job.
-     * Lifecycle: pending → confirmed → in_progress → completed (or → cancelled)
-     */
     public function updateStatus(Request $request, ServiceJobPost $job)
     {
-    
         $provider = $this->provider();
 
         $offer = ServiceJobOffer::where('job_post_id', $job->id)
@@ -94,7 +85,6 @@ class JobWorkController extends Controller
             'final_cost'     => 'nullable|numeric|min:0',
         ]);
 
-        // Guard valid transitions
         $current = $job->work_status ?? 'pending';
         $new     = $validated['work_status'];
 
@@ -109,7 +99,6 @@ class JobWorkController extends Controller
             return back()->with('error', "Cannot move from '{$current}' to '{$new}'.");
         }
 
-        // Require final_cost when completing
         if ($new === 'completed') {
             $request->validate(['final_cost' => 'required|numeric|min:1']);
         }
@@ -120,22 +109,19 @@ class JobWorkController extends Controller
             $updateData['provider_notes'] = $validated['provider_notes'];
         }
 
-        if ($new === 'in_progress')  $updateData['work_started_at']   = now();
-        if ($new === 'completed')    $updateData['work_completed_at']  = now();
-        if ($new === 'completed')    $updateData['final_cost']         = $validated['final_cost'];
-        if ($new === 'completed')    $updateData['status']             = 'completed'; // close the post
-        if ($new === 'cancelled')    $updateData['status']             = 'cancelled';
+        if ($new === 'in_progress') $updateData['work_started_at']  = now();
+        if ($new === 'completed')   $updateData['work_completed_at'] = now();
+        if ($new === 'completed')   $updateData['final_cost']        = $validated['final_cost'];
+        if ($new === 'completed')   $updateData['status']            = 'completed';
+        if ($new === 'cancelled')   $updateData['status']            = 'cancelled';
 
         $job->update($updateData);
         $job->refresh()->load(['user', 'vehicle', 'acceptedOffer.serviceProvider']);
 
-        // Notify consumer about status change
         JobNotificationService::workStatusUpdated($job, $new);
 
-        // Generate revenue record on completion
         if ($new === 'completed') {
             $this->generateRevenueRecord($job, $provider);
-            // Update provider's overall rating from all job ratings
             $this->refreshProviderRating($provider);
         }
 
@@ -143,26 +129,19 @@ class JobWorkController extends Controller
             ->with('success', $this->successMessage($new));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Completion flow: GET shows combined form, POST saves everything
-    // ─────────────────────────────────────────────────────────────────────────
-
+    // ── Completion form ───────────────────────────────────────────────────────
     public function completeForm(ServiceJobPost $job)
     {
         $provider = $this->provider();
 
-        // Must be accepted offer for this provider
         $offer = ServiceJobOffer::where('job_post_id', $job->id)
             ->where('service_provider_id', $provider->id)
             ->where('status', 'accepted')
             ->firstOrFail();
 
-        // Only allow from in_progress
         abort_unless(($job->work_status ?? 'pending') === 'in_progress', 403, 'Job must be in progress to complete.');
 
-        // Load existing service record if already created (re-edit scenario)
         $existingRecord = ServiceRecord::where('job_post_id', $job->id)->first();
-
         $job->load(['vehicle', 'user', 'acceptedOffer.serviceProvider']);
 
         return view('provider.jobs.complete', compact('job', 'offer', 'provider', 'existingRecord'));
@@ -180,10 +159,8 @@ class JobWorkController extends Controller
         abort_unless(($job->work_status ?? 'pending') === 'in_progress', 403);
 
         $validated = $request->validate([
-            // Job completion fields
             'final_cost'           => 'required|numeric|min:0.01',
             'provider_notes'       => 'nullable|string|max:1000',
-            // Service record fields
             'service_type'         => 'required|string|max:255',
             'description'          => 'required|string|max:2000',
             'service_date'         => 'required|date',
@@ -193,20 +170,30 @@ class JobWorkController extends Controller
             'notes'                => 'nullable|string|max:2000',
             'next_service_date'    => 'nullable|date',
             'next_service_mileage' => 'nullable|integer|min:0',
+            // Diagnostics
+            'diagnostics'                      => 'nullable|array',
+            'diagnostics.*.title'              => 'required|string|max:200',
+            'diagnostics.*.description'        => 'required|string|max:1000',
+            'diagnostics.*.category'           => 'nullable|string',
+            'diagnostics.*.location'           => 'nullable|string|max:100',
+            'diagnostics.*.severity'           => 'nullable|in:low,medium,high,critical',
+            'diagnostics.*.is_safety_critical' => 'nullable|in:0,1',
+            'diagnostics.*.estimated_cost_min' => 'nullable|numeric|min:0',
+            'diagnostics.*.estimated_cost_max' => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($validated, $job, $provider) {
 
-            // ── 1. Mark job complete ─────────────────────────────────────────────
+            // 1. Mark job complete
             $job->update([
-                'work_status'        => 'completed',
-                'status'             => 'completed',
-                'final_cost'         => $validated['final_cost'],
-                'provider_notes'     => $validated['provider_notes'] ?? null,
-                'work_completed_at'  => now(),
+                'work_status'       => 'completed',
+                'status'            => 'completed',
+                'final_cost'        => $validated['final_cost'],
+                'provider_notes'    => $validated['provider_notes'] ?? null,
+                'work_completed_at' => now(),
             ]);
 
-            // ── 2. Upsert service record (create or update existing) ─────────────
+            // 2. Upsert service record
             $partsArray = !empty($validated['parts_replaced'])
                 ? array_values(array_filter(array_map('trim', explode(',', $validated['parts_replaced']))))
                 : null;
@@ -229,15 +216,15 @@ class JobWorkController extends Controller
                 ]
             );
 
-            // ── 3. Update vehicle mileage ────────────────────────────────────────
+            // 3. Update vehicle mileage
             $vehicle = $job->vehicle;
             if ($vehicle && !empty($validated['mileage_at_service'])) {
                 $vehicle->updateMileage((int) $validated['mileage_at_service']);
             }
 
-            // ── 4. Upsert expense record ─────────────────────────────────────────
+            // 4. Upsert expense record
             if ($vehicle) {
-                $expense = $record->expense;
+                $expense     = $record->expense;
                 $expenseData = [
                     'category'         => 'maintenance',
                     'description'      => $validated['service_type'] . ' — ' . $validated['description'],
@@ -255,12 +242,17 @@ class JobWorkController extends Controller
                 }
             }
 
-            // ── 5. Maintenance: complete matching schedule, schedule next ────────
+            // 5. Maintenance schedule
             if ($vehicle) {
                 $this->handleMaintenanceOnComplete($vehicle, $validated);
             }
 
-            // ── 6. Notify consumer + refresh provider rating ─────────────────────
+            // 6. Save diagnostics findings
+            if (!empty($validated['diagnostics'])) {
+                $this->saveDiagnostics($record, $validated['diagnostics'], $provider, $job);
+            }
+
+            // 7. Notify consumer + refresh rating
             $job->refresh()->load(['user', 'vehicle', 'acceptedOffer.serviceProvider']);
             JobNotificationService::workStatusUpdated($job, 'completed');
             $this->refreshProviderRating($provider);
@@ -268,6 +260,66 @@ class JobWorkController extends Controller
 
         return redirect()->route('provider.jobs.work.show', $job)
             ->with('success', '🎉 Job completed! Service record, expenses, and maintenance all updated.');
+    }
+
+    // ── Save diagnostic findings + alert owner ────────────────────────────────
+    private function saveDiagnostics(ServiceRecord $record, array $diagnostics, $provider, ServiceJobPost $job): void
+    {
+        $hasSafety = false;
+        $saved     = [];
+
+        foreach ($diagnostics as $data) {
+            if (empty($data['title']) || empty($data['description'])) continue;
+
+            $isSafety = ($data['is_safety_critical'] ?? '0') === '1';
+            if ($isSafety) $hasSafety = true;
+
+            $saved[] = ServiceDiagnostic::create([
+                'vehicle_id'          => $record->vehicle_id,
+                'service_record_id'   => $record->id,
+                'service_provider_id' => $provider->id,
+                'title'               => $data['title'],
+                'description'         => $data['description'],
+                'category'            => $data['category'] ?? 'other',
+                'location'            => $data['location'] ?? null,
+                'severity'            => $data['severity'] ?? 'medium',
+                'is_safety_critical'  => $isSafety,
+                'estimated_cost_min'  => $data['estimated_cost_min'] ?? null,
+                'estimated_cost_max'  => $data['estimated_cost_max'] ?? null,
+                'status'              => 'open',
+            ]);
+        }
+
+        if (empty($saved) || !$record->vehicle?->user_id) return;
+
+        $vehicle  = $record->vehicle;
+        $count    = count($saved);
+        $provName = $provider->business_name ?? 'Your provider';
+        $vehName  = "{$vehicle->year} {$vehicle->make} {$vehicle->model}";
+
+        if ($hasSafety) {
+            $title    = "⚠️ Safety Issue Found — {$vehName}";
+            $message  = "{$provName} flagged {$count} diagnostic finding" . ($count > 1 ? 's' : '') .
+                        " including a SAFETY CRITICAL concern during your {$record->service_type}. Please review immediately.";
+            $priority = 'critical';
+        } else {
+            $worst    = in_array('high', array_column($saved, 'severity')) ? 'warning' : 'info';
+            $title    = "🔍 {$count} Diagnostic Finding" . ($count > 1 ? 's' : '') . " — {$vehName}";
+            $message  = "{$provName} flagged {$count} issue" . ($count > 1 ? 's' : '') .
+                        " during your {$record->service_type} service. Tap to review details and cost estimates.";
+            $priority = $worst;
+        }
+
+        Alert::create([
+            'user_id'      => $vehicle->user_id,
+            'vehicle_id'   => $vehicle->id,
+            'type'         => 'maintenance',
+            'title'        => $title,
+            'message'      => $message,
+            'action_url'   => route('vehicles.show', $vehicle),
+            'priority'     => $priority,
+            'for_provider' => false,
+        ]);
     }
 
     protected function handleMaintenanceOnComplete(\App\Models\Vehicle $vehicle, array $data): void
@@ -284,7 +336,7 @@ class JobWorkController extends Controller
             ->first();
 
         if ($schedule) {
-            $schedule->markCompleted(); // auto-creates next if recurring
+            $schedule->markCompleted();
 
             if ($hasNextDate || $hasNextMileage) {
                 $next = MaintenanceSchedule::where('vehicle_id', $vehicle->id)
@@ -314,10 +366,8 @@ class JobWorkController extends Controller
         }
     }
 
-
     private function generateRevenueRecord(ServiceJobPost $job, $provider): void
     {
-        // Avoid duplicates
         if (ServiceRecord::where('job_post_id', $job->id)->exists()) return;
 
         ServiceRecord::create([
@@ -335,7 +385,6 @@ class JobWorkController extends Controller
 
     private function refreshProviderRating($provider): void
     {
-        // Average ratings from both bookings AND job posts
         $bookingAvg = $provider->bookings()->whereNotNull('rating')->avg('rating') ?? 0;
         $bookingCnt = $provider->bookings()->whereNotNull('rating')->count();
 
@@ -346,7 +395,7 @@ class JobWorkController extends Controller
             $q->where('service_provider_id', $provider->id)->where('status', 'accepted'))
             ->whereNotNull('rating')->count();
 
-        $totalCnt = $bookingCnt + $jobCnt;
+        $totalCnt  = $bookingCnt + $jobCnt;
         $avgRating = $totalCnt > 0
             ? (($bookingAvg * $bookingCnt) + ($jobAvg * $jobCnt)) / $totalCnt
             : 0;

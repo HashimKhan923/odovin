@@ -142,7 +142,7 @@
             .sp-content { padding: 1.25rem; }
         }
 
-        /* ── Notification Bell ─────────────────────────────────────────────── */
+        /* ── Notification Bell ── */
         .notif-wrap { position: relative; }
         .notif-btn {
             position: relative; background: rgba(0,212,255,.08);
@@ -163,10 +163,7 @@
             padding: 0 4px; border: 2px solid var(--bg-primary);
             animation: badgePulse 2s infinite;
         }
-        @keyframes badgePulse {
-            0%,100% { transform: scale(1); }
-            50%      { transform: scale(1.15); }
-        }
+        @keyframes badgePulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
         .notif-dropdown {
             position: absolute; top: calc(100% + 10px); right: 0;
             width: 360px; background: rgba(18,24,39,.98);
@@ -176,10 +173,7 @@
             animation: dropIn .2s ease;
         }
         .notif-dropdown.open { display: block; }
-        @keyframes dropIn {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes dropIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .notif-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color);
@@ -199,6 +193,7 @@
             display: flex; gap: .875rem; padding: .875rem 1.25rem;
             border-bottom: 1px solid rgba(0,212,255,.04);
             cursor: pointer; transition: background .2s; text-decoration: none;
+            position: relative;
         }
         .notif-item:hover { background: rgba(0,212,255,.05); }
         .notif-item.unread { background: rgba(0,212,255,.04); }
@@ -208,7 +203,6 @@
             width: 3px; height: 60%; background: var(--accent-cyan);
             border-radius: 0 2px 2px 0;
         }
-        .notif-item { position: relative; }
         .notif-icon {
             width: 36px; height: 36px; border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
@@ -224,8 +218,7 @@
             box-shadow: 0 0 6px var(--accent-cyan);
         }
         .notif-empty {
-            padding: 3rem 1.5rem; text-align: center; color: var(--text-tertiary);
-            font-size: .875rem;
+            padding: 3rem 1.5rem; text-align: center; color: var(--text-tertiary); font-size: .875rem;
         }
         .notif-empty svg { width: 48px; height: 48px; margin: 0 auto .75rem; display: block; opacity: .25; }
         .notif-loading {
@@ -280,6 +273,14 @@
                 <a href="{{ route('provider.service-records.index') }}" class="sp-nav-link {{ request()->routeIs('provider.service-records.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Service Records
+                </a>
+                <a href="{{ route('provider.service-diagnostics.index') }}" class="sp-nav-link {{ request()->routeIs('provider.service-diagnostics.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    Service Diagnostics
+                    @php $openIssues = \App\Models\ServiceDiagnostic::where('service_provider_id', auth()->user()->serviceProvider?->id ?? 0)->whereIn('status',['open','acknowledged','in_progress'])->count(); @endphp
+                    @if($openIssues > 0)
+                    <span class="sp-badge" style="background:#ff6600;">{{ $openIssues }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('provider.profile') }}" class="sp-nav-link {{ request()->routeIs('provider.profile') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -498,8 +499,8 @@
         fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
             .then(data => {
-                const badge = document.getElementById('notifBadge');
-                const btn   = document.getElementById('notifBtn');
+                const badge  = document.getElementById('notifBadge');
+                const btn    = document.getElementById('notifBtn');
                 const unread = data.unread_count;
                 if (unread > 0) {
                     badge.textContent = unread > 99 ? '99+' : unread;
@@ -513,7 +514,6 @@
             })
             .catch(() => {});
 
-        // Also update open jobs sidebar badge
         fetch(COUNTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(r => r.json())
             .then(data => {
@@ -530,7 +530,6 @@
         pollNotifications();
         setInterval(pollNotifications, 8000);
 
-        // ── WebSocket: instant badge bump when new job posted ─────────────
         setTimeout(() => {
             if (window.Echo) {
                 try {

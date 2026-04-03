@@ -47,4 +47,10 @@ class ServiceRecord extends Model
     {
         return $this->hasOne(Expense::class);
     }
+
+    public function serviceDiagnostics()
+    {
+        return $this->hasMany(ServiceDiagnostic::class);
+    }
+
 }

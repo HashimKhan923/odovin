@@ -30,6 +30,9 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 // Public VIN Decoder (no auth required)
 Route::get('/vehicles/decode-vin/{vin}', [VehicleApiController::class, 'decodeVin']);
 
+// Public: nearby providers for map
+Route::get('/providers/nearby-map', \App\Http\Controllers\Api\NearbyMapController::class);
+
 // Protected Routes
 Route::middleware('auth:sanctum')->group(function () {
     
