@@ -101,7 +101,7 @@
             </select>
             <select name="radius" class="filter-select" onchange="this.form.submit()">
                 @foreach([1, 5, 10, 25, 50, 100] as $r)
-                <option value="{{ $r }}" {{ request('radius', 10) == $r ? 'selected' : '' }}>Within {{ $r }} miles</option>
+                <option value="{{ $r }}" {{ request('radius', 50) == $r ? 'selected' : '' }}>Within {{ $r }} miles</option>
                 @endforeach
             </select>
         </form>
