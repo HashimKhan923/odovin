@@ -21,19 +21,25 @@ class JobNotificationService
         $lng    = $job->longitude;
         $radius = $job->radius ?? 25;
 
+        // Wrap in subquery so MySQL resolves the 'distance' alias before HAVING filters it.
+        // Direct HAVING on a selectRaw alias is unreliable across MySQL versions.
         $providers = ServiceProvider::active()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->selectRaw("
                 *,
                 (3959 * acos(
-                    cos(radians(?)) * cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) * sin(radians(latitude))
+                    LEAST(1, GREATEST(-1,
+                        cos(radians(?)) * cos(radians(latitude)) *
+                        cos(radians(longitude) - radians(?)) +
+                        sin(radians(?)) * sin(radians(latitude))
+                    ))
                 )) AS distance
             ", [$lat, $lng, $lat])
             ->havingRaw('distance <= ?', [$radius])
-            ->get();
+            ->orderBy('distance')
+            ->get()
+            ->filter(fn($p) => $p->distance <= $radius); // PHP-level safety net
 
         foreach ($providers as $provider) {
             if (!$provider->user_id) continue;
