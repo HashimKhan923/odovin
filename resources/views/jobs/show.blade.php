@@ -151,6 +151,30 @@
 .legend-pip span { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
 @keyframes scanLine { 0%{transform:translateX(-100%);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateX(100%);opacity:0} }
 @keyframes hudBlink { 0%,100%{opacity:1;box-shadow:0 0 8px var(--accent-cyan)} 50%{opacity:.3;box-shadow:none} }
+/* ── Radius slider ── */
+.radius-slider-wrap {
+    display:flex; align-items:center; gap:.75rem;
+    background:rgba(10,14,26,.8); border:1px solid rgba(0,212,255,.2);
+    border-radius:10px; padding:.5rem .875rem; backdrop-filter:blur(8px);
+    margin-top:.625rem;
+}
+.radius-label { font-family:'Orbitron',sans-serif; font-size:.65rem; color:var(--accent-cyan); white-space:nowrap; font-weight:700; min-width:60px; }
+.radius-val   { font-family:'Orbitron',sans-serif; font-size:.75rem; color:#fff; font-weight:800; min-width:40px; text-align:right; }
+input[type=range].radius-range {
+    flex:1; -webkit-appearance:none; height:4px;
+    background:linear-gradient(to right, var(--accent-cyan) var(--pct,50%), rgba(0,212,255,.15) var(--pct,50%));
+    border-radius:2px; outline:none; cursor:pointer;
+}
+input[type=range].radius-range::-webkit-slider-thumb {
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--accent-cyan); box-shadow:0 0 8px var(--accent-cyan);
+    border:2px solid #fff; cursor:pointer;
+}
+input[type=range].radius-range::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%;
+    background:var(--accent-cyan); border:2px solid #fff; cursor:pointer;
+}
+
 /* Google Maps InfoWindow dark override */
 .gm-style .gm-style-iw-c { background:#0a0e1a !important; border-radius:10px !important; padding:0 !important; box-shadow:0 8px 32px rgba(0,0,0,.6) !important; }
 .gm-style .gm-style-iw-d { overflow:hidden !important; }
@@ -395,23 +419,29 @@
                     <span class="map-hud-badge" id="mapTotalCount">— providers</span>
                 </div>
                 <div id="nearbyMap"></div>
-                <div class="map-hud-bottom">
-                    <div style="display:flex;gap:.625rem;flex-wrap:wrap;">
-                        <div class="map-stat-pill">
-                            <div><div class="num" id="mapVerifiedCount">—</div><div class="lbl">Verified</div></div>
+                <div class="map-hud-bottom" style="flex-direction:column;gap:.5rem;align-items:stretch;">
+                    <div style="display:flex;gap:.625rem;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+                        <div style="display:flex;gap:.625rem;flex-wrap:wrap;">
+                            <div class="map-stat-pill">
+                                <div><div class="num" id="mapVerifiedCount">—</div><div class="lbl">Verified</div></div>
+                            </div>
+                            <div class="map-stat-pill">
+                                <div><div class="num" id="mapClosestDist">—</div><div class="lbl">Closest (mi)</div></div>
+                            </div>
                         </div>
-                        <div class="map-stat-pill">
-                            <div><div class="num" id="mapClosestDist">—</div><div class="lbl">Closest (mi)</div></div>
-                        </div>
-                        <div class="map-stat-pill">
-                            <div><div class="num" style="color:var(--accent-green);">{{ $job->radius ?? 25 }}mi</div><div class="lbl">Radius</div></div>
+                        <div class="map-legend-inline">
+                            <div class="legend-pip"><span style="background:#00d4ff;box-shadow:0 0 5px #00d4ff;"></span>Job</div>
+                            <div class="legend-pip"><span style="background:#00ffaa;box-shadow:0 0 5px #00ffaa;"></span>Verified</div>
+                            <div class="legend-pip"><span style="background:#ffaa00;box-shadow:0 0 5px #ffaa00;"></span>Unverified</div>
                         </div>
                     </div>
-                    <div class="map-legend-inline">
-                        <div class="legend-pip"><span style="background:#00d4ff;box-shadow:0 0 5px #00d4ff;"></span>Job</div>
-                        <div class="legend-pip"><span style="background:#00ffaa;box-shadow:0 0 5px #00ffaa;"></span>Verified</div>
-                        <div class="legend-pip"><span style="background:#ffaa00;box-shadow:0 0 5px #ffaa00;"></span>Unverified</div>
-                        <div class="legend-pip"><span style="background:#4a4a6a;"></span>Inactive</div>
+                    {{-- Radius slider --}}
+                    <div class="radius-slider-wrap">
+                        <span class="radius-label">📡 Radius</span>
+                        <input type="range" class="radius-range" id="radiusSlider"
+                            min="5" max="100" step="5" value="{{ $job->radius ?? 25 }}"
+                            oninput="onRadiusChange(this.value)">
+                        <span class="radius-val"><span id="radiusDisplay">{{ $job->radius ?? 25 }}</span> mi</span>
                     </div>
                 </div>
             </div>
@@ -629,49 +659,64 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
 (function() {
     const JOB_LAT = {{ $job->latitude }};
     const JOB_LNG = {{ $job->longitude }};
-    const RADIUS  = {{ $job->radius ?? 25 }};
+    let   RADIUS  = {{ $job->radius ?? 25 }};
 
-    function initNearbyMap() {
-        const mapEl = document.getElementById('nearbyMap');
-        if (!mapEl || !window.google) return;
+    let mapObj = null;
+    let radiusCircles = [];
+    let providerMarkers = [];
 
-        const map = new google.maps.Map(mapEl, {
-            center: { lat: JOB_LAT, lng: JOB_LNG },
-            zoom: RADIUS <= 10 ? 12 : RADIUS <= 25 ? 10 : 9,
-            styles: odovinMapStyles(),
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-        });
+    // ── Radius slider handler ───────────────────────────────────────────
+    window.onRadiusChange = function(val) {
+        val = parseInt(val);
+        RADIUS = val;
+        document.getElementById('radiusDisplay').textContent = val;
+        // Update slider gradient fill
+        const slider = document.getElementById('radiusSlider');
+        const pct = ((val - 5) / (100 - 5)) * 100;
+        slider.style.setProperty('--pct', pct + '%');
+        // Debounce the map refresh
+        clearTimeout(window._radiusTimer);
+        window._radiusTimer = setTimeout(() => refreshMap(), 600);
+    };
 
-        // Job location — glowing pin
-        const jobSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">
-            <defs><filter id="gj"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-            <ellipse cx="22" cy="50" rx="8" ry="3" fill="rgba(0,212,255,.25)"/>
-            <path d="M22 4 C13 4 6 11 6 20 C6 31 22 48 22 48 C22 48 38 31 38 20 C38 11 31 4 22 4Z" fill="#0a2a3a" stroke="#00d4ff" stroke-width="1.5"/>
-            <circle cx="22" cy="20" r="7" fill="#00d4ff" opacity="0.9"/>
-            <circle cx="22" cy="20" r="4" fill="#ffffff"/>
-            <circle cx="22" cy="20" r="7" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.6">
-                <animate attributeName="r" from="7" to="14" dur="2s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/>
-            </circle>
-        </svg>`;
-        new google.maps.Marker({
-            position: { lat: JOB_LAT, lng: JOB_LNG }, map,
-            icon: { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(jobSvg), scaledSize: new google.maps.Size(44,54), anchor: new google.maps.Point(22,50) },
-            zIndex: 20,
-        });
+    // Initialise slider gradient on load
+    setTimeout(() => {
+        const slider = document.getElementById('radiusSlider');
+        if (slider) {
+            const pct = ((RADIUS - 5) / (100 - 5)) * 100;
+            slider.style.setProperty('--pct', pct + '%');
+        }
+    }, 100);
 
-        // Radius circles
-        new google.maps.Circle({ map, center:{lat:JOB_LAT,lng:JOB_LNG}, radius:RADIUS*1609.34, strokeColor:'#00d4ff', strokeOpacity:.25, strokeWeight:1, fillColor:'#00d4ff', fillOpacity:.025 });
-        new google.maps.Circle({ map, center:{lat:JOB_LAT,lng:JOB_LNG}, radius:RADIUS*1609.34*.5, strokeColor:'#00d4ff', strokeOpacity:.12, strokeWeight:1, fillColor:'transparent', fillOpacity:0 });
+    function refreshMap() {
+        if (!mapObj) return;
+        // Clear existing circles and markers
+        radiusCircles.forEach(c => c.setMap(null));
+        radiusCircles = [];
+        providerMarkers.forEach(m => m.setMap(null));
+        providerMarkers = [];
+        // Redraw radius + reload providers
+        drawRadius();
+        loadProviders();
+        // Update zoom
+        mapObj.setZoom(RADIUS <= 10 ? 12 : RADIUS <= 25 ? 10 : 9);
+    }
 
-        // Load providers
+    function drawRadius() {
+        radiusCircles.push(new google.maps.Circle({ map:mapObj, center:{lat:JOB_LAT,lng:JOB_LNG}, radius:RADIUS*1609.34, strokeColor:'#00d4ff', strokeOpacity:.25, strokeWeight:1, fillColor:'#00d4ff', fillOpacity:.025 }));
+        radiusCircles.push(new google.maps.Circle({ map:mapObj, center:{lat:JOB_LAT,lng:JOB_LNG}, radius:RADIUS*1609.34*.5, strokeColor:'#00d4ff', strokeOpacity:.12, strokeWeight:1, fillColor:'transparent', fillOpacity:0 }));
+    }
+
+    function loadProviders() {
+        const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+        set('mapTotalCount', '…');
+        set('mapVerifiedCount', '…');
+        set('mapClosestDist', '…');
+
         fetch(`/api/providers/nearby-map?lat=${JOB_LAT}&lng=${JOB_LNG}&radius=${RADIUS}`, { headers:{'Accept':'application/json'} })
         .then(r => r.json())
         .then(data => {
             const providers = data.providers || [];
-            const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
             set('mapTotalCount', providers.length + ' providers');
             set('mapVerifiedCount', providers.filter(p=>p.is_verified&&p.is_active).length);
             set('mapClosestDist', providers[0] ? providers[0].distance : '—');
@@ -701,11 +746,10 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
                        </svg>`;
 
                 const marker = new google.maps.Marker({
-                    position: { lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) }, map,
+                    position: { lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) }, map:mapObj,
                     icon: { url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg), scaledSize:new google.maps.Size(pulse?36:22,pulse?36:22), anchor:new google.maps.Point(pulse?18:11,pulse?18:11) },
                     zIndex: p.is_active ? 5 : 1,
                 });
-
                 const badge = p.is_verified ? `<span style="font-size:.68rem;background:rgba(0,255,170,.15);color:#00ffaa;border-radius:6px;padding:.1rem .4rem;">✓ Verified</span>` : '';
                 const stars = p.rating > 0 ? `<div style="color:#ffaa00;font-size:.8rem;margin:.2rem 0;">★ ${p.rating} <span style="color:#888;">(${p.total_reviews})</span></div>` : '';
                 const info  = new google.maps.InfoWindow({
@@ -716,10 +760,47 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
                         <div style="font-size:.7rem;color:rgba(0,212,255,.6);margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(0,212,255,.1);">📍 ${p.distance} mi away</div>
                     </div>`
                 });
-                marker.addListener('click', () => { window._openInfo && window._openInfo.close(); info.open(map, marker); window._openInfo = info; });
+                marker.addListener('click', () => { window._openInfo && window._openInfo.close(); info.open(mapObj, marker); window._openInfo = info; });
+                providerMarkers.push(marker);
             });
         })
         .catch(err => console.error('Map error:', err));
+    }
+
+    function initNearbyMap() {
+        const mapEl = document.getElementById('nearbyMap');
+        if (!mapEl || !window.google) return;
+
+        mapObj = new google.maps.Map(mapEl, {
+            center: { lat: JOB_LAT, lng: JOB_LNG },
+            zoom: RADIUS <= 10 ? 12 : RADIUS <= 25 ? 10 : 9,
+            styles: odovinMapStyles(),
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+        });
+
+        // Job location — glowing pin (static, never removed)
+        const jobSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">
+            <defs><filter id="gj"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+            <ellipse cx="22" cy="50" rx="8" ry="3" fill="rgba(0,212,255,.25)"/>
+            <path d="M22 4 C13 4 6 11 6 20 C6 31 22 48 22 48 C22 48 38 31 38 20 C38 11 31 4 22 4Z" fill="#0a2a3a" stroke="#00d4ff" stroke-width="1.5"/>
+            <circle cx="22" cy="20" r="7" fill="#00d4ff" opacity="0.9"/>
+            <circle cx="22" cy="20" r="4" fill="#ffffff"/>
+            <circle cx="22" cy="20" r="7" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.6">
+                <animate attributeName="r" from="7" to="14" dur="2s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/>
+            </circle>
+        </svg>`;
+        new google.maps.Marker({
+            position: { lat: JOB_LAT, lng: JOB_LNG }, map: mapObj,
+            icon: { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(jobSvg), scaledSize: new google.maps.Size(44,54), anchor: new google.maps.Point(22,50) },
+            zIndex: 20,
+        });
+
+        // Draw radius circles + load providers (both refreshable)
+        drawRadius();
+        loadProviders();
     }
 
     function odovinMapStyles() {
