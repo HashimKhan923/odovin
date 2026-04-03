@@ -10,7 +10,6 @@ class AlertController extends Controller
     public function index(Request $request)
     {
         $alerts = Alert::where('user_id', $request->user()->id)
-            ->where('for_provider', 0)
             ->with('vehicle')
             ->when($request->type, function ($query, $type) {
                 return $query->where('type', $type);
@@ -27,93 +26,82 @@ class AlertController extends Controller
     public function fetch(Request $request)
     {
         $userId     = $request->user()->id;
-        $forProvider = $request->boolean('provider'); // provider layout sends ?provider=1
+        $isProvider = $request->boolean('provider'); // ?provider=1 from provider bell
 
-        $notifications = Alert::where('user_id', $userId)
-            ->where('for_provider', $forProvider)
-            ->latest()
-            ->limit(10)
-            ->get()
+        $query = Alert::where('user_id', $userId);
+
+        // Provider bell only shows provider-facing alerts; consumer bell only consumer alerts
+        if ($isProvider) {
+            $query->where('for_provider', true);
+        } else {
+            $query->where(function ($q) {
+                $q->where('for_provider', false)->orWhereNull('for_provider');
+            });
+        }
+
+        $notifications = $query->latest()->limit(20)->get()
             ->map(fn($a) => [
                 'id'         => $a->id,
                 'title'      => $a->title,
                 'message'    => $a->message,
                 'type'       => $a->type,
                 'priority'   => $a->priority,
-                'color'      => $a->color ?? null,
-                'icon'       => $a->icon ?? null,
+                'color'      => $a->color,
+                'icon'       => $a->icon,
                 'action_url' => $a->action_url ?? null,
                 'is_read'    => $a->is_read,
                 'time'       => $a->created_at->diffForHumans(),
             ]);
 
+        $unreadCount = Alert::where('user_id', $userId)
+            ->where('is_read', false)
+            ->when($isProvider,
+                fn($q) => $q->where('for_provider', true),
+                fn($q) => $q->where(fn($q2) => $q2->where('for_provider', false)->orWhereNull('for_provider'))
+            )
+            ->count();
+
         return response()->json([
             'notifications' => $notifications,
-            'unread_count'  => Alert::where('user_id', $userId)
-                                    ->where('for_provider', $forProvider)
-                                    ->where('is_read', false)
-                                    ->count(),
+            'unread_count'  => $unreadCount,
         ]);
     }
 
-
-    /**
-     * Returns live sidebar badge counts.
-     * GET /alerts/counts?provider=1
-     */
-    public function counts(Request $request)
-    {
-        $userId      = $request->user()->id;
-        $forProvider = $request->boolean('provider');
-
-        $data = [
-            'unread_count' => Alert::where('user_id', $userId)
-                                   ->where('for_provider', $forProvider)
-                                   ->where('is_read', false)
-                                   ->count(),
-        ];
-
-        if ($forProvider) {
-            // Open jobs count for provider sidebar badge
-            $data['open_jobs_count'] = \App\Models\ServiceJobPost::open()->count();
-        } else {
-            // Active jobs count for consumer sidebar badge
-            $data['active_jobs_count'] = \App\Models\ServiceJobPost::where('user_id', $userId)
-                ->whereIn('status', ['open', 'accepted'])
-                ->count();
-        }
-
-        return response()->json($data);
-    }
-
     public function markAsRead(Alert $alert)
-    {
+    { 
+        // $this->authorize('update', $alert);
+
         $alert->markAsRead();
+
         return back();
     }
 
     public function markAllAsRead(Request $request)
     {
-        $forProvider = $request->boolean('provider');
+        $isProvider = $request->boolean('provider');
 
-        Alert::where('user_id', $request->user()->id)
-            ->where('for_provider', $forProvider)
-            ->where('is_read', false)
-            ->update([
-                'is_read' => true,
-                'read_at' => now(),
-            ]);
+        $query = Alert::where('user_id', $request->user()->id)->where('is_read', false);
 
-        if ($request->expectsJson()) {
-            return response()->json(['success' => true]);
+        if ($isProvider) {
+            $query->where('for_provider', true);
+        } else {
+            $query->where(fn($q) => $q->where('for_provider', false)->orWhereNull('for_provider'));
         }
 
+        $query->update(['is_read' => true, 'read_at' => now()]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['ok' => true]);
+        }
         return back()->with('success', 'All alerts marked as read!');
     }
 
     public function destroy(Alert $alert)
     {
+        // $this->authorize('delete', $alert);
+
         $alert->delete();
+
         return back()->with('success', 'Alert deleted!');
     }
 }

@@ -41,7 +41,17 @@ class JobRealTimeController extends Controller
             $query->select('service_job_posts.*')->latest();
         }
 
-        $jobs = $query->get()->map(function ($job) {
+        $jobs = $query->get()
+            ->filter(function ($job) use ($lat, $lng) {
+                // Respect the job's own radius — provider must be within it
+                if (!$lat || !$lng || !$job->latitude || !$job->longitude || !$job->radius) return true;
+                $dLat = deg2rad($job->latitude - $lat);
+                $dLng = deg2rad($job->longitude - $lng);
+                $a = sin($dLat/2)**2 + cos(deg2rad($lat)) * cos(deg2rad($job->latitude)) * sin($dLng/2)**2;
+                $dist = 3959 * 2 * atan2(sqrt($a), sqrt(1-$a));
+                return $dist <= (float) $job->radius;
+            })
+            ->map(function ($job) {
             return [
                 'id'               => $job->id,
                 'job_number'       => $job->job_number,
@@ -55,6 +65,7 @@ class JobRealTimeController extends Controller
                 'latitude'         => $job->latitude,
                 'longitude'        => $job->longitude,
                 'location_address' => $job->location_address,
+                'radius'           => $job->radius,
                 'expires_at'       => $job->expires_at?->toIso8601String(),
                 'created_at'       => $job->created_at->toIso8601String(),
                 'offers_count'     => $job->offers()->count(),

@@ -100,8 +100,8 @@
                 @endforeach
             </select>
             <select name="radius" class="filter-select" onchange="this.form.submit()">
-                @foreach([10,25,50,100] as $r)
-                <option value="{{ $r }}" {{ request('radius', 50) == $r ? 'selected' : '' }}>Within {{ $r }} miles</option>
+                @foreach([1, 5, 10, 25, 50, 100] as $r)
+                <option value="{{ $r }}" {{ request('radius', 10) == $r ? 'selected' : '' }}>Within {{ $r }} miles</option>
                 @endforeach
             </select>
         </form>
@@ -231,7 +231,10 @@
 
     function addJob(job) {
         const dist = haversine(CFG.lat,CFG.lng,job.latitude,job.longitude);
-        if (dist!==null && dist > CFG.radius) return;
+        // Filter by provider's browse radius (their own setting)
+        if (dist !== null && dist > CFG.radius) return;
+        // Filter by the JOB's radius — consumer only wants providers within X miles
+        if (dist !== null && job.radius && dist > parseFloat(job.radius)) return;
         if (document.getElementById(`job-${job.id}`)) return;
         const empty = document.getElementById('emptyState');
         if (empty) empty.remove();
