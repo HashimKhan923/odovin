@@ -439,7 +439,7 @@ input[type=range].radius-range::-moz-range-thumb {
                     <div class="radius-slider-wrap">
                         <span class="radius-label">📡 Radius</span>
                         <input type="range" class="radius-range" id="radiusSlider"
-                            min="5" max="100" step="5" value="{{ $job->radius ?? 25 }}"
+                            min="1" max="100" step="1" value="{{ $job->radius ?? 25 }}"
                             oninput="onRadiusChange(this.value)">
                         <span class="radius-val"><span id="radiusDisplay">{{ $job->radius ?? 25 }}</span> mi</span>
                     </div>
