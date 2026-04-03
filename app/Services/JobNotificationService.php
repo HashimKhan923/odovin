@@ -17,29 +17,49 @@ class JobNotificationService
     {
         if (!$job->latitude || !$job->longitude) return;
 
-        $lat    = $job->latitude;
-        $lng    = $job->longitude;
-        $radius = $job->radius ?? 25;
+        $lat    = (float) $job->latitude;
+        $lng    = (float) $job->longitude;
+        $radius = (int)   ($job->radius ?? 25);
 
-        // Wrap in subquery so MySQL resolves the 'distance' alias before HAVING filters it.
-        // Direct HAVING on a selectRaw alias is unreliable across MySQL versions.
-        $providers = ServiceProvider::active()
+        // Log what we're working with for debugging
+        \Illuminate\Support\Facades\Log::info('[JobNotification] notifyNearbyProviders', [
+            'job_id'     => $job->id,
+            'job_radius' => $job->radius,
+            'radius_used'=> $radius,
+            'lat'        => $lat,
+            'lng'        => $lng,
+        ]);
+
+        // Get ALL providers with coords, calculate distance in PHP — avoids MySQL HAVING alias bug
+        $allProviders = ServiceProvider::active()
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
-            ->selectRaw("
-                *,
-                (3959 * acos(
-                    LEAST(1, GREATEST(-1,
-                        cos(radians(?)) * cos(radians(latitude)) *
-                        cos(radians(longitude) - radians(?)) +
-                        sin(radians(?)) * sin(radians(latitude))
-                    ))
-                )) AS distance
-            ", [$lat, $lng, $lat])
-            ->havingRaw('distance <= ?', [$radius])
-            ->orderBy('distance')
-            ->get()
-            ->filter(fn($p) => $p->distance <= $radius); // PHP-level safety net
+            ->get();
+
+        $providers = $allProviders->filter(function ($provider) use ($lat, $lng, $radius) {
+            $provLat = (float) $provider->latitude;
+            $provLng = (float) $provider->longitude;
+
+            // Haversine in PHP — guaranteed accurate, no SQL alias issues
+            $earthRadius = 3959; // miles
+            $dLat = deg2rad($provLat - $lat);
+            $dLng = deg2rad($provLng - $lng);
+            $a = sin($dLat / 2) ** 2
+               + cos(deg2rad($lat)) * cos(deg2rad($provLat)) * sin($dLng / 2) ** 2;
+            $distance = round($earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a)), 2);
+
+            $provider->distance = $distance;
+
+            \Illuminate\Support\Facades\Log::info('[JobNotification] provider check', [
+                'provider_id'   => $provider->id,
+                'business_name' => $provider->business_name,
+                'distance_mi'   => $distance,
+                'radius_mi'     => $radius,
+                'within_radius' => $distance <= $radius,
+            ]);
+
+            return $distance <= $radius;
+        });
 
         foreach ($providers as $provider) {
             if (!$provider->user_id) continue;
