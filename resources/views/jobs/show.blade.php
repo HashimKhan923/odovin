@@ -6,7 +6,6 @@
 .pg { max-width:1100px; margin:0 auto; padding:2rem 1.5rem; }
 .back-link { display:inline-flex; align-items:center; gap:.5rem; color:var(--accent-cyan); text-decoration:none; font-size:.875rem; font-weight:600; margin-bottom:1.5rem; transition:all .3s; }
 .back-link:hover { gap:.875rem; }
-/* Hero */
 .hero { background:var(--card-bg); border:1px solid var(--border-color); border-radius:20px; padding:2rem; margin-bottom:1.5rem; position:relative; overflow:hidden; }
 .hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent-cyan),var(--accent-green)); }
 .hero-top { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; flex-wrap:wrap; }
@@ -19,7 +18,6 @@
 .pill-cancelled,.pill-expired { background:rgba(255,255,255,.07); color:var(--text-tertiary); border:1px solid rgba(255,255,255,.1); }
 .meta-strip { display:flex; gap:2rem; flex-wrap:wrap; margin-top:1.25rem; padding-top:1.25rem; border-top:1px solid var(--border-color); font-size:.875rem; color:var(--text-secondary); }
 .meta-item { display:flex; align-items:center; gap:.5rem; }
-/* Status timeline */
 .timeline-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:1.75rem; margin-bottom:1.5rem; }
 .tl-title { font-family:'Orbitron',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:1.5rem; }
 .timeline { position:relative; }
@@ -36,11 +34,9 @@
 .tl-step.done .tl-label { color:var(--accent-green); }
 .tl-step.current .tl-label { color:var(--accent-cyan); }
 .tl-step.pending .tl-label { color:var(--text-tertiary); }
-/* Layout */
 .main-layout { display:grid; grid-template-columns:1fr 320px; gap:1.5rem; }
 .card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:1.75rem; margin-bottom:1.5rem; }
 .card-title { font-family:'Orbitron',sans-serif; font-size:.95rem; font-weight:700; margin-bottom:1.25rem; padding-bottom:.75rem; border-bottom:1px solid var(--border-color); }
-/* Offer cards */
 .offer-card { border:1px solid var(--border-color); border-radius:14px; padding:1.5rem; margin-bottom:1rem; transition:all .3s; position:relative; overflow:hidden; }
 .offer-card:hover { border-color:rgba(0,212,255,.3); }
 .offer-card.winner { border-color:rgba(0,255,170,.4); background:rgba(0,255,170,.03); }
@@ -53,7 +49,6 @@
 .btn-accept { display:inline-flex; align-items:center; gap:.5rem; padding:.625rem 1.25rem; background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green)); border:none; border-radius:8px; color:#000; font-family:'Orbitron',sans-serif; font-weight:700; font-size:.75rem; cursor:pointer; transition:all .3s; text-decoration:none; }
 .btn-accept:hover { transform:translateY(-1px); box-shadow:0 4px 15px rgba(0,212,255,.4); }
 .btn-profile { display:inline-flex; align-items:center; gap:.5rem; padding:.625rem 1.1rem; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.25); border-radius:8px; color:var(--accent-cyan); font-size:.8rem; font-weight:600; text-decoration:none; transition:all .3s; }
-/* Rating section */
 .rating-card { background:linear-gradient(135deg,rgba(0,255,170,.06),rgba(0,212,255,.04)); border:1px solid rgba(0,255,170,.25); border-radius:16px; padding:2rem; margin-bottom:1.5rem; }
 .stars { display:flex; gap:.35rem; margin-bottom:1rem; }
 .star { font-size:2rem; cursor:pointer; color:rgba(255,255,255,.15); transition:all .2s; }
@@ -64,7 +59,6 @@
 .form-textarea { resize:vertical; min-height:90px; }
 .btn-submit { display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1.75rem; background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green)); border:none; border-radius:10px; color:#000; font-family:'Orbitron',sans-serif; font-weight:700; font-size:.8rem; cursor:pointer; transition:all .3s; }
 .btn-submit:hover { transform:translateY(-1px); box-shadow:0 4px 15px rgba(0,212,255,.4); }
-/* Sidebar */
 .sidebar-card { background:var(--card-bg); border:1px solid var(--border-color); border-radius:16px; padding:1.5rem; margin-bottom:1rem; }
 .sidebar-card h3 { font-family:'Orbitron',sans-serif; font-size:.85rem; font-weight:700; margin-bottom:1rem; padding-bottom:.75rem; border-bottom:1px solid var(--border-color); }
 .kv { display:flex; justify-content:space-between; font-size:.825rem; margin-bottom:.75rem; }
@@ -79,71 +73,21 @@
 .badge-verified { background:rgba(0,255,170,.1); color:var(--accent-green); border:1px solid rgba(0,255,170,.2); }
 .badge-type     { background:rgba(0,212,255,.1); color:var(--accent-cyan); border:1px solid rgba(0,212,255,.2); }
 @media(max-width:900px) { .main-layout { grid-template-columns:1fr; } }
-
-/* ── New 2-row layout ── */
 .top-row    { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; align-items:start; margin-bottom:1.25rem; }
 .info-row   { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; }
 @media(max-width:1000px) { .top-row  { grid-template-columns:1fr; } }
 @media(max-width:900px)  { .info-row { grid-template-columns:1fr 1fr; } .main-layout { grid-template-columns:1fr; } }
 @media(max-width:600px)  { .info-row { grid-template-columns:1fr; } }
-
-/* ── Odovin Radar Map ── */
-.odo-map-container {
-    position:relative; border-radius:18px; overflow:hidden;
-    border:1px solid rgba(0,212,255,.2);
-    box-shadow:0 0 0 1px rgba(0,212,255,.05),0 8px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(0,212,255,.1);
-}
-.odo-map-container::before {
-    content:''; position:absolute; top:0; left:0; right:0; height:2px;
-    background:linear-gradient(90deg,transparent,var(--accent-cyan),var(--accent-green),transparent);
-    z-index:5; animation:scanLine 3s ease-in-out infinite;
-}
-.odo-map-container::after {
-    content:''; position:absolute; inset:0; pointer-events:none; z-index:5;
-    background:
-        linear-gradient(to right,rgba(0,212,255,.6) 2px,transparent 2px) 0 0/18px 18px no-repeat,
-        linear-gradient(to bottom,rgba(0,212,255,.6) 2px,transparent 2px) 0 0/18px 18px no-repeat,
-        linear-gradient(to left,rgba(0,212,255,.6) 2px,transparent 2px) 100% 0/18px 18px no-repeat,
-        linear-gradient(to bottom,rgba(0,212,255,.6) 2px,transparent 2px) 100% 0/18px 18px no-repeat,
-        linear-gradient(to right,rgba(0,212,255,.6) 2px,transparent 2px) 0 100%/18px 18px no-repeat,
-        linear-gradient(to top,rgba(0,212,255,.6) 2px,transparent 2px) 0 100%/18px 18px no-repeat,
-        linear-gradient(to left,rgba(0,212,255,.6) 2px,transparent 2px) 100% 100%/18px 18px no-repeat,
-        linear-gradient(to top,rgba(0,212,255,.6) 2px,transparent 2px) 100% 100%/18px 18px no-repeat;
-    border-radius:18px;
-}
+.odo-map-container { position:relative; border-radius:18px; overflow:hidden; border:1px solid rgba(0,212,255,.2); box-shadow:0 0 0 1px rgba(0,212,255,.05),0 8px 40px rgba(0,0,0,.5),inset 0 1px 0 rgba(0,212,255,.1); }
+.odo-map-container::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--accent-cyan),var(--accent-green),transparent); z-index:5; animation:scanLine 3s ease-in-out infinite; }
+.odo-map-container::after { content:''; position:absolute; inset:0; pointer-events:none; z-index:5; background: linear-gradient(to right,rgba(0,212,255,.6) 2px,transparent 2px) 0 0/18px 18px no-repeat, linear-gradient(to bottom,rgba(0,212,255,.6) 2px,transparent 2px) 0 0/18px 18px no-repeat, linear-gradient(to left,rgba(0,212,255,.6) 2px,transparent 2px) 100% 0/18px 18px no-repeat, linear-gradient(to bottom,rgba(0,212,255,.6) 2px,transparent 2px) 100% 0/18px 18px no-repeat, linear-gradient(to right,rgba(0,212,255,.6) 2px,transparent 2px) 0 100%/18px 18px no-repeat, linear-gradient(to top,rgba(0,212,255,.6) 2px,transparent 2px) 0 100%/18px 18px no-repeat, linear-gradient(to left,rgba(0,212,255,.6) 2px,transparent 2px) 100% 100%/18px 18px no-repeat, linear-gradient(to top,rgba(0,212,255,.6) 2px,transparent 2px) 100% 100%/18px 18px no-repeat; border-radius:18px; }
 #nearbyMap { width:100%; height:420px; display:block; }
-.map-hud-top {
-    position:absolute; top:0; left:0; right:0; z-index:4;
-    padding:.75rem 1rem;
-    background:linear-gradient(to bottom,rgba(10,14,26,.92) 0%,transparent 100%);
-    display:flex; align-items:center; justify-content:space-between; pointer-events:none;
-}
-.map-hud-title {
-    font-family:'Orbitron',sans-serif; font-size:.72rem; font-weight:700;
-    color:var(--accent-cyan); letter-spacing:.12em; text-transform:uppercase;
-    display:flex; align-items:center; gap:.5rem;
-}
-.map-hud-title::before {
-    content:''; width:6px; height:6px; border-radius:50%;
-    background:var(--accent-cyan); box-shadow:0 0 8px var(--accent-cyan);
-    animation:hudBlink 1.5s ease-in-out infinite;
-}
-.map-hud-badge {
-    font-family:'Orbitron',sans-serif; font-size:.65rem; font-weight:700;
-    background:rgba(0,212,255,.12); border:1px solid rgba(0,212,255,.3);
-    color:var(--accent-cyan); padding:.2rem .6rem; border-radius:6px; letter-spacing:.06em;
-}
-.map-hud-bottom {
-    position:absolute; bottom:0; left:0; right:0; z-index:4;
-    padding:.75rem 1rem;
-    background:linear-gradient(to top,rgba(10,14,26,.95) 0%,transparent 100%);
-    display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
-}
-.map-stat-pill {
-    display:flex; align-items:center; gap:.5rem;
-    background:rgba(10,14,26,.7); border:1px solid rgba(0,212,255,.15);
-    border-radius:8px; padding:.375rem .75rem; backdrop-filter:blur(8px);
-}
+.map-hud-top { position:absolute; top:0; left:0; right:0; z-index:4; padding:.75rem 1rem; background:linear-gradient(to bottom,rgba(10,14,26,.92) 0%,transparent 100%); display:flex; align-items:center; justify-content:space-between; pointer-events:none; }
+.map-hud-title { font-family:'Orbitron',sans-serif; font-size:.72rem; font-weight:700; color:var(--accent-cyan); letter-spacing:.12em; text-transform:uppercase; display:flex; align-items:center; gap:.5rem; }
+.map-hud-title::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--accent-cyan); box-shadow:0 0 8px var(--accent-cyan); animation:hudBlink 1.5s ease-in-out infinite; }
+.map-hud-badge { font-family:'Orbitron',sans-serif; font-size:.65rem; font-weight:700; background:rgba(0,212,255,.12); border:1px solid rgba(0,212,255,.3); color:var(--accent-cyan); padding:.2rem .6rem; border-radius:6px; letter-spacing:.06em; }
+.map-hud-bottom { position:absolute; bottom:0; left:0; right:0; z-index:4; padding:.75rem 1rem; background:linear-gradient(to top,rgba(10,14,26,.95) 0%,transparent 100%); display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.map-stat-pill { display:flex; align-items:center; gap:.5rem; background:rgba(10,14,26,.7); border:1px solid rgba(0,212,255,.15); border-radius:8px; padding:.375rem .75rem; backdrop-filter:blur(8px); }
 .map-stat-pill .num { font-family:'Orbitron',sans-serif; font-size:.9rem; font-weight:800; color:var(--accent-cyan); line-height:1; }
 .map-stat-pill .lbl { font-size:.65rem; color:var(--text-tertiary); line-height:1.3; }
 .map-legend-inline { display:flex; gap:.875rem; align-items:center; }
@@ -151,37 +95,32 @@
 .legend-pip span { width:7px; height:7px; border-radius:50%; display:inline-block; flex-shrink:0; }
 @keyframes scanLine { 0%{transform:translateX(-100%);opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{transform:translateX(100%);opacity:0} }
 @keyframes hudBlink { 0%,100%{opacity:1;box-shadow:0 0 8px var(--accent-cyan)} 50%{opacity:.3;box-shadow:none} }
-/* ── Radius slider ── */
-.radius-slider-wrap {
-    display:flex; align-items:center; gap:.75rem;
-    background:rgba(10,14,26,.8); border:1px solid rgba(0,212,255,.2);
-    border-radius:10px; padding:.5rem .875rem; backdrop-filter:blur(8px);
-    margin-top:.625rem;
-}
+.radius-slider-wrap { display:flex; align-items:center; gap:.75rem; background:rgba(10,14,26,.8); border:1px solid rgba(0,212,255,.2); border-radius:10px; padding:.5rem .875rem; backdrop-filter:blur(8px); margin-top:.625rem; }
 .radius-label { font-family:'Orbitron',sans-serif; font-size:.65rem; color:var(--accent-cyan); white-space:nowrap; font-weight:700; min-width:60px; }
 .radius-val   { font-family:'Orbitron',sans-serif; font-size:.75rem; color:#fff; font-weight:800; min-width:40px; text-align:right; }
-input[type=range].radius-range {
-    flex:1; -webkit-appearance:none; height:4px;
-    background:linear-gradient(to right, var(--accent-cyan) var(--pct,50%), rgba(0,212,255,.15) var(--pct,50%));
-    border-radius:2px; outline:none; cursor:pointer;
-}
-input[type=range].radius-range::-webkit-slider-thumb {
-    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
-    background:var(--accent-cyan); box-shadow:0 0 8px var(--accent-cyan);
-    border:2px solid #fff; cursor:pointer;
-}
-input[type=range].radius-range::-moz-range-thumb {
-    width:14px; height:14px; border-radius:50%;
-    background:var(--accent-cyan); border:2px solid #fff; cursor:pointer;
-}
-
-/* Google Maps InfoWindow dark override */
+input[type=range].radius-range { flex:1; -webkit-appearance:none; height:4px; background:linear-gradient(to right, var(--accent-cyan) var(--pct,50%), rgba(0,212,255,.15) var(--pct,50%)); border-radius:2px; outline:none; cursor:pointer; }
+input[type=range].radius-range::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--accent-cyan); box-shadow:0 0 8px var(--accent-cyan); border:2px solid #fff; cursor:pointer; }
+input[type=range].radius-range::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:var(--accent-cyan); border:2px solid #fff; cursor:pointer; }
 .gm-style .gm-style-iw-c { background:#0a0e1a !important; border-radius:10px !important; padding:0 !important; box-shadow:0 8px 32px rgba(0,0,0,.6) !important; }
 .gm-style .gm-style-iw-d { overflow:hidden !important; }
 .gm-style .gm-style-iw-t::after { background:#0a0e1a !important; }
 .gm-style .gm-style-iw-ch { display:none !important; }
 .gm-style-iw-tc::after { background:#0a0e1a !important; }
 .gm-ui-hover-effect { filter:invert(1) !important; opacity:.5 !important; }
+
+/* ── Counter-offer styles ── */
+.counter-panel { margin-top:1rem; padding:1rem 1.1rem; background:rgba(168,85,247,.06); border:1px solid rgba(168,85,247,.2); border-radius:10px; }
+.counter-panel-title { font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#a855f7; margin-bottom:.875rem; }
+.counter-sent { margin-top:1rem; padding:1rem 1.1rem; background:rgba(255,170,0,.06); border:1px solid rgba(255,170,0,.25); border-radius:10px; }
+.counter-accepted { margin-top:1rem; padding:1rem 1.1rem; background:rgba(0,255,170,.06); border:1px solid rgba(0,255,170,.25); border-radius:10px; }
+.counter-rejected { margin-top:1rem; padding:.875rem 1.1rem; background:rgba(255,51,102,.05); border:1px solid rgba(255,51,102,.2); border-radius:10px; font-size:.82rem; color:#ff8099; }
+.counter-input { width:100%; padding:.65rem 1rem; background:rgba(168,85,247,.05); border:1px solid rgba(168,85,247,.3); border-radius:8px; color:var(--text-primary); font-family:'Chakra Petch',sans-serif; font-size:.875rem; transition:border-color .2s; }
+.counter-input:focus { outline:none; border-color:#a855f7; }
+.btn-counter { padding:.6rem 1.25rem; background:rgba(168,85,247,.15); border:1px solid rgba(168,85,247,.4); border-radius:8px; color:#c084fc; font-family:'Orbitron',sans-serif; font-weight:700; font-size:.72rem; cursor:pointer; transition:all .25s; text-decoration:none; display:inline-flex; align-items:center; gap:.4rem; }
+.btn-counter:hover { background:rgba(168,85,247,.25); transform:translateY(-1px); }
+.btn-counter-sm { padding:.45rem .875rem; background:transparent; border:1px solid rgba(255,255,255,.1); border-radius:8px; color:var(--text-tertiary); font-size:.75rem; cursor:pointer; transition:all .2s; }
+.btn-counter-sm:hover { border-color:rgba(255,51,102,.3); color:#ff8099; }
+.counter-form-wrap { display:none; margin-top:.875rem; }
 </style>
 
 <div class="pg">
@@ -192,8 +131,9 @@ input[type=range].radius-range::-moz-range-thumb {
 
     @if(session('success'))<div style="background:rgba(0,255,170,.1);border:1px solid rgba(0,255,170,.3);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;color:var(--accent-green);font-size:.875rem;">✓ {{ session('success') }}</div>@endif
     @if(session('error'))<div style="background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.3);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;color:#ff8099;font-size:.875rem;">{{ session('error') }}</div>@endif
+    @if(session('info'))<div style="background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.3);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;color:var(--accent-cyan);font-size:.875rem;">ℹ {{ session('info') }}</div>@endif
 
-    {{-- Hero Card --}}
+    {{-- Hero --}}
     <div class="hero">
         <div class="hero-top">
             <div>
@@ -210,17 +150,80 @@ input[type=range].radius-range::-moz-range-thumb {
         </div>
     </div>
 
-    {{-- Work Status Timeline (only after offer accepted) --}}
+    {{-- Payment: unpaid --}}
+    @if(in_array($job->payment_status, ['unpaid', null]) && $job->accepted_offer_id && !$job->escrow)
+    <div style="background:rgba(255,170,0,.07);border:1px solid rgba(255,170,0,.3);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <span style="font-size:1.75rem;">💳</span>
+        <div style="flex:1;min-width:200px;">
+            <p style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--accent-warning);margin-bottom:.4rem;">Payment Required to Confirm Booking</p>
+            <p style="font-size:.82rem;color:var(--text-secondary);line-height:1.5;">You've selected a provider but payment hasn't been completed yet. The booking is not confirmed until payment is held in escrow.</p>
+        </div>
+        <a href="{{ route('jobs.payment.show', $job) }}" style="padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--accent-warning),#e67e00);border:none;border-radius:8px;color:#000;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.75rem;text-decoration:none;white-space:nowrap;">
+            Complete Payment →
+        </a>
+    </div>
+    @endif
+
+    {{-- Payment: held, work not done --}}
+    @if($job->escrow && $job->escrow->status === 'held' && $job->work_status !== 'completed')
+    <div style="background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.2);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.875rem;">
+        <span style="font-size:1.5rem;">🔒</span>
+        <div>
+            <p style="font-weight:700;color:var(--accent-cyan);font-size:.875rem;margin-bottom:.2rem;">{{ $job->escrow->formattedAmount() }} Held in Escrow</p>
+            <p style="font-size:.8rem;color:var(--text-tertiary);">Your payment is secure. Funds will be released to the provider once you confirm the work is complete.</p>
+        </div>
+    </div>
+    @endif
+
+    {{-- Payment: held, work done, release prompt --}}
+    @if($job->escrow && $job->escrow->status === 'held' && $job->work_status === 'completed')
+    <div style="background:rgba(0,255,170,.06);border:1px solid rgba(0,255,170,.3);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;">
+        <p style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--accent-green);margin-bottom:.625rem;">💰 Work Complete — Release Payment?</p>
+        <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;">
+            <strong>{{ $job->acceptedOffer?->serviceProvider?->business_name ?? $job->acceptedOffer?->serviceProvider?->name }}</strong>
+            has marked this job as complete. Release <strong style="color:var(--accent-green);">{{ $job->escrow->formattedAmount() }}</strong> to pay them?
+            @if($job->escrow->release_at) If you take no action, payment releases automatically <strong>{{ $job->escrow->release_at->diffForHumans() }}</strong>. @endif
+        </p>
+        <div style="display:flex;gap:.875rem;flex-wrap:wrap;">
+            <form method="POST" action="{{ route('jobs.payment.release', $job) }}">
+                @csrf
+                <button type="submit" style="padding:.7rem 1.6rem;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));border:none;border-radius:8px;color:#000;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;" onclick="return confirm('Release {{ $job->escrow->formattedAmount() }} to the provider?')">✓ Release Payment</button>
+            </form>
+            <form method="POST" action="{{ route('jobs.payment.refund', $job) }}">
+                @csrf
+                <button type="submit" style="padding:.7rem 1.4rem;background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.3);border-radius:8px;color:#ff8099;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;" onclick="return confirm('Are you sure? This cancels the job and issues a refund to your card.')">✗ Request Refund</button>
+            </form>
+        </div>
+    </div>
+    @endif
+
+    {{-- Payment: released --}}
+    @if($job->escrow && $job->escrow->status === 'released')
+    <div style="background:rgba(0,255,170,.05);border:1px solid rgba(0,255,170,.2);border-radius:14px;padding:1.1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.875rem;">
+        <span style="font-size:1.4rem;">✅</span>
+        <div>
+            <p style="font-weight:700;color:var(--accent-green);font-size:.875rem;margin-bottom:.15rem;">Payment Released</p>
+            <p style="font-size:.78rem;color:var(--text-tertiary);">{{ $job->escrow->formattedAmount() }} paid on {{ $job->escrow->released_at?->format('M d, Y') }}</p>
+        </div>
+    </div>
+    @endif
+
+    {{-- Payment: refunded --}}
+    @if($job->escrow && $job->escrow->status === 'refunded')
+    <div style="background:rgba(255,51,102,.05);border:1px solid rgba(255,51,102,.2);border-radius:14px;padding:1.1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:.875rem;">
+        <span style="font-size:1.4rem;">↩️</span>
+        <div>
+            <p style="font-weight:700;color:#ff8099;font-size:.875rem;margin-bottom:.15rem;">Payment Refunded</p>
+            <p style="font-size:.78rem;color:var(--text-tertiary);">Refund of {{ $job->escrow->formattedAmount() }} issued on {{ $job->escrow->refunded_at?->format('M d, Y') }}</p>
+        </div>
+    </div>
+    @endif
+
+    {{-- Work Status Timeline --}}
     @if($job->status === 'accepted' || $job->status === 'completed')
     @php
         $ws = $job->work_status ?? 'pending';
-        $steps = [
-            ['key'=>'offer_accepted', 'icon'=>'✓',  'label'=>'Offer Accepted',  'sub'=>'You selected a provider'],
-            ['key'=>'confirmed',      'icon'=>'✅',  'label'=>'Confirmed',        'sub'=>'Provider confirmed the job'],
-            ['key'=>'in_progress',    'icon'=>'🔧', 'label'=>'Work In Progress', 'sub'=>$job->work_started_at ? $job->work_started_at->format('M d · H:i') : 'Provider has started'],
-            ['key'=>'completed',      'icon'=>'🎉', 'label'=>'Completed',        'sub'=>$job->work_completed_at ? $job->work_completed_at->format('M d · H:i') : 'Job finished'],
-        ];
-        $order = ['pending'=>0, 'confirmed'=>1, 'in_progress'=>2, 'completed'=>3];
+        $order = ['pending'=>0,'confirmed'=>1,'in_progress'=>2,'completed'=>3];
         $currentIdx = $order[$ws] ?? 0;
     @endphp
     <div class="timeline-card">
@@ -235,16 +238,18 @@ input[type=range].radius-range::-moz-range-thumb {
         </div>
         @else
         <div class="timeline">
-            {{-- Step 0: Offer Accepted (always done) --}}
             <div class="tl-step done">
-                <div class="tl-icon done">✓</div>
-                <div class="tl-body"><div class="tl-label">Offer Accepted</div><div class="tl-sub">You selected {{ $job->acceptedOffer?->serviceProvider?->name ?? 'a provider' }}</div></div>
+                <div class="tl-icon done">💳</div>
+                <div class="tl-body">
+                    <div class="tl-label">Payment Confirmed</div>
+                    <div class="tl-sub">{{ $job->escrow?->formattedAmount() ?? '' }} held in escrow</div>
+                </div>
             </div>
             @foreach([['confirmed',1,'✅','Confirmed','Provider confirmed the job'],['in_progress',2,'🔧','Work In Progress','Provider has started working'],['completed',3,'🎉','Completed','Job finished successfully']] as [$key,$idx,$icon,$label,$sub])
             @php
                 $state = $currentIdx > $idx ? 'done' : ($currentIdx === $idx ? 'current' : 'pending');
                 $realSub = match($key) {
-                    'in_progress' => $job->work_started_at ? $job->work_started_at->format('M d, Y · H:i') : $sub,
+                    'in_progress' => $job->work_started_at   ? $job->work_started_at->format('M d, Y · H:i')   : $sub,
                     'completed'   => $job->work_completed_at ? $job->work_completed_at->format('M d, Y · H:i') : $sub,
                     default       => $sub,
                 };
@@ -257,6 +262,18 @@ input[type=range].radius-range::-moz-range-thumb {
                 </div>
             </div>
             @endforeach
+            @php $escrowDone = $job->escrow && $job->escrow->status === 'released'; @endphp
+            <div class="tl-step {{ $escrowDone ? 'done' : 'pending' }}">
+                <div class="tl-icon {{ $escrowDone ? 'done' : 'pending' }}">{{ $escrowDone ? '✓' : '💰' }}</div>
+                <div class="tl-body">
+                    <div class="tl-label">Payment Released</div>
+                    <div class="tl-sub">
+                        @if($escrowDone) {{ $job->escrow->formattedAmount() }} sent on {{ $job->escrow->released_at?->format('M d, Y') }}
+                        @elseif($job->escrow && $job->escrow->release_at && $job->work_status === 'completed') Auto-releases {{ $job->escrow->release_at->diffForHumans() }}
+                        @else Funds released when you confirm completion @endif
+                    </div>
+                </div>
+            </div>
         </div>
         @if($job->provider_notes)
         <div style="margin-top:1.25rem;padding:1rem;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.12);border-radius:10px;font-size:.85rem;color:var(--text-secondary);line-height:1.6;">
@@ -266,32 +283,26 @@ input[type=range].radius-range::-moz-range-thumb {
         @if($job->final_cost && $ws === 'completed')
         <div style="margin-top:1rem;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:rgba(0,255,170,.06);border:1px solid rgba(0,255,170,.2);border-radius:10px;">
             <span style="font-size:.875rem;color:var(--text-secondary);">Final Amount Charged</span>
-            <span style="font-family:'Orbitron',sans-serif;font-size:1.25rem;font-weight:800;color:var(--accent-green);">${{ number_format($job->final_cost, 2) }}</span>
+            <span style="font-family:'Orbitron',sans-serif;font-size:1.25rem;font-weight:800;color:var(--accent-green);">${{ number_format($job->final_cost,2) }}</span>
         </div>
         @endif
         @endif
     </div>
     @endif
 
-    {{-- Rating Section (after completed, before rated) --}}
-    @if($job->work_status === 'completed' && is_null($job->rating))
+    {{-- Rating --}}
+    @if($job->work_status === 'completed' && $job->escrow?->status === 'released' && is_null($job->rating))
     <div class="rating-card">
         <div style="font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:700;margin-bottom:.5rem;">⭐ Rate Your Experience</div>
         <div style="font-size:.875rem;color:var(--text-secondary);margin-bottom:1.5rem;">How was {{ $job->acceptedOffer?->serviceProvider?->name ?? 'the provider' }}'s work?</div>
         <form action="{{ route('jobs.rate', $job) }}" method="POST">
             @csrf
             <div class="stars" id="starRating">
-                @for($i = 1; $i <= 5; $i++)
-                <span class="star" onclick="setRating({{ $i }})">★</span>
-                @endfor
+                @for($i=1;$i<=5;$i++)<span class="star" onclick="setRating({{ $i }})">★</span>@endfor
             </div>
             <input type="hidden" name="rating" id="ratingInput" value="0">
-            <div style="margin-bottom:1rem;">
-                <textarea name="review" class="form-textarea" placeholder="Share your experience with this provider... (optional)"></textarea>
-            </div>
-            <button type="submit" class="btn-submit" onclick="return document.getElementById('ratingInput').value > 0 || (alert('Please select a star rating'), false)">
-                Submit Review ★
-            </button>
+            <div style="margin-bottom:1rem;"><textarea name="review" class="form-textarea" placeholder="Share your experience... (optional)"></textarea></div>
+            <button type="submit" class="btn-submit" onclick="return document.getElementById('ratingInput').value > 0 || (alert('Please select a star rating'), false)">Submit Review ★</button>
         </form>
     </div>
     @elseif($job->rating)
@@ -307,16 +318,16 @@ input[type=range].radius-range::-moz-range-thumb {
     </div>
     @endif
 
-    {{-- ═══════════ ROW 1: Offers + Radar Map ═══════════ --}}
+    {{-- ROW 1: Offers + Radar Map --}}
     <div class="top-row">
 
-        {{-- LEFT: Offers --}}
+        {{-- Offers --}}
         <div>
             @if($acceptedOffer && ($job->status === 'accepted' || $job->status === 'completed'))
             <div class="accepted-banner">
                 <div style="font-size:2rem;margin-bottom:.5rem;">🎯</div>
                 <h3 style="font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--accent-green);margin-bottom:.5rem;">{{ $acceptedOffer->serviceProvider->name }} is on the job</h3>
-                <p style="color:var(--text-secondary);font-size:.875rem;">Offered price: <strong style="color:var(--accent-warning);">${{ number_format($acceptedOffer->offered_price, 2) }}</strong> · {{ $job->workStatusLabel() }}</p>
+                <p style="color:var(--text-secondary);font-size:.875rem;">Offered price: <strong style="color:var(--accent-warning);">${{ number_format($acceptedOffer->offered_price,2) }}</strong> · {{ $job->workStatusLabel() }}</p>
             </div>
             @endif
 
@@ -333,6 +344,7 @@ input[type=range].radius-range::-moz-range-thumb {
                 </div>
                 @endif
 
+                {{-- Accepted offer card --}}
                 @if($acceptedOffer)
                 @php $prov = $acceptedOffer->serviceProvider; @endphp
                 <div class="offer-card winner">
@@ -355,10 +367,13 @@ input[type=range].radius-range::-moz-range-thumb {
                 </div>
                 @endif
 
+                {{-- Pending offer cards with counter-offer UI --}}
                 <div id="pendingOffersList">
                 @foreach($pendingOffers as $offer)
                 @php $prov = $offer->serviceProvider; @endphp
                 <div class="offer-card" id="offer-{{ $offer->id }}">
+
+                    {{-- Provider info row --}}
                     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.875rem;">
                         <div>
                             <div class="provider-name">{{ $prov->name }}</div>
@@ -369,8 +384,19 @@ input[type=range].radius-range::-moz-range-thumb {
                             </div>
                             @if(isset($offer->distance))<div style="font-size:.78rem;color:var(--text-tertiary);margin-top:.35rem;">📍 {{ $offer->distance }} miles away</div>@endif
                         </div>
-                        <div class="offer-price">${{ number_format($offer->offered_price,2) }}</div>
+                        <div>
+                            <div class="offer-price">${{ number_format($offer->offered_price,2) }}</div>
+                            @if($offer->negotiation_status !== 'pending')
+                            <div style="text-align:right;margin-top:.3rem;">
+                                <span style="font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:6px;background:rgba(168,85,247,.12);color:#c084fc;border:1px solid rgba(168,85,247,.25);">
+                                    {{ $offer->negotiationLabel() }}
+                                </span>
+                            </div>
+                            @endif
+                        </div>
                     </div>
+
+                    {{-- Offer details --}}
                     <div class="offer-details">
                         <div>📅 {{ \Carbon\Carbon::parse($offer->available_date)->format('M d, Y') }}</div>
                         <div>🕐 {{ $offer->available_time }}</div>
@@ -378,14 +404,110 @@ input[type=range].radius-range::-moz-range-thumb {
                         <div>📍 {{ $prov->city }}, {{ $prov->state }}</div>
                     </div>
                     @if($offer->message)<div class="offer-message">"{{ $offer->message }}"</div>@endif
-                    @if($job->isOpen())
-                    <div style="margin-top:1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
-                        <form method="POST" action="{{ route('jobs.accept-offer', [$job, $offer]) }}">@csrf
-                            <button type="submit" class="btn-accept" onclick="return confirm('Accept {{ $prov->name }}'s offer of ${{ number_format($offer->offered_price,2) }}?')">✓ Accept This Offer</button>
-                        </form>
-                        <a href="{{ route('providers.show', $prov) }}" class="btn-profile">View Profile →</a>
+
+                    {{-- ── Counter-offer state panels ── --}}
+
+                    @if($offer->negotiation_status === 'countered')
+                    {{-- Consumer sent a counter, waiting for provider response --}}
+                    <div class="counter-sent">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.75rem;">
+                            <div>
+                                <div style="font-size:.72rem;font-weight:700;color:var(--accent-warning);letter-spacing:.05em;margin-bottom:.35rem;">⏳ COUNTER SENT — AWAITING RESPONSE</div>
+                                <div style="font-size:.875rem;">
+                                    Your counter: <strong style="font-family:'Orbitron',sans-serif;color:var(--accent-warning);">${{ number_format($offer->counter_price,2) }}</strong>
+                                    <span style="font-size:.78rem;color:var(--text-tertiary);margin-left:.5rem;">vs their ${{ number_format($offer->offered_price,2) }}</span>
+                                </div>
+                                @if($offer->counter_message)<div style="font-size:.8rem;color:var(--text-secondary);margin-top:.35rem;font-style:italic;">"{{ $offer->counter_message }}"</div>@endif
+                                <div style="font-size:.72rem;color:var(--text-tertiary);margin-top:.35rem;">Sent {{ $offer->countered_at?->diffForHumans() }}</div>
+                            </div>
+                            @if($job->isOpen())
+                            <form method="POST" action="{{ route('jobs.offers.counter.destroy', [$job, $offer]) }}">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="btn-counter-sm" onclick="return confirm('Withdraw your counter-offer?')">✕ Withdraw</button>
+                            </form>
+                            @endif
+                        </div>
+                    </div>
+
+                    @elseif($offer->negotiation_status === 'counter_accepted')
+                    {{-- Provider accepted the counter --}}
+                    <div class="counter-accepted">
+                        <div style="font-size:.72rem;font-weight:700;color:var(--accent-green);letter-spacing:.05em;margin-bottom:.35rem;">✓ COUNTER ACCEPTED — NEW AGREED PRICE</div>
+                        <div style="font-size:.875rem;">
+                            Agreed: <strong style="font-family:'Orbitron',sans-serif;color:var(--accent-green);">${{ number_format($offer->counter_price,2) }}</strong>
+                            <span style="font-size:.78rem;color:var(--text-tertiary);margin-left:.5rem;">(was ${{ number_format($offer->offered_price,2) }})</span>
+                        </div>
+                        <p style="font-size:.8rem;color:var(--text-secondary);margin-top:.35rem;">Both sides agreed on this price. Accept below to confirm the booking.</p>
+                    </div>
+
+                    @elseif($offer->negotiation_status === 'counter_rejected')
+                    {{-- Provider rejected the counter --}}
+                    <div class="counter-rejected">
+                        <strong>↩ Counter declined</strong> — their original ${{ number_format($offer->offered_price,2) }} still stands.
+                        You can accept it or send a new counter below.
                     </div>
                     @endif
+
+                    {{-- ── Action buttons ── --}}
+                    @if($job->isOpen())
+                    <div style="margin-top:1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;">
+
+                        {{-- Accept button — uses counter price if accepted, else original --}}
+                        <form method="POST" action="{{ route('jobs.accept-offer', [$job, $offer]) }}">
+                            @csrf
+                            @if($offer->negotiation_status === 'counter_accepted')
+                                <button type="submit" class="btn-accept" onclick="return confirm('Accept {{ $prov->name }}\'s agreed price of ${{ number_format($offer->counter_price,2) }}?')">
+                                    ✓ Accept ${{ number_format($offer->counter_price,2) }}
+                                </button>
+                            @else
+                                <button type="submit" class="btn-accept" onclick="return confirm('Accept {{ $prov->name }}\'s offer of ${{ number_format($offer->offered_price,2) }}?')">
+                                    ✓ Accept ${{ number_format($offer->offered_price,2) }}
+                                </button>
+                            @endif
+                        </form>
+
+                        {{-- Counter button — hidden while waiting for provider response or after agreement --}}
+                        @if(!in_array($offer->negotiation_status, ['countered', 'counter_accepted']))
+                        <button class="btn-counter" onclick="toggleCounter({{ $offer->id }})">💬 Counter</button>
+                        @endif
+
+                        <a href="{{ route('providers.show', $prov) }}" class="btn-profile">Profile →</a>
+                    </div>
+
+                    {{-- Counter-offer form (toggled by button) --}}
+                    @if(!in_array($offer->negotiation_status, ['countered', 'counter_accepted']))
+                    <div id="counter-form-{{ $offer->id }}" class="counter-form-wrap">
+                        <div class="counter-panel">
+                            <div class="counter-panel-title">💬 Send Counter-Offer</div>
+                            <form method="POST" action="{{ route('jobs.offers.counter.store', [$job, $offer]) }}">
+                                @csrf
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
+                                    <div>
+                                        <label style="font-size:.75rem;color:var(--text-tertiary);display:block;margin-bottom:.35rem;">Their price</label>
+                                        <div style="font-family:'Orbitron',sans-serif;font-size:1rem;color:var(--text-tertiary);padding:.65rem 0;">${{ number_format($offer->offered_price,2) }}</div>
+                                    </div>
+                                    <div>
+                                        <label for="cp_{{ $offer->id }}" style="font-size:.75rem;color:var(--text-tertiary);display:block;margin-bottom:.35rem;">Your counter <span style="color:#a855f7;">*</span></label>
+                                        <div style="position:relative;">
+                                            <span style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-weight:700;">$</span>
+                                            <input type="number" name="counter_price" id="cp_{{ $offer->id }}" class="counter-input" style="padding-left:1.75rem;" step="0.01" min="1" placeholder="0.00" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom:.75rem;">
+                                    <label for="cm_{{ $offer->id }}" style="font-size:.75rem;color:var(--text-tertiary);display:block;margin-bottom:.35rem;">Note to provider (optional)</label>
+                                    <textarea name="counter_message" id="cm_{{ $offer->id }}" class="counter-input" style="resize:vertical;min-height:70px;" maxlength="500" placeholder="e.g. Found similar services for less, can you match?"></textarea>
+                                </div>
+                                <div style="display:flex;gap:.75rem;align-items:center;">
+                                    <button type="submit" class="btn-counter">Send Counter →</button>
+                                    <button type="button" class="btn-counter-sm" onclick="toggleCounter({{ $offer->id }})">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    @endif
+                    @endif
+
                 </div>
                 @endforeach
                 </div>
@@ -410,7 +532,7 @@ input[type=range].radius-range::-moz-range-thumb {
             </div>
         </div>
 
-        {{-- RIGHT: Odovin Radar Map --}}
+        {{-- Radar Map --}}
         <div style="position:sticky;top:1rem;">
             @if($job->latitude && $job->longitude)
             <div class="odo-map-container">
@@ -422,12 +544,8 @@ input[type=range].radius-range::-moz-range-thumb {
                 <div class="map-hud-bottom" style="flex-direction:column;gap:.5rem;align-items:stretch;">
                     <div style="display:flex;gap:.625rem;flex-wrap:wrap;align-items:center;justify-content:space-between;">
                         <div style="display:flex;gap:.625rem;flex-wrap:wrap;">
-                            <div class="map-stat-pill">
-                                <div><div class="num" id="mapVerifiedCount">—</div><div class="lbl">Verified</div></div>
-                            </div>
-                            <div class="map-stat-pill">
-                                <div><div class="num" id="mapClosestDist">—</div><div class="lbl">Closest (mi)</div></div>
-                            </div>
+                            <div class="map-stat-pill"><div><div class="num" id="mapVerifiedCount">—</div><div class="lbl">Verified</div></div></div>
+                            <div class="map-stat-pill"><div><div class="num" id="mapClosestDist">—</div><div class="lbl">Closest (mi)</div></div></div>
                         </div>
                         <div class="map-legend-inline">
                             <div class="legend-pip"><span style="background:#00d4ff;box-shadow:0 0 5px #00d4ff;"></span>Job</div>
@@ -435,12 +553,9 @@ input[type=range].radius-range::-moz-range-thumb {
                             <div class="legend-pip"><span style="background:#ffaa00;box-shadow:0 0 5px #ffaa00;"></span>Unverified</div>
                         </div>
                     </div>
-                    {{-- Radius slider --}}
                     <div class="radius-slider-wrap">
                         <span class="radius-label">📡 Radius</span>
-                        <input type="range" class="radius-range" id="radiusSlider"
-                            min="1" max="100" step="1" value="{{ $job->radius ?? 25 }}"
-                            oninput="onRadiusChange(this.value)">
+                        <input type="range" class="radius-range" id="radiusSlider" min="1" max="100" step="1" value="{{ $job->radius ?? 25 }}" oninput="onRadiusChange(this.value)">
                         <span class="radius-val"><span id="radiusDisplay">{{ $job->radius ?? 25 }}</span> mi</span>
                     </div>
                 </div>
@@ -450,10 +565,8 @@ input[type=range].radius-range::-moz-range-thumb {
 
     </div>
 
-    {{-- ═══════════ ROW 2: Job Details · Description · Actions ═══════════ --}}
+    {{-- ROW 2: Details · Description · Actions --}}
     <div class="info-row">
-
-        {{-- Job Details --}}
         <div class="sidebar-card">
             <h3>Job Details</h3>
             <div class="kv"><span class="k">Job #</span><span class="v">{{ $job->job_number }}</span></div>
@@ -463,18 +576,15 @@ input[type=range].radius-range::-moz-range-thumb {
             @if($job->preferred_date)<div class="kv"><span class="k">Preferred Date</span><span class="v">{{ \Carbon\Carbon::parse($job->preferred_date)->format('M d, Y') }}</span></div>@endif
             <div class="kv"><span class="k">Status</span><span class="v">{{ ucfirst($job->status) }}</span></div>
             @if(in_array($job->status,['accepted','completed']))<div class="kv"><span class="k">Work Status</span><span class="v">{{ $job->workStatusLabel() }}</span></div>@endif
+            @if($job->escrow)<div class="kv"><span class="k">Payment</span><span class="v">{{ ucfirst($job->payment_status ?? 'unpaid') }}</span></div>@endif
             @if($job->final_cost)<div class="kv"><span class="k">Final Cost</span><span class="v" style="color:var(--accent-green);font-family:'Orbitron',sans-serif;">${{ number_format($job->final_cost,2) }}</span></div>@endif
             <div class="kv"><span class="k">Offers</span><span class="v">{{ $job->offers->count() }}</span></div>
         </div>
-
-        {{-- Description --}}
         <div class="sidebar-card">
             <h3>Description</h3>
             <p style="font-size:.875rem;color:var(--text-secondary);line-height:1.7;">{{ $job->description }}</p>
             @if($job->customer_notes)<p style="font-size:.825rem;color:var(--text-secondary);margin-top:.875rem;padding-top:.875rem;border-top:1px solid var(--border-color);font-style:italic;">{{ $job->customer_notes }}</p>@endif
         </div>
-
-        {{-- Actions --}}
         <div>
             @if($job->isOpen())
             <div class="sidebar-card">
@@ -499,51 +609,50 @@ input[type=range].radius-range::-moz-range-thumb {
             </div>
             @endif
         </div>
-
     </div>
+
+</div>
 
 <script>
 function setRating(val) {
     document.getElementById('ratingInput').value = val;
-    document.querySelectorAll('#starRating .star').forEach((s, i) => {
-        s.classList.toggle('filled', i < val);
-    });
+    document.querySelectorAll('#starRating .star').forEach((s,i) => s.classList.toggle('filled', i < val));
 }
-// Hover preview
-document.querySelectorAll('#starRating .star').forEach((s, i) => {
+document.querySelectorAll('#starRating .star').forEach((s,i) => {
     s.addEventListener('mouseenter', () => {
-        document.querySelectorAll('#starRating .star').forEach((x, j) => {
-            x.style.color = j <= i ? '#ffaa00' : 'rgba(255,255,255,.15)';
-        });
+        document.querySelectorAll('#starRating .star').forEach((x,j) => { x.style.color = j <= i ? '#ffaa00' : 'rgba(255,255,255,.15)'; });
     });
     s.addEventListener('mouseleave', () => {
         const val = parseInt(document.getElementById('ratingInput').value || 0);
-        document.querySelectorAll('#starRating .star').forEach((x, j) => {
-            x.classList.toggle('filled', j < val);
-            x.style.color = '';
-        });
+        document.querySelectorAll('#starRating .star').forEach((x,j) => { x.classList.toggle('filled', j < val); x.style.color = ''; });
     });
 });
+
+function toggleCounter(offerId) {
+    const form = document.getElementById('counter-form-' + offerId);
+    if (!form) return;
+    const visible = form.style.display === 'block';
+    form.style.display = visible ? 'none' : 'block';
+    if (!visible) {
+        const input = document.getElementById('cp_' + offerId);
+        if (input) setTimeout(() => input.focus(), 50);
+    }
+}
 </script>
+
 <script>
 (function() {
-    // ── Consumer job page: real-time offer polling ──────────────────────
-    // Runs only on open jobs. Polls every 5s for new offers.
-    // No WebSocket needed — pure HTTP polling fallback.
+    const IS_OPEN = {{ $job->isOpen() ? 'true' : 'false' }};
+    const JOB_ID  = {{ $job->id }};
+    const CSRF    = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
 
-    const IS_OPEN  = {{ $job->isOpen() ? 'true' : 'false' }};
-    const JOB_ID   = {{ $job->id }};
-    const CSRF     = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    if (!IS_OPEN) return;
 
-    if (!IS_OPEN) return; // job already accepted/cancelled — stop
-
-    // Seed with already-rendered offer IDs so we don't duplicate them
     const seen = new Set([
         @foreach($pendingOffers as $o){{ (int)$o->id }},@endforeach
         @if($acceptedOffer){{ (int)$acceptedOffer->id }},@endif
     ]);
 
-    // ── Toast notification ──────────────────────────────────────────────
     function toast(title, body) {
         const el = document.createElement('div');
         el.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;background:var(--card-bg,#1a2235);border:1px solid rgba(0,212,255,.4);border-radius:14px;padding:1rem 1.25rem;min-width:280px;max-width:360px;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:toastIn .4s ease;';
@@ -552,7 +661,6 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
         setTimeout(() => { el.style.animation = 'toastOut .4s ease forwards'; setTimeout(() => el.remove(), 400); }, 5000);
     }
 
-    // ── Build offer card HTML ───────────────────────────────────────────
     function buildCard(o) {
         const p = o.provider;
         const badge = p.is_verified ? `<span style="font-size:.72rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent-cyan);padding:.15rem .5rem;border-radius:10px;">✓ Verified</span>` : '';
@@ -584,39 +692,29 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
         </div>`;
     }
 
-    // ── Insert offer into DOM ───────────────────────────────────────────
     function addOffer(o) {
         const id = parseInt(o.offer_id);
         if (seen.has(id)) return;
         seen.add(id);
-
-        // Hide the "waiting" spinner if visible
         const hint = document.getElementById('waitingHint');
         if (hint) hint.style.display = 'none';
-
-        // Ensure the list container exists — create it if not
         let list = document.getElementById('pendingOffersList');
         if (!list) {
-            const card = document.querySelector('.card'); // fallback: first card
             list = document.createElement('div');
             list.id = 'pendingOffersList';
+            const card = document.querySelector('.card');
             if (card) card.appendChild(list);
             else document.body.appendChild(list);
         }
-
         list.insertAdjacentHTML('beforeend', buildCard(o));
-
-        // Update the count badge
         const badge = document.getElementById('offerCount');
         if (badge) {
             const cur = parseInt(badge.textContent.replace(/\D/g,'')) || 0;
             badge.textContent = `(${cur + 1})`;
         }
-
         toast(`💰 New offer from ${o.provider.name}`, `$${parseFloat(o.offered_price).toFixed(2)} — review below`);
     }
 
-    // ── Poll endpoint ───────────────────────────────────────────────────
     let since = Math.floor(Date.now() / 1000) - 15;
 
     async function poll() {
@@ -624,23 +722,15 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
             const res = await fetch(`/api/realtime/jobs/${JOB_ID}/offers/live?since=${since}`, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF }
             });
-            if (!res.ok) {
-                console.warn('[Offers] poll HTTP', res.status);
-                return;
-            }
+            if (!res.ok) return;
             const data = await res.json();
             if (data.server_time) since = data.server_time - 2;
             (data.new_offers || []).forEach(addOffer);
-        } catch (e) {
-            console.error('[Offers] poll error', e);
-        }
+        } catch (e) { console.error('[Offers] poll error', e); }
     }
 
-    // Start immediately then every 5s
     poll();
     setInterval(poll, 5000);
-
-    // Pause when tab hidden, resume when visible
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) { since = Math.floor(Date.now()/1000) - 15; poll(); }
     });
@@ -652,187 +742,77 @@ document.querySelectorAll('#starRating .star').forEach((s, i) => {
 @keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(20px); } }
 </style>
 
-
-{{-- Odovin Provider Radar Map JS --}}
 @if($job->latitude && $job->longitude)
 <script>
 (function() {
     const JOB_LAT = {{ $job->latitude }};
     const JOB_LNG = {{ $job->longitude }};
     let   RADIUS  = {{ $job->radius ?? 25 }};
+    let mapObj = null, radiusCircles = [], providerMarkers = [];
 
-    let mapObj = null;
-    let radiusCircles = [];
-    let providerMarkers = [];
-
-    // ── Radius slider handler ───────────────────────────────────────────
     window.onRadiusChange = function(val) {
-        val = parseInt(val);
-        RADIUS = val;
+        val = parseInt(val); RADIUS = val;
         document.getElementById('radiusDisplay').textContent = val;
-        // Update slider gradient fill
         const slider = document.getElementById('radiusSlider');
-        const pct = ((val - 5) / (100 - 5)) * 100;
-        slider.style.setProperty('--pct', pct + '%');
-        // Debounce the map refresh
+        slider.style.setProperty('--pct', ((val-5)/(100-5)*100)+'%');
         clearTimeout(window._radiusTimer);
         window._radiusTimer = setTimeout(() => refreshMap(), 600);
     };
-
-    // Initialise slider gradient on load
     setTimeout(() => {
         const slider = document.getElementById('radiusSlider');
-        if (slider) {
-            const pct = ((RADIUS - 5) / (100 - 5)) * 100;
-            slider.style.setProperty('--pct', pct + '%');
-        }
+        if (slider) slider.style.setProperty('--pct', ((RADIUS-5)/(100-5)*100)+'%');
     }, 100);
 
     function refreshMap() {
         if (!mapObj) return;
-        // Clear existing circles and markers
-        radiusCircles.forEach(c => c.setMap(null));
-        radiusCircles = [];
-        providerMarkers.forEach(m => m.setMap(null));
-        providerMarkers = [];
-        // Redraw radius + reload providers
-        drawRadius();
-        loadProviders();
-        // Update zoom
-        mapObj.setZoom(RADIUS <= 10 ? 12 : RADIUS <= 25 ? 10 : 9);
+        radiusCircles.forEach(c=>c.setMap(null)); radiusCircles=[];
+        providerMarkers.forEach(m=>m.setMap(null)); providerMarkers=[];
+        drawRadius(); loadProviders();
+        mapObj.setZoom(RADIUS<=10?12:RADIUS<=25?10:9);
     }
-
     function drawRadius() {
-        radiusCircles.push(new google.maps.Circle({ map:mapObj, center:{lat:JOB_LAT,lng:JOB_LNG}, radius:RADIUS*1609.34, strokeColor:'#00d4ff', strokeOpacity:.25, strokeWeight:1, fillColor:'#00d4ff', fillOpacity:.025 }));
-        radiusCircles.push(new google.maps.Circle({ map:mapObj, center:{lat:JOB_LAT,lng:JOB_LNG}, radius:RADIUS*1609.34*.5, strokeColor:'#00d4ff', strokeOpacity:.12, strokeWeight:1, fillColor:'transparent', fillOpacity:0 }));
+        radiusCircles.push(new google.maps.Circle({map:mapObj,center:{lat:JOB_LAT,lng:JOB_LNG},radius:RADIUS*1609.34,strokeColor:'#00d4ff',strokeOpacity:.25,strokeWeight:1,fillColor:'#00d4ff',fillOpacity:.025}));
+        radiusCircles.push(new google.maps.Circle({map:mapObj,center:{lat:JOB_LAT,lng:JOB_LNG},radius:RADIUS*1609.34*.5,strokeColor:'#00d4ff',strokeOpacity:.12,strokeWeight:1,fillColor:'transparent',fillOpacity:0}));
     }
-
     function loadProviders() {
-        const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
-        set('mapTotalCount', '…');
-        set('mapVerifiedCount', '…');
-        set('mapClosestDist', '…');
-
-        fetch(`/api/providers/nearby-map?lat=${JOB_LAT}&lng=${JOB_LNG}&radius=${RADIUS}`, { headers:{'Accept':'application/json'} })
-        .then(r => r.json())
-        .then(data => {
-            const providers = data.providers || [];
-            set('mapTotalCount', providers.length + ' providers');
-            set('mapVerifiedCount', providers.filter(p=>p.is_verified&&p.is_active).length);
-            set('mapClosestDist', providers[0] ? providers[0].distance : '—');
-
-            providers.forEach((p, idx) => {
-                const color = !p.is_active ? '#666688' : p.is_verified ? '#00ffaa' : '#ffaa00';
-                const pulse = p.is_active;
-                const delay = (idx * 0.4) % 3;
-                const dur   = 1.8 + (idx % 3) * 0.4;
-                const svg = pulse
-                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36">
-                        <defs><filter id="pg${idx}"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-                        <circle cx="18" cy="18" r="9" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.7">
-                            <animate attributeName="r" from="9" to="17" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
-                            <animate attributeName="opacity" from="0.7" to="0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
-                        </circle>
-                        <circle cx="18" cy="18" r="9" fill="none" stroke="${color}" stroke-width="1" opacity="0.4">
-                            <animate attributeName="r" from="9" to="17" dur="${dur}s" begin="${delay+dur*0.5}s" repeatCount="indefinite"/>
-                            <animate attributeName="opacity" from="0.4" to="0" dur="${dur}s" begin="${delay+dur*0.5}s" repeatCount="indefinite"/>
-                        </circle>
-                        <circle cx="18" cy="18" r="7" fill="${color}" opacity="0.95" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/>
-                        <circle cx="18" cy="18" r="3.5" fill="rgba(255,255,255,.9)"/>
-                       </svg>`
-                    : `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-                        <circle cx="11" cy="11" r="7" fill="${color}" opacity="0.45" stroke="#222" stroke-width="1.5"/>
-                        <circle cx="11" cy="11" r="3" fill="${color}" opacity="0.6"/>
-                       </svg>`;
-
-                const marker = new google.maps.Marker({
-                    position: { lat: parseFloat(p.latitude), lng: parseFloat(p.longitude) }, map:mapObj,
-                    icon: { url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg), scaledSize:new google.maps.Size(pulse?36:22,pulse?36:22), anchor:new google.maps.Point(pulse?18:11,pulse?18:11) },
-                    zIndex: p.is_active ? 5 : 1,
-                });
-                const badge = p.is_verified ? `<span style="font-size:.68rem;background:rgba(0,255,170,.15);color:#00ffaa;border-radius:6px;padding:.1rem .4rem;">✓ Verified</span>` : '';
-                const stars = p.rating > 0 ? `<div style="color:#ffaa00;font-size:.8rem;margin:.2rem 0;">★ ${p.rating} <span style="color:#888;">(${p.total_reviews})</span></div>` : '';
-                const info  = new google.maps.InfoWindow({
-                    content: `<div style="font-family:'Chakra Petch',sans-serif;background:#0a0e1a;border:1px solid rgba(0,212,255,.25);border-radius:10px;padding:.875rem 1rem;min-width:175px;">
-                        <div style="font-weight:700;font-size:.875rem;color:#fff;margin-bottom:.3rem;">${p.name}</div>
-                        <div style="font-size:.75rem;color:#88aacc;margin-bottom:.35rem;">${p.type} ${badge}</div>
-                        ${stars}
-                        <div style="font-size:.7rem;color:rgba(0,212,255,.6);margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(0,212,255,.1);">📍 ${p.distance} mi away</div>
-                    </div>`
-                });
-                marker.addListener('click', () => { window._openInfo && window._openInfo.close(); info.open(mapObj, marker); window._openInfo = info; });
+        const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+        set('mapTotalCount','…');set('mapVerifiedCount','…');set('mapClosestDist','…');
+        fetch(`/api/providers/nearby-map?lat=${JOB_LAT}&lng=${JOB_LNG}&radius=${RADIUS}`,{headers:{'Accept':'application/json'}})
+        .then(r=>r.json()).then(data=>{
+            const providers=data.providers||[];
+            set('mapTotalCount',providers.length+' providers');
+            set('mapVerifiedCount',providers.filter(p=>p.is_verified&&p.is_active).length);
+            set('mapClosestDist',providers[0]?providers[0].distance:'—');
+            providers.forEach((p,idx)=>{
+                const color=!p.is_active?'#666688':p.is_verified?'#00ffaa':'#ffaa00';
+                const pulse=p.is_active,delay=(idx*.4)%3,dur=1.8+(idx%3)*.4;
+                const svg=pulse?`<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"><defs><filter id="pg${idx}"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><circle cx="18" cy="18" r="9" fill="none" stroke="${color}" stroke-width="1.5" opacity="0.7"><animate attributeName="r" from="9" to="17" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.7" to="0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/></circle><circle cx="18" cy="18" r="9" fill="none" stroke="${color}" stroke-width="1" opacity="0.4"><animate attributeName="r" from="9" to="17" dur="${dur}s" begin="${delay+dur*.5}s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.4" to="0" dur="${dur}s" begin="${delay+dur*.5}s" repeatCount="indefinite"/></circle><circle cx="18" cy="18" r="7" fill="${color}" opacity="0.95" stroke="rgba(0,0,0,.5)" stroke-width="1.5"/><circle cx="18" cy="18" r="3.5" fill="rgba(255,255,255,.9)"/></svg>`:`<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="7" fill="${color}" opacity="0.45" stroke="#222" stroke-width="1.5"/><circle cx="11" cy="11" r="3" fill="${color}" opacity="0.6"/></svg>`;
+                const marker=new google.maps.Marker({position:{lat:parseFloat(p.latitude),lng:parseFloat(p.longitude)},map:mapObj,icon:{url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg),scaledSize:new google.maps.Size(pulse?36:22,pulse?36:22),anchor:new google.maps.Point(pulse?18:11,pulse?18:11)},zIndex:p.is_active?5:1});
+                const badge=p.is_verified?`<span style="font-size:.68rem;background:rgba(0,255,170,.15);color:#00ffaa;border-radius:6px;padding:.1rem .4rem;">✓ Verified</span>`:'';
+                const stars=p.rating>0?`<div style="color:#ffaa00;font-size:.8rem;margin:.2rem 0;">★ ${p.rating} <span style="color:#888;">(${p.total_reviews})</span></div>`:'';
+                const info=new google.maps.InfoWindow({content:`<div style="font-family:'Chakra Petch',sans-serif;background:#0a0e1a;border:1px solid rgba(0,212,255,.25);border-radius:10px;padding:.875rem 1rem;min-width:175px;"><div style="font-weight:700;font-size:.875rem;color:#fff;margin-bottom:.3rem;">${p.name}</div><div style="font-size:.75rem;color:#88aacc;margin-bottom:.35rem;">${p.type} ${badge}</div>${stars}<div style="font-size:.7rem;color:rgba(0,212,255,.6);margin-top:.4rem;padding-top:.4rem;border-top:1px solid rgba(0,212,255,.1);">📍 ${p.distance} mi away</div></div>`});
+                marker.addListener('click',()=>{window._openInfo&&window._openInfo.close();info.open(mapObj,marker);window._openInfo=info;});
                 providerMarkers.push(marker);
             });
-        })
-        .catch(err => console.error('Map error:', err));
+        }).catch(err=>console.error('Map error:',err));
     }
-
     function initNearbyMap() {
-        const mapEl = document.getElementById('nearbyMap');
-        if (!mapEl || !window.google) return;
-
-        mapObj = new google.maps.Map(mapEl, {
-            center: { lat: JOB_LAT, lng: JOB_LNG },
-            zoom: RADIUS <= 10 ? 12 : RADIUS <= 25 ? 10 : 9,
-            styles: odovinMapStyles(),
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-        });
-
-        // Job location — glowing pin (static, never removed)
-        const jobSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54">
-            <defs><filter id="gj"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-            <ellipse cx="22" cy="50" rx="8" ry="3" fill="rgba(0,212,255,.25)"/>
-            <path d="M22 4 C13 4 6 11 6 20 C6 31 22 48 22 48 C22 48 38 31 38 20 C38 11 31 4 22 4Z" fill="#0a2a3a" stroke="#00d4ff" stroke-width="1.5"/>
-            <circle cx="22" cy="20" r="7" fill="#00d4ff" opacity="0.9"/>
-            <circle cx="22" cy="20" r="4" fill="#ffffff"/>
-            <circle cx="22" cy="20" r="7" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.6">
-                <animate attributeName="r" from="7" to="14" dur="2s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/>
-            </circle>
-        </svg>`;
-        new google.maps.Marker({
-            position: { lat: JOB_LAT, lng: JOB_LNG }, map: mapObj,
-            icon: { url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(jobSvg), scaledSize: new google.maps.Size(44,54), anchor: new google.maps.Point(22,50) },
-            zIndex: 20,
-        });
-
-        // Draw radius circles + load providers (both refreshable)
-        drawRadius();
-        loadProviders();
+        const mapEl=document.getElementById('nearbyMap');
+        if(!mapEl||!window.google)return;
+        mapObj=new google.maps.Map(mapEl,{center:{lat:JOB_LAT,lng:JOB_LNG},zoom:RADIUS<=10?12:RADIUS<=25?10:9,styles:odovinMapStyles(),mapTypeControl:false,streetViewControl:false,fullscreenControl:false});
+        const jobSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54"><defs><filter id="gj"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><ellipse cx="22" cy="50" rx="8" ry="3" fill="rgba(0,212,255,.25)"/><path d="M22 4 C13 4 6 11 6 20 C6 31 22 48 22 48 C22 48 38 31 38 20 C38 11 31 4 22 4Z" fill="#0a2a3a" stroke="#00d4ff" stroke-width="1.5"/><circle cx="22" cy="20" r="7" fill="#00d4ff" opacity="0.9"/><circle cx="22" cy="20" r="4" fill="#ffffff"/><circle cx="22" cy="20" r="7" fill="none" stroke="#00d4ff" stroke-width="1.5" opacity="0.6"><animate attributeName="r" from="7" to="14" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" from="0.6" to="0" dur="2s" repeatCount="indefinite"/></circle></svg>`;
+        new google.maps.Marker({position:{lat:JOB_LAT,lng:JOB_LNG},map:mapObj,icon:{url:'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(jobSvg),scaledSize:new google.maps.Size(44,54),anchor:new google.maps.Point(22,50)},zIndex:20});
+        drawRadius(); loadProviders();
     }
-
-    function odovinMapStyles() {
-        return [
-            { elementType:'geometry', stylers:[{color:'#080d1a'}] },
-            { elementType:'labels.text.stroke', stylers:[{color:'#080d1a'}] },
-            { elementType:'labels.text.fill',   stylers:[{color:'#4a5568'}] },
-            { elementType:'labels.icon',         stylers:[{visibility:'off'}] },
-            { featureType:'road',           elementType:'geometry',       stylers:[{color:'#0d1a2e'}] },
-            { featureType:'road',           elementType:'geometry.stroke',stylers:[{color:'#0a2040'}] },
-            { featureType:'road.highway',   elementType:'geometry',       stylers:[{color:'#0a2040'}] },
-            { featureType:'road.highway',   elementType:'geometry.stroke',stylers:[{color:'#0d3060'}] },
-            { featureType:'water',          elementType:'geometry',       stylers:[{color:'#050a14'}] },
-            { featureType:'landscape',      elementType:'geometry',       stylers:[{color:'#080d1a'}] },
-            { featureType:'poi',            stylers:[{visibility:'off'}] },
-            { featureType:'transit',        stylers:[{visibility:'off'}] },
-            { featureType:'administrative', elementType:'geometry',       stylers:[{color:'#0a1428'}] },
-        ];
-    }
-
-    if (window.google && window.google.maps) {
-        initNearbyMap();
-    } else {
+    function odovinMapStyles(){return[{elementType:'geometry',stylers:[{color:'#080d1a'}]},{elementType:'labels.text.stroke',stylers:[{color:'#080d1a'}]},{elementType:'labels.text.fill',stylers:[{color:'#4a5568'}]},{elementType:'labels.icon',stylers:[{visibility:'off'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#0d1a2e'}]},{featureType:'road',elementType:'geometry.stroke',stylers:[{color:'#0a2040'}]},{featureType:'road.highway',elementType:'geometry',stylers:[{color:'#0a2040'}]},{featureType:'road.highway',elementType:'geometry.stroke',stylers:[{color:'#0d3060'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#050a14'}]},{featureType:'landscape',elementType:'geometry',stylers:[{color:'#080d1a'}]},{featureType:'poi',stylers:[{visibility:'off'}]},{featureType:'transit',stylers:[{visibility:'off'}]},{featureType:'administrative',elementType:'geometry',stylers:[{color:'#0a1428'}]}];}
+    if(window.google&&window.google.maps){initNearbyMap();}else{
         @if(config('services.google_maps.key'))
-        const s = document.createElement('script');
-        s.src = "https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&callback=initNearbyMapGlobal";
-        s.async = true;
-        window.initNearbyMapGlobal = initNearbyMap;
-        document.head.appendChild(s);
+        const s=document.createElement('script');
+        s.src="https://maps.googleapis.com/maps/api/js?key={{ config('services.google_maps.key') }}&callback=initNearbyMapGlobal";
+        s.async=true; window.initNearbyMapGlobal=initNearbyMap; document.head.appendChild(s);
         @else
-        const el = document.getElementById('nearbyMap');
-        if (el) el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:.825rem;">Google Maps API key not configured</div>';
+        const el=document.getElementById('nearbyMap');
+        if(el)el.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:.825rem;">Google Maps API key not configured</div>';
         @endif
     }
 })();

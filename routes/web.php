@@ -87,6 +87,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/export', [App\Http\Controllers\Admin\ReportController::class, 'export'])->name('export');
         });
 
+        Route::prefix('subscription-plans')->name('subscription-plans.')
+            ->group(function () {
+                Route::get('/',                [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'index'])    ->name('index');
+                Route::put('/{plan}',          [\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'update'])   ->name('update');
+                Route::post('/{plan}/provision',[\App\Http\Controllers\Admin\SubscriptionPlanController::class, 'provision'])->name('provision');
+            });
+
+
+        Route::prefix('jobs')->name('jobs.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\JobPostController::class, 'index'])->name('index');
+            Route::get('/{job}', [\App\Http\Controllers\Admin\JobPostController::class, 'show'])->name('show');
+            Route::delete('/{job}', [\App\Http\Controllers\Admin\JobPostController::class, 'destroy'])->name('destroy');
+            Route::post('/{job}/force-close', [\App\Http\Controllers\Admin\JobPostController::class, 'forceClose'])->name('force-close');
+        });
+
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/escrow',        [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('escrow');
+            Route::get('/subscriptions', [\App\Http\Controllers\Admin\PaymentController::class, 'subscriptions'])->name('subscriptions');
+        });
+
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('index');
             Route::post('/update', [App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('update');
@@ -173,6 +193,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{record}',    [ServiceHistoryController::class, 'show'])->name('show');
     });
 
+        // Quote request form on provider profile
+    Route::get('/providers/{provider}/quote',  [\App\Http\Controllers\QuoteRequestController::class, 'create'])->name('quotes.create');
+    Route::post('/providers/{provider}/quote', [\App\Http\Controllers\QuoteRequestController::class, 'store']) ->name('quotes.store');
+
+
+    // Consumer quote management
+    Route::prefix('quotes')->name('quotes.')->group(function () {
+        Route::get('/',              [\App\Http\Controllers\QuoteRequestController::class, 'index'])  ->name('index');
+        Route::get('/{quote}',       [\App\Http\Controllers\QuoteRequestController::class, 'show'])   ->name('show');
+        Route::post('/{quote}/accept',  [\App\Http\Controllers\QuoteRequestController::class, 'accept']) ->name('accept');
+        Route::post('/{quote}/decline', [\App\Http\Controllers\QuoteRequestController::class, 'decline'])->name('decline');
+        Route::delete('/{quote}',    [\App\Http\Controllers\QuoteRequestController::class, 'destroy'])->name('destroy');
+    });
+
+
     // ── Job Posts ────────────────────────────────────────────────────────────
     Route::prefix('jobs')->name('jobs.')->group(function () {
         Route::get('/',                [JobPostController::class, 'index'])->name('index');
@@ -186,6 +221,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{job}/accept-offer/{offer}', [JobPostController::class, 'acceptOffer'])->name('accept-offer');
         Route::post('/{job}/rate',     [JobPostController::class, 'rate'])->name('rate');
     });
+
+    // ── Counter-Offers on Job Offers ────────────────────────────────────────────
+    Route::prefix('jobs/{job}/offers/{offer}/counter')->name('jobs.offers.counter.')->group(function () {
+        Route::post('/',   [App\Http\Controllers\CounterOfferController::class, 'store'])  ->name('store');
+        Route::delete('/', [App\Http\Controllers\CounterOfferController::class, 'destroy'])->name('destroy');
+    });
+
+
+    // ── Payment & Escrow ──────────────────────────────────────────────────────
+
+    Route::prefix('jobs/{job}/payment')->name('jobs.payment.')->middleware(['auth','verified'])->group(function () {
+        Route::get('/',         [App\Http\Controllers\PaymentController::class, 'show'])        ->name('show');
+        Route::post('/intent',  [App\Http\Controllers\PaymentController::class, 'createIntent'])->name('intent');
+        Route::post('/release', [App\Http\Controllers\PaymentController::class, 'release'])     ->name('release');
+        Route::post('/refund',  [App\Http\Controllers\PaymentController::class, 'refund'])      ->name('refund');
+        Route::post('/sync', [App\Http\Controllers\PaymentController::class, 'sync'])->name('sync');
+    });
+
 
     // Service Providers (public listing)
     Route::prefix('providers')->name('providers.')->group(function () {
@@ -329,6 +382,34 @@ Route::prefix('provider')->name('provider.')->group(function () {
             Route::post('/{job}/submit-offer', [\App\Http\Controllers\Provider\JobOfferController::class, 'submitOffer'])->name('submit-offer');
         });
 
+        // Counter-Offers on Job Offers
+        Route::prefix('offers/{offer}/counter')->name('counter.')->group(function () {
+            Route::post('/accept', [App\Http\Controllers\Provider\CounterOfferController::class, 'accept'])->name('accept');
+            Route::post('/reject', [App\Http\Controllers\Provider\CounterOfferController::class, 'reject'])->name('reject');
+        });
+        // Quote Management
+        Route::prefix('quotes')->name('quotes.')->group(function () {
+            Route::get('/',                          [\App\Http\Controllers\Provider\QuoteController::class, 'index'])  ->name('index');
+            Route::get('/{quote}',                   [\App\Http\Controllers\Provider\QuoteController::class, 'show'])   ->name('show');
+            Route::post('/{quote}/respond',          [\App\Http\Controllers\Provider\QuoteController::class, 'respond'])->name('respond');
+            Route::post('/{quote}/decline',          [\App\Http\Controllers\Provider\QuoteController::class, 'decline'])->name('decline');
+        });
+        
+
+        // Payments & Stripe Onboarding
+        Route::prefix('payments')->name('payments.')->group(function () {
+            Route::get('/',               [App\Http\Controllers\Provider\PaymentController::class, 'index'])        ->name('index');
+            Route::get('/onboard',        [App\Http\Controllers\Provider\PaymentController::class, 'onboard'])      ->name('onboard');
+            Route::get('/onboard/return', [App\Http\Controllers\Provider\PaymentController::class, 'onboardReturn'])->name('onboard.return');
+        });
+
+        Route::prefix('subscription')->name('subscription.')->group(function () {
+            Route::get('/',               [\App\Http\Controllers\Provider\SubscriptionController::class, 'index'])         ->name('index');
+            Route::post('/checkout',      [\App\Http\Controllers\Provider\SubscriptionController::class, 'checkout'])      ->name('checkout');
+            Route::get('/success',        [\App\Http\Controllers\Provider\SubscriptionController::class, 'success'])       ->name('success');
+            Route::get('/billing-portal', [\App\Http\Controllers\Provider\SubscriptionController::class, 'billingPortal'])->name('billing-portal');
+        });
+
         // My Work Queue
         Route::prefix('work')->name('jobs.work.')->group(function () {
             Route::get('/',                     [\App\Http\Controllers\Provider\JobWorkController::class, 'index'])->name('index');
@@ -369,3 +450,7 @@ Route::middleware(['web', 'auth'])->prefix('api/realtime')->name('api.realtime.'
     Route::get('/jobs/{job}/offers/live', [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveOffers'])->name('offers.live');
     Route::get('/provider/offers/live',   [\App\Http\Controllers\Api\JobRealTimeController::class, 'liveProviderOffers'])->name('provider.offers.live');
 });
+
+// ── Stripe Webhook Endpoints ──────────────────────────────────────────────────
+Route::post('/stripe/webhook',              App\Http\Controllers\StripeWebhookController::class)            ->name('stripe.webhook');
+Route::post('/stripe/subscription-webhook', App\Http\Controllers\SubscriptionWebhookController::class)      ->name('stripe.subscription.webhook');

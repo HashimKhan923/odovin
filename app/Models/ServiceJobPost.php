@@ -26,6 +26,7 @@ class ServiceJobPost extends Model
         'work_status', 'final_cost', 'provider_notes',
         'rating', 'review', 'work_started_at', 'work_completed_at',
         'media',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -160,4 +161,10 @@ class ServiceJobPost extends Model
             $this->acceptedOffer->serviceProvider->updateRating();
         }
     }
+
+    public function escrow(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\JobEscrow::class, 'job_post_id');
+    }
+
 }

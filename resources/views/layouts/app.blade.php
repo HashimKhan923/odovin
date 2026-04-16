@@ -391,6 +391,45 @@
             .main-content { margin-left: 0; }
             .top-bar { padding: 1rem; }
         }
+
+
+        /* ── Odovin Toast Popup (consumer) ── */
+#odovin-toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: .75rem;
+    pointer-events: none;
+}
+.odovin-toast {
+    display: flex;
+    align-items: flex-start;
+    gap: .875rem;
+    min-width: 300px;
+    max-width: 380px;
+    padding: 1rem 1.1rem;
+    background: var(--card-bg, #1a2235);
+    border: 1px solid var(--border-color, rgba(0,212,255,.15));
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    pointer-events: all;
+    cursor: pointer;
+    animation: toastSlideIn .35s cubic-bezier(.21,1.02,.73,1) forwards;
+}
+.odovin-toast.toast-out {
+    animation: toastSlideOut .3s ease forwards;
+}
+.odovin-toast-icon  { font-size: 1.25rem; flex-shrink: 0; margin-top: .1rem; }
+.odovin-toast-body  { flex: 1; min-width: 0; }
+.odovin-toast-title { font-family: 'Orbitron', sans-serif; font-size: .78rem; font-weight: 700; color: #fff; margin-bottom: .2rem; }
+.odovin-toast-msg   { font-size: .78rem; color: var(--text-secondary, #aaa); line-height: 1.5; }
+.odovin-toast-close { font-size: .9rem; color: var(--text-tertiary, #666); flex-shrink: 0; }
+.odovin-toast-close:hover { color: #fff; }
+@keyframes toastSlideIn { from { opacity:0; transform:translateX(30px) scale(.95); } to { opacity:1; transform:translateX(0) scale(1); } }
+@keyframes toastSlideOut { from { opacity:1; transform:translateX(0) scale(1); } to { opacity:0; transform:translateX(30px) scale(.95); } }
     </style>
 </head>
 <body>
@@ -432,6 +471,15 @@
                         <span class="nav-text">Post a Job</span>
                         @php $activeJobs = \App\Models\ServiceJobPost::where('user_id', auth()->id())->whereIn('status',['open','accepted'])->count(); @endphp
                         <span id="activeJobsBadge" style="margin-left:auto;background:var(--accent-warning);color:#000;border-radius:20px;font-size:0.65rem;padding:2px 7px;font-weight:700;{{ $activeJobs > 0 ? '' : 'display:none;' }}">{{ $activeJobs }}</span>
+                    </a>
+                    <a href="{{ route('quotes.index') }}" class="nav-item {{ request()->routeIs('quotes.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        <span class="nav-text">Quote Requests</span>
+                        @php $pendingQuoteCount = \App\Models\QuoteRequest::where('user_id', auth()->id())->where('status', 'quoted')->whereNull('consumer_action')->count(); @endphp
+                        <span id="quotesActionBadge" style="margin-left:auto;background:var(--accent-cyan);color:#000;border-radius:20px;font-size:0.65rem;padding:2px 7px;font-weight:700;{{ $pendingQuoteCount > 0 ? '' : 'display:none;' }}">{{ $pendingQuoteCount ?: 0 }}</span>
                     </a>
                     <a href="{{ route('maintenance.index') }}" class="nav-item {{ request()->routeIs('maintenance.*') ? 'active' : '' }}">
                         <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -590,6 +638,9 @@
         </div>
     </div>
 
+    <div id="odovin-toast-container"></div>
+
+
     <script>
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'dark';
@@ -619,109 +670,198 @@
         initSidebar();
     </script>
 
-    <script>
-    // ── Consumer Global Notification Bell ────────────────────────────────────
-    (function() {
-        const FETCH_URL      = '{{ route("alerts.fetch") }}';
-        const COUNTS_URL     = '{{ route("alerts.counts") }}';
-        const MARK_READ_BASE = '{{ url("/alerts") }}';
-        const CSRF           = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-        let   dropdownOpen   = false;
-
-        function updateBadge(count) {
-            const badge = document.getElementById('consumerNotifBadge');
-            if (!badge) return;
-            if (count > 0) {
-                badge.textContent = count > 99 ? '99+' : count;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
+ 
+<script>
+// ── Consumer Global Notification Bell + Real-time Toast System ───────
+(function () {
+ 
+    const FETCH_URL      = '{{ route("alerts.fetch") }}';
+    const COUNTS_URL     = '{{ route("alerts.counts") }}';
+    const MARK_READ_BASE = '{{ url("/alerts") }}';
+    const CSRF           = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+ 
+    let dropdownOpen  = false;
+    let lastAlertIds  = new Set();
+    let isFirstLoad   = true;
+ 
+    // ── Toast ─────────────────────────────────────────────────────────
+ 
+    function toastIcon(title) {
+        title = (title || '').toLowerCase();
+        if (title.includes('offer'))    return '💰';
+        if (title.includes('counter'))  return '💬';
+        if (title.includes('accepted')) return '✅';
+        if (title.includes('payment'))  return '💳';
+        if (title.includes('complete')) return '🎉';
+        if (title.includes('release'))  return '💸';
+        if (title.includes('refund'))   return '↩️';
+        if (title.includes('cancel'))   return '❌';
+        return '🔔';
+    }
+ 
+    function showToast(title, message, actionUrl, autoMs = 6000) {
+        const container = document.getElementById('odovin-toast-container');
+        if (!container) return;
+        const el = document.createElement('div');
+        el.className = 'odovin-toast';
+        el.innerHTML = `
+            <div class="odovin-toast-icon">${toastIcon(title)}</div>
+            <div class="odovin-toast-body">
+                <div class="odovin-toast-title">${title}</div>
+                <div class="odovin-toast-msg">${message}</div>
+            </div>
+            <div class="odovin-toast-close">✕</div>
+        `;
+        el.addEventListener('click', function (e) {
+            if (e.target.classList.contains('odovin-toast-close')) { dismissToast(el); return; }
+            if (actionUrl) window.location.href = actionUrl;
+            else dismissToast(el);
+        });
+        document.getElementById('odovin-toast-container').appendChild(el);
+        el._toastTimer = setTimeout(() => dismissToast(el), autoMs);
+    }
+ 
+    function dismissToast(el) {
+        clearTimeout(el._toastTimer);
+        el.classList.add('toast-out');
+        setTimeout(() => el.remove(), 320);
+    }
+ 
+    // ── Badge helpers ─────────────────────────────────────────────────
+ 
+    function updateBadge(count) {
+        const badge = document.getElementById('consumerNotifBadge');
+        if (!badge) return;
+        if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.style.display = 'flex'; }
+        else             { badge.style.display = 'none'; }
+    }
+ 
+    function setBadge(id, count) {
+        const b = document.getElementById(id);
+        if (!b) return;
+        if (count > 0) { b.textContent = count > 99 ? '99+' : count; b.style.display = ''; }
+        else             { b.style.display = 'none'; }
+    }
+ 
+    // ── Dropdown render ───────────────────────────────────────────────
+ 
+    function renderList(notifications) {
+        const list = document.getElementById('consumerNotifList');
+        if (!list) return;
+        if (!notifications.length) {
+            list.innerHTML = '<div style="padding:3rem 1.5rem;text-align:center;color:var(--text-tertiary);">No notifications</div>';
+            return;
         }
-
-        function updateJobsBadge() {
-            fetch(COUNTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        list.innerHTML = notifications.map(n => `
+            <a href="#" class="alert-item ${n.is_read ? '' : 'unread'}"
+               onclick="consumerNotifClick(event,${n.id},'${n.action_url ?? ''}')">
+                <div style="font-size:.8rem;font-weight:600;color:var(--text-primary);margin-bottom:.25rem;">${n.title}</div>
+                <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.35rem;">${n.message}</div>
+                <div style="font-size:.7rem;color:var(--text-tertiary);">${n.time}</div>
+            </a>
+        `).join('');
+    }
+ 
+    // ── Core poll ─────────────────────────────────────────────────────
+ 
+    async function poll() {
+        try {
+            const res  = await fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+ 
+            updateBadge(data.unread_count || 0);
+            if (dropdownOpen) renderList(data.notifications || []);
+ 
+            // Fire toasts for new unread alerts (skip first load)
+            if (!isFirstLoad && data.notifications) {
+                data.notifications.forEach(n => {
+                    if (!n.is_read && !lastAlertIds.has(n.id)) {
+                        showToast(n.title, n.message, n.action_url);
+                    }
+                });
+            }
+ 
+            // Seed known IDs
+            if (data.notifications) {
+                data.notifications.forEach(n => lastAlertIds.add(n.id));
+            }
+            isFirstLoad = false;
+ 
+        } catch (e) {}
+    }
+ 
+    // ── Counts poll — updates active jobs badge in nav ────────────────
+ 
+    async function pollCounts() {
+        try {
+            const res  = await fetch(COUNTS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+ 
+            setBadge('activeJobsBadge',   data.active_jobs_count      || 0);
+            setBadge('unpaidJobsBadge',   data.unpaid_jobs_count       || 0);
+            setBadge('quotesActionBadge', data.quotes_action_count     || 0);
+        } catch (e) {}
+    }
+ 
+    // ── Dropdown toggle ───────────────────────────────────────────────
+ 
+    window.toggleConsumerNotif = function () {
+        dropdownOpen = !dropdownOpen;
+        const dd = document.getElementById('consumerNotifDropdown');
+        dd.style.display = dropdownOpen ? 'block' : 'none';
+        if (dropdownOpen) {
+            fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
-                .then(data => {
-                    const b = document.getElementById('activeJobsBadge');
-                    if (!b) return;
-                    const n = data.active_jobs_count || 0;
-                    if (n > 0) { b.textContent = n; b.style.display = ''; }
-                    else        { b.style.display = 'none'; }
-                })
-                .catch(() => {});
+                .then(data => { updateBadge(data.unread_count || 0); renderList(data.notifications || []); });
         }
-
-        function renderList(notifications) {
-            const list = document.getElementById('consumerNotifList');
-            if (!notifications.length) {
-                list.innerHTML = '<div style="padding:3rem 1.5rem;text-align:center;color:var(--text-tertiary);">No notifications</div>';
-                return;
-            }
-            list.innerHTML = notifications.map(n => `
-                <a href="#" class="alert-item ${n.is_read ? '' : 'unread'}"
-                   onclick="consumerNotifClick(event,${n.id},'${n.action_url ?? ''}')">
-                    <div style="font-size:.8rem;font-weight:600;color:var(--text-primary);margin-bottom:.25rem;">${n.title}</div>
-                    <div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:.35rem;">${n.message}</div>
-                    <div style="font-size:.7rem;color:var(--text-tertiary);">${n.time}</div>
-                </a>
-            `).join('');
-        }
-
-        async function poll() {
-            try {
-                const res  = await fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                const data = await res.json();
-                updateBadge(data.unread_count || 0);
-                if (dropdownOpen) renderList(data.notifications || []);
-            } catch(e) {}
-        }
-
-        window.toggleConsumerNotif = function() {
-            dropdownOpen = !dropdownOpen;
+    };
+ 
+    window.consumerNotifClick = async function (e, id, url) {
+        e.preventDefault();
+        await fetch(`${MARK_READ_BASE}/${id}/read`, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
+        });
+        if (url && url !== '') window.location.href = url;
+        else poll();
+    };
+ 
+    document.addEventListener('click', function (e) {
+        const wrap = document.getElementById('consumerNotifWrap');
+        if (dropdownOpen && wrap && !wrap.contains(e.target)) {
+            dropdownOpen = false;
             const dd = document.getElementById('consumerNotifDropdown');
-            dd.style.display = dropdownOpen ? 'block' : 'none';
-            if (dropdownOpen) {
-                fetch(FETCH_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(r => r.json())
-                    .then(data => { updateBadge(data.unread_count||0); renderList(data.notifications||[]); });
+            if (dd) dd.style.display = 'none';
+        }
+    });
+ 
+    // ── Boot ──────────────────────────────────────────────────────────
+ 
+    document.addEventListener('DOMContentLoaded', function () {
+        poll();       // seeds IDs, no toasts on first call because isFirstLoad=true
+        pollCounts();
+ 
+        setInterval(poll,        5000);  // check for new alerts every 5s
+        setInterval(pollCounts,  5000);  // update nav badges every 5s
+ 
+        // WebSocket instant trigger (if Echo is configured)
+        setTimeout(() => {
+            if (window.Echo) {
+                try {
+                    Echo.private('user.{{ auth()->id() }}')
+                        .listen('.new-offer',          () => poll())
+                        .listen('.offer-accepted',     () => poll())
+                        .listen('.counter-received',   () => poll())
+                        .listen('.counter-accepted',   () => poll())
+                        .listen('.payment-held',       () => poll())
+                        .listen('.work-complete',      () => poll());
+                } catch (e) {}
             }
-        };
-
-        window.consumerNotifClick = async function(e, id, url) {
-            e.preventDefault();
-            await fetch(`${MARK_READ_BASE}/${id}/read`, {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'X-Requested-With': 'XMLHttpRequest' },
-            });
-            if (url && url !== '') window.location.href = url;
-            else poll();
-        };
-
-        document.addEventListener('click', function(e) {
-            if (dropdownOpen && !document.getElementById('consumerNotifWrap').contains(e.target)) {
-                dropdownOpen = false;
-                document.getElementById('consumerNotifDropdown').style.display = 'none';
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            poll();
-            updateJobsBadge();
-            setInterval(poll, 8000);
-            setInterval(updateJobsBadge, 8000);
-
-            setTimeout(() => {
-                if (window.Echo) {
-                    try {
-                        Echo.private('user.{{ auth()->id() }}')
-                            .listen('.new-offer', () => poll());
-                    } catch(e) {}
-                }
-            }, 1000);
-        });
-    })();
-    </script>
+        }, 1000);
+    });
+ 
+})();
+</script>
 
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     

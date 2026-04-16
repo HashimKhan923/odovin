@@ -52,6 +52,8 @@
 .btn-offer:hover { transform:translateY(-1px); box-shadow:0 4px 15px rgba(0,212,255,.4); }
 .btn-view { display:inline-flex; align-items:center; gap:.5rem; padding:.625rem 1.1rem; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.25); border-radius:8px; color:var(--accent-cyan); font-size:.8rem; font-weight:600; text-decoration:none; transition:all .3s; }
 .badge-offered { display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .75rem; background:rgba(0,255,170,.1); border:1px solid rgba(0,255,170,.3); border-radius:20px; font-size:.72rem; color:var(--accent-green); font-weight:600; }
+.direct-request-card { border-color:rgba(0,212,255,.35) !important; background:rgba(0,212,255,.02); }
+.direct-request-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent-cyan),var(--accent-green)); }
 .distance-pill { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .7rem; background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); border-radius:20px; font-size:.75rem; color:var(--accent-cyan); }
 .vehicle-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .7rem; background:rgba(255,170,0,.08); border:1px solid rgba(255,170,0,.2); border-radius:20px; font-size:.75rem; color:var(--accent-warning); }
 .urgency-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .7rem; border-radius:20px; font-size:.7rem; font-weight:700; }
@@ -104,6 +106,13 @@
                 <option value="{{ $r }}" {{ request('radius', 50) == $r ? 'selected' : '' }}>Within {{ $r }} miles</option>
                 @endforeach
             </select>
+            {{-- Show radius boost badge if provider is on Pro/Premium --}}
+            @if(isset($radiusBoost) && $radiusBoost > 0)
+            <span style="display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .875rem;background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(236,72,153,.08));border:1px solid rgba(168,85,247,.3);border-radius:20px;font-size:.75rem;color:#c084fc;font-weight:700;">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                +{{ $radiusBoost }}km {{ ucfirst($plan->slug ?? '') }} boost active
+            </span>
+            @endif
         </form>
     </div>
 
@@ -113,13 +122,19 @@
             $hoursLeft = $job->expires_at ? now()->diffInHours($job->expires_at, false) : 999;
             $urgency   = $hoursLeft < 3 ? 'high' : ($hoursLeft < 8 ? 'medium' : 'low');
             $alreadyOffered = in_array($job->id, $myOfferJobIds);
+            $isDirectRequest = isset($job->is_direct_request) && $job->is_direct_request;
         @endphp
-        <div class="job-card urgency-{{ $urgency }} {{ $alreadyOffered ? 'already-offered' : '' }}" id="job-{{ $job->id }}" data-job-id="{{ $job->id }}">
+        <div class="job-card urgency-{{ $urgency }} {{ $alreadyOffered ? 'already-offered' : '' }} {{ $isDirectRequest ? 'direct-request-card' : '' }}" id="job-{{ $job->id }}" data-job-id="{{ $job->id }}">
             <div class="job-layout">
                 <div>
                     <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
                         <div class="job-type">{{ $job->service_type }}</div>
                         <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;">
+                            @if($isDirectRequest)
+                            <span style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.35);border-radius:20px;font-size:.72rem;font-weight:700;color:var(--accent-cyan);">
+                                📬 Direct Request
+                            </span>
+                            @endif
                             @if($urgency === 'high')<span class="urgency-badge urgency-high">🔥 Expires soon</span>@elseif($urgency === 'medium')<span class="urgency-badge urgency-medium">⏳ {{ $hoursLeft }}h left</span>@endif
                             @if($alreadyOffered)<span class="badge-offered">✓ Offer Submitted</span>@endif
                             @if($job->offers->count() > 0)<span class="offer-count-badge">{{ $job->offers->count() }} offer{{ $job->offers->count()!==1?'s':'' }}</span>@endif

@@ -214,28 +214,24 @@ class JobPostController extends Controller
 
         DB::transaction(function () use ($job, $offer) {
             $offer->update(['status' => 'accepted']);
-            $job->offers()->where('id', '!=', $offer->id)->where('status', 'pending')->update(['status' => 'rejected']);
-            $job->update(['status' => 'accepted', 'accepted_offer_id' => $offer->id]);
+            $job->offers()->where('id', '!=', $offer->id)
+                        ->where('status', 'pending')
+                        ->update(['status' => 'rejected']);
+            $job->update([
+                'accepted_offer_id'   => $offer->id,
+                'payment_status'      => 'unpaid',
+                'assigned_provider_id' => $offer->service_provider_id, // ← ADD THIS
+            ]);
         });
 
-        JobNotificationService::offerAccepted($offer->load(['jobPost.user', 'serviceProvider']));
-
-        foreach ($job->offers->where('status', 'rejected') as $rej) {
+        // Notify rejected providers
+        foreach ($job->fresh()->offers->where('status', 'rejected') as $rej) {
             JobNotificationService::offerRejected($rej->load(['jobPost', 'serviceProvider']));
         }
 
-        auth()->user()->alerts()->create([
-            'user_id'      => auth()->id(),
-            'vehicle_id'   => $job->vehicle_id,
-            'type'         => 'booking',
-            'title'        => 'Offer Accepted',
-            'message'      => "You accepted {$offer->serviceProvider->name}'s offer for {$job->service_type}.",
-            'priority'     => 'info',
-            'for_provider' => false,
-        ]);
-
-        return redirect()->route('jobs.show', $job)
-            ->with('success', "Offer accepted! {$offer->serviceProvider->name} will be in touch shortly.");
+        // Send consumer to payment page — job only confirms after card is charged
+        return redirect()->route('jobs.payment.show', $job)
+            ->with('info', 'Offer selected! Complete your payment to confirm the booking.');
     }
 
     public function cancel(ServiceJobPost $job)

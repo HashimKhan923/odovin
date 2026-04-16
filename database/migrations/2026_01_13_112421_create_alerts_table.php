@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('type', ['maintenance', 'document_expiry', 'recall', 'booking', 'payment', 'system']);
             $table->string('title');
             $table->text('message');
-            $table->enum('priority', ['info', 'warning', 'critical'])->default('info');
+            $table->string('priority', 20)->default('info');
             $table->boolean('is_read')->default(false);
             $table->timestamp('read_at')->nullable();
             $table->timestamps();

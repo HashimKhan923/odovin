@@ -37,28 +37,21 @@ class JobNotificationService
             ->get();
 
         $providers = $allProviders->filter(function ($provider) use ($lat, $lng, $radius) {
-            $provLat = (float) $provider->latitude;
-            $provLng = (float) $provider->longitude;
-
-            // Haversine in PHP — guaranteed accurate, no SQL alias issues
-            $earthRadius = 3959; // miles
+            $provLat   = (float) $provider->latitude;
+            $provLng   = (float) $provider->longitude;
+            $boost     = (int) ($provider->currentPlan()->radius_boost_km ?? 0);
+            $maxRadius = $radius + $boost;
+        
+            $earthRadius = 3959;
             $dLat = deg2rad($provLat - $lat);
             $dLng = deg2rad($provLng - $lng);
-            $a = sin($dLat / 2) ** 2
-               + cos(deg2rad($lat)) * cos(deg2rad($provLat)) * sin($dLng / 2) ** 2;
+            $a    = sin($dLat / 2) ** 2
+                + cos(deg2rad($lat)) * cos(deg2rad($provLat)) * sin($dLng / 2) ** 2;
             $distance = round($earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a)), 2);
-
+        
             $provider->distance = $distance;
-
-            \Illuminate\Support\Facades\Log::info('[JobNotification] provider check', [
-                'provider_id'   => $provider->id,
-                'business_name' => $provider->business_name,
-                'distance_mi'   => $distance,
-                'radius_mi'     => $radius,
-                'within_radius' => $distance <= $radius,
-            ]);
-
-            return $distance <= $radius;
+        
+            return $distance <= $maxRadius;
         });
 
         foreach ($providers as $provider) {

@@ -437,6 +437,40 @@
         color: var(--accent-warning);
         border: 1px solid rgba(255, 170, 0, 0.3);
     }
+    .badge-pro {
+        background: rgba(0, 212, 255, 0.12);
+        color: #00d4ff;
+        border: 1px solid rgba(0, 212, 255, 0.3);
+    }
+    .badge-premium {
+        background: linear-gradient(135deg, rgba(168,85,247,.18), rgba(236,72,153,.12));
+        color: #c084fc;
+        border: 1px solid rgba(168, 85, 247, 0.35);
+    }
+    .provider-card { position: relative; }
+    .provider-card.featured-provider {
+        border-color: rgba(168, 85, 247, 0.35) !important;
+        box-shadow: 0 0 0 1px rgba(168,85,247,.12), 0 8px 30px rgba(168,85,247,.08);
+    }
+    .provider-card.featured-provider::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #a855f7, #ec4899);
+        border-radius: 12px 12px 0 0;
+    }
+    .provider-card.pro-provider {
+        border-color: rgba(0, 212, 255, 0.2) !important;
+    }
+    .provider-card.pro-provider::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #00d4ff, #00ffaa);
+        border-radius: 12px 12px 0 0;
+    }
 
     .badge svg {
         width: 14px;
@@ -719,7 +753,12 @@
                 <div class="providers-grid">
                     
                     @foreach($providers as $provider)
-                    <div class="provider-card" data-lat="{{ $provider->latitude }}" data-lng="{{ $provider->longitude }}">
+                    @php
+                        $cardClass = '';
+                        if ($provider->plan_slug === 'premium' && $provider->subscription_active) $cardClass = 'featured-provider';
+                        elseif ($provider->plan_slug === 'pro' && $provider->subscription_active) $cardClass = 'pro-provider';
+                    @endphp
+                    <div class="provider-card {{ $cardClass }}" data-lat="{{ $provider->latitude }}" data-lng="{{ $provider->longitude }}">
                         <div class="provider-header">
                             <div class="provider-title">
                                 <h3 class="provider-name">{{ $provider->business_name }}</h3>
@@ -733,6 +772,17 @@
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/>
                                             </svg>
                                             Verified
+                                        </span>
+                                    @endif
+                                    @if($provider->plan_slug === 'premium' && $provider->subscription_active)
+                                        <span class="badge badge-premium">
+                                            <svg width="11" height="11" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            Premium
+                                        </span>
+                                    @elseif($provider->plan_slug === 'pro' && $provider->subscription_active)
+                                        <span class="badge badge-pro">
+                                            <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                            Pro
                                         </span>
                                     @endif
                                     @if(isset($provider->distance))

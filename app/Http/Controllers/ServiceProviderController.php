@@ -47,15 +47,23 @@ class ServiceProviderController extends Controller
         });
 
         $sort = $request->sort ?? 'rating';
+
+        // Premium/Pro providers always surface first within each sort group
+        $priorityOrder = "CASE plan_slug
+            WHEN 'premium' THEN 1
+            WHEN 'pro'     THEN 2
+            ELSE                3
+        END ASC";
+
         switch ($sort) {
             case 'distance':
                 ($request->latitude && $request->longitude)
-                    ? $query->orderBy('distance', 'asc')
-                    : $query->orderByDesc('rating');
+                    ? $query->orderByRaw($priorityOrder)->orderBy('distance', 'asc')
+                    : $query->orderByRaw($priorityOrder)->orderByDesc('rating');
                 break;
-            case 'reviews': $query->orderByDesc('total_reviews'); break;
-            case 'name':    $query->orderBy('business_name', 'asc'); break;
-            default:        $query->orderByDesc('rating')->orderByDesc('is_verified');
+            case 'reviews': $query->orderByRaw($priorityOrder)->orderByDesc('total_reviews'); break;
+            case 'name':    $query->orderByRaw($priorityOrder)->orderBy('business_name', 'asc'); break;
+            default:        $query->orderByRaw($priorityOrder)->orderByDesc('rating')->orderByDesc('is_verified');
         }
 
         $providers = $query->paginate(12)->withQueryString();

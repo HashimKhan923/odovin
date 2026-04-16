@@ -245,6 +245,7 @@
                 Dashboard
             </a>
         </div>
+
         <div class="adm-nav-section">
             <div class="adm-nav-label">Management</div>
             <a href="{{ route('admin.users.index') }}" class="adm-nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
@@ -262,13 +263,43 @@
                 Service Providers
                 <span class="adm-count">{{ \App\Models\ServiceProvider::count() }}</span>
             </a>
-            <a href="{{ route('admin.bookings.index') }}" class="adm-nav-link {{ request()->routeIs('admin.bookings.*') ? 'active' : '' }}">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                Bookings
-                @php $pendingCount = \App\Models\ServiceBooking::where('status','pending')->count() @endphp
-                @if($pendingCount > 0)<span class="adm-badge">{{ $pendingCount }}</span>@else<span class="adm-count">{{ \App\Models\ServiceBooking::count() }}</span>@endif
+
+            <a href="{{ route('admin.jobs.index') }}" class="adm-nav-link {{ request()->routeIs('admin.jobs.*') ? 'active' : '' }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Job Posts
+                @php $openJobs = \App\Models\ServiceJobPost::where('status','open')->count() @endphp
+                @if($openJobs > 0)
+                    <span class="adm-count">{{ $openJobs }} open</span>
+                @endif
             </a>
         </div>
+
+        <div class="adm-nav-section">
+            <div class="adm-nav-label">Payments</div>
+            <a href="{{ route('admin.payments.escrow') }}" class="adm-nav-link {{ request()->routeIs('admin.payments.escrow') ? 'active' : '' }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                Escrow &amp; Payouts
+                @php $overdueEscrow = \App\Models\JobEscrow::overdue()->count() @endphp
+                @if($overdueEscrow > 0)
+                    <span class="adm-badge">{{ $overdueEscrow }}</span>
+                @endif
+            </a>
+            <a href="{{ route('admin.payments.subscriptions') }}" class="adm-nav-link {{ request()->routeIs('admin.payments.subscriptions') ? 'active' : '' }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+                Subscriptions
+                @php $pastDue = \App\Models\ProviderSubscription::where('status','past_due')->count() @endphp
+                @if($pastDue > 0)
+                    <span class="adm-badge">{{ $pastDue }}</span>
+                @else
+                    <span class="adm-count">{{ \App\Models\ProviderSubscription::where('status','active')->count() }} active</span>
+                @endif
+            </a>
+            <a href="{{ route('admin.subscription-plans.index') }}" class="adm-nav-link {{ request()->routeIs('admin.subscription-plans.*') ? 'active' : '' }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Plan Settings
+            </a>
+        </div>
+
         <div class="adm-nav-section">
             <div class="adm-nav-label">Analytics</div>
             <a href="{{ route('admin.reports.index') }}" class="adm-nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
@@ -276,6 +307,7 @@
                 Reports
             </a>
         </div>
+
         <div class="adm-nav-section">
             <div class="adm-nav-label">System</div>
             <a href="{{ route('admin.settings.index') }}" class="adm-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">

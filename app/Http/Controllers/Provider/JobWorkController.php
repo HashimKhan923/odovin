@@ -123,6 +123,9 @@ class JobWorkController extends Controller
         if ($new === 'completed') {
             $this->generateRevenueRecord($job, $provider);
             $this->refreshProviderRating($provider);
+
+            app(\App\Services\EscrowService::class)->startReleaseWindow($job);
+
         }
 
         return redirect()->route('provider.jobs.work.show', $job)
@@ -193,6 +196,8 @@ class JobWorkController extends Controller
                 'work_completed_at' => now(),
             ]);
 
+            app(\App\Services\EscrowService::class)->startReleaseWindow($job);
+
             // 2. Upsert service record
             $partsArray = !empty($validated['parts_replaced'])
                 ? array_values(array_filter(array_map('trim', explode(',', $validated['parts_replaced']))))
@@ -256,6 +261,8 @@ class JobWorkController extends Controller
             $job->refresh()->load(['user', 'vehicle', 'acceptedOffer.serviceProvider']);
             JobNotificationService::workStatusUpdated($job, 'completed');
             $this->refreshProviderRating($provider);
+
+            app(\App\Services\EscrowService::class)->startReleaseWindow($job);
         });
 
         return redirect()->route('provider.jobs.work.show', $job)

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\ServiceProvider;
 use App\Models\ServiceBooking;
 use Illuminate\Http\Request;
+use App\Models\ProviderSubscription;
+use App\Models\ServiceJobPost;
+use App\Models\JobEscrow;
 
 class ServiceProviderController extends Controller
 {
@@ -46,17 +49,28 @@ class ServiceProviderController extends Controller
     public function show(ServiceProvider $provider)
     {
         $provider->load(['bookings.user', 'bookings.vehicle']);
-        
+
         $stats = [
-            'total_bookings' => $provider->bookings()->count(),
-            'completed_bookings' => $provider->bookings()->where('status', 'completed')->count(),
-            'cancelled_bookings' => $provider->bookings()->where('status', 'cancelled')->count(),
-            'pending_bookings' => $provider->bookings()->where('status', 'pending')->count(),
-            'average_rating' => $provider->bookings()->whereNotNull('rating')->avg('rating'),
-            'total_revenue' => $provider->bookings()->where('status', 'completed')->sum('price'),
+            'total_bookings'      => $provider->bookings()->count(),
+            'completed_bookings'  => $provider->bookings()->where('status', 'completed')->count(),
+            'cancelled_bookings'  => $provider->bookings()->where('status', 'cancelled')->count(),
+            'pending_bookings'    => $provider->bookings()->where('status', 'pending')->count(),
+            'average_rating'      => $provider->bookings()->whereNotNull('rating')->avg('rating'),
+            'total_revenue'       => $provider->bookings()->where('status', 'completed')->sum('price'),
+            'jobs_assigned'       => ServiceJobPost::where('assigned_provider_id', $provider->id)->count(),
+            'jobs_completed'      => ServiceJobPost::where('assigned_provider_id', $provider->id)->where('work_status', 'completed')->count(),
+            'jobs_in_progress'    => ServiceJobPost::where('assigned_provider_id', $provider->id)->where('work_status', 'in_progress')->count(),
+            'escrow_released'     => JobEscrow::whereHas('jobPost', fn($q) => $q->where('assigned_provider_id', $provider->id))
+                                        ->where('status', 'released')->sum('amount'),
         ];
 
-        return view('admin.providers.show', compact('provider', 'stats'));
+        $subscription = ProviderSubscription::where('service_provider_id', $provider->id)
+            ->with('plan')->latest()->first();
+
+        $recentJobs = ServiceJobPost::where('assigned_provider_id', $provider->id)
+            ->with('user', 'vehicle')->latest()->limit(6)->get();
+
+        return view('admin.providers.show', compact('provider', 'stats', 'subscription', 'recentJobs'));
     }
 
     public function create()

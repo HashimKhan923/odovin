@@ -23,49 +23,80 @@ class JobOfferController extends Controller
     {
         $provider = $this->provider();
 
-        // Base query: open, not expired
-        $query = ServiceJobPost::open()
+        // Get provider's plan for radius boost
+        $plan        = $provider->currentPlan();
+        $radiusBoost = (int) ($plan->radius_boost_km ?? 0);
+
+        // ── Base: open jobs not already accepted/rejected by this provider
+        // Only show: unassigned jobs (public) OR jobs assigned directly to me
+        $base = ServiceJobPost::open()
             ->with(['user', 'vehicle', 'offers'])
             ->whereDoesntHave('offers', function ($q) use ($provider) {
-                // Hide jobs the provider already offered on (they use myOffers for that)
                 $q->where('service_provider_id', $provider->id)
                   ->whereIn('status', ['accepted', 'rejected']);
+            })
+            ->where(function ($q) use ($provider) {
+                $q->whereNull('assigned_provider_id')
+                  ->orWhere('assigned_provider_id', $provider->id);
             });
 
-        // Optional: filter by service type
-        $query->when($request->service_type, fn($q, $t) => $q->where('service_type', $t));
+        // Optional service type filter
+        $base->when($request->service_type, fn($q, $t) => $q->where('service_type', $t));
 
-        // Distance-based filtering if provider has coordinates
+        // ── Distance-based query with radius boost ────────────────────────
         if ($provider->latitude && $provider->longitude) {
-            $lat = $provider->latitude;
-            $lng = $provider->longitude;
+            $lat       = $provider->latitude;
+            $lng       = $provider->longitude;
+            $maxRadius = ($request->radius ?? 50) + $radiusBoost;
 
-            $query->selectRaw("
-                service_job_posts.*,
-                (3959 * acos(
-                    cos(radians(?)) * cos(radians(latitude)) *
-                    cos(radians(longitude) - radians(?)) +
-                    sin(radians(?)) * sin(radians(latitude))
-                )) AS distance
-            ", [$lat, $lng, $lat]);
+            $nearbyQuery = (clone $base)
+                ->selectRaw("
+                    service_job_posts.*,
+                    (3959 * acos(
+                        cos(radians(?)) * cos(radians(latitude)) *
+                        cos(radians(longitude) - radians(?)) +
+                        sin(radians(?)) * sin(radians(latitude))
+                    )) AS distance,
+                    CASE WHEN assigned_provider_id = ? THEN 1 ELSE 0 END AS is_direct_request
+                ", [$lat, $lng, $lat, $provider->id])
+                ->where(function ($q) use ($lat, $lng, $maxRadius, $provider) {
+                    $q->whereRaw("
+                        (3959 * acos(
+                            cos(radians(?)) * cos(radians(latitude)) *
+                            cos(radians(longitude) - radians(?)) +
+                            sin(radians(?)) * sin(radians(latitude))
+                        )) <= ?
+                    ", [$lat, $lng, $lat, $maxRadius])
+                    ->orWhere('assigned_provider_id', $provider->id);
+                })
+                // Direct requests first, then by distance
+                ->orderByRaw('is_direct_request DESC')
+                ->orderByRaw("
+                    (3959 * acos(
+                        cos(radians(?)) * cos(radians(latitude)) *
+                        cos(radians(longitude) - radians(?)) +
+                        sin(radians(?)) * sin(radians(latitude))
+                    )) ASC
+                ", [$lat, $lng, $lat]);
 
-            $maxRadius = $request->radius ?? 50;
-            $query->havingRaw('distance <= ?', [$maxRadius])
-                  ->orderBy('distance', 'asc');
+            $jobs = $nearbyQuery->paginate(15)->withQueryString();
+
         } else {
-            $query->select('service_job_posts.*')->latest();
+            $jobs = (clone $base)
+                ->selectRaw('service_job_posts.*, CASE WHEN assigned_provider_id = ? THEN 1 ELSE 0 END AS is_direct_request', [$provider->id])
+                ->orderByRaw('is_direct_request DESC')
+                ->latest()
+                ->paginate(15)
+                ->withQueryString();
         }
 
-        $jobs = $query->paginate(15)->withQueryString();
-
-        // Tag each job with whether this provider already submitted an offer
         $myOfferJobIds = ServiceJobOffer::where('service_provider_id', $provider->id)
             ->pluck('job_post_id')
             ->toArray();
 
         $serviceTypes = ServiceJobPost::open()->distinct('service_type')->pluck('service_type');
 
-        return view('provider.jobs.index', compact('provider', 'jobs', 'myOfferJobIds', 'serviceTypes'));
+        return view('provider.jobs.index', compact('provider', 'jobs', 'myOfferJobIds', 'serviceTypes', 'radiusBoost', 'plan'));
     }
 
     // ── Provider: view a specific job post ───────────────────────────────
@@ -74,12 +105,13 @@ class JobOfferController extends Controller
     {
         $provider = $this->provider();
 
-        // Only show open jobs unless provider already offered
         $myOffer = ServiceJobOffer::where('job_post_id', $job->id)
             ->where('service_provider_id', $provider->id)
             ->first();
 
-        abort_unless($job->isOpen() || $myOffer, 404);
+        $isAssignedToMe = $job->assigned_provider_id === $provider->id;
+
+        abort_unless($job->isOpen() || $myOffer || $isAssignedToMe, 404);
 
         $job->load(['vehicle', 'user']);
 
@@ -96,7 +128,6 @@ class JobOfferController extends Controller
             return back()->with('error', 'This job post is no longer accepting offers.');
         }
 
-        // Check duplicate
         if (ServiceJobOffer::where('job_post_id', $job->id)
                            ->where('service_provider_id', $provider->id)
                            ->exists()) {
@@ -118,9 +149,13 @@ class JobOfferController extends Controller
             'status'              => 'pending',
         ]);
 
-        // Alert the consumer
+        // Increment bid usage (CheckBidLimit middleware sets subscription on request)
+        $subscription = $request->attributes->get('subscription');
+        if ($subscription) {
+            $subscription->incrementBidUsage();
+        }
+
         JobNotificationService::newOffer($offer->load(['jobPost.user', 'serviceProvider']));
-        // Broadcast to consumer's private channel (WebSocket)
         broadcast(new NewOfferReceived($offer));
 
         return redirect()->route('provider.jobs.show', $job)

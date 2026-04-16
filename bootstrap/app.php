@@ -20,6 +20,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin'    => \App\Http\Middleware\AdminMiddleware::class,
             'provider' => \App\Http\Middleware\ProviderMiddleware::class,
         ]);
+        $middleware->validateCsrfTokens(except: [
+        'stripe/webhook',
+        'stripe/subscription-webhook',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

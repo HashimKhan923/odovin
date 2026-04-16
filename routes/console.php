@@ -14,3 +14,7 @@ Schedule::job(new RefreshVehicleAIInsights)
     ->daily()
     ->withoutOverlapping()
     ->onOneServer();
+
+
+    
+Schedule::command('escrow:auto-release')->hourly();
