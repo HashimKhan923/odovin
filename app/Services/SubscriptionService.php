@@ -254,6 +254,15 @@ class SubscriptionService
 
         $billingInterval = $stripeSubscription->items->data[0]->plan->interval ?? 'month';
 
+        // Timestamps may be null on freshly created subscriptions — fall back safely
+        $periodStart = $stripeSubscription->current_period_start
+            ? \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_start)
+            : now();
+
+        $periodEnd = $stripeSubscription->current_period_end
+            ? \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)
+            : ($billingInterval === 'year' ? now()->addYear() : now()->addMonth());
+
         ProviderSubscription::create([
             'service_provider_id'    => $providerId,
             'plan_id'                => $plan->id,
@@ -261,8 +270,8 @@ class SubscriptionService
             'stripe_customer_id'     => $session->customer,
             'billing_interval'       => $billingInterval === 'year' ? 'yearly' : 'monthly',
             'status'                 => $stripeSubscription->status,
-            'current_period_start'   => \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_start),
-            'current_period_end'     => \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end),
+            'current_period_start'   => $periodStart,
+            'current_period_end'     => $periodEnd,
             'bids_reset_at'          => now()->addMonth(),
         ]);
 
@@ -285,8 +294,12 @@ class SubscriptionService
 
         $sub->update([
             'status'               => $stripeSubscription->status,
-            'current_period_start' => \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_start),
-            'current_period_end'   => \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end),
+            'current_period_start' => $stripeSubscription->current_period_start
+                                        ? \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_start)
+                                        : $sub->current_period_start,
+            'current_period_end'   => $stripeSubscription->current_period_end
+                                        ? \Carbon\Carbon::createFromTimestamp($stripeSubscription->current_period_end)
+                                        : $sub->current_period_end,
             'canceled_at'          => $stripeSubscription->canceled_at
                                         ? \Carbon\Carbon::createFromTimestamp($stripeSubscription->canceled_at)
                                         : null,
