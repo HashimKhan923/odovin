@@ -20,7 +20,7 @@ class JobRealTimeController extends Controller
         $since  = $request->since  ? \Carbon\Carbon::createFromTimestamp($request->since) : now()->subMinutes(5);
         $lat    = $request->lat;
         $lng    = $request->lng;
-        $radius = $request->radius ?? 50;
+        $radius = $request->radius ?? \App\Models\AppSetting::int('default_browse_radius_miles', 50);
 
         $query = ServiceJobPost::open()
             ->with(['vehicle'])

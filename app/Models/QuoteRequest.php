@@ -32,7 +32,7 @@ class QuoteRequest extends Model
         parent::boot();
         static::creating(function ($q) {
             $q->reference = 'QR-' . strtoupper(Str::random(8));
-            $q->expires_at = $q->expires_at ?? now()->addDays(7);
+            $q->expires_at = $q->expires_at ?? now()->addDays(\App\Models\AppSetting::int('quote_expiry_days', 7));
         });
     }
 

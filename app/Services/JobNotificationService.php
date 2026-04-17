@@ -19,7 +19,7 @@ class JobNotificationService
 
         $lat    = (float) $job->latitude;
         $lng    = (float) $job->longitude;
-        $radius = (int)   ($job->radius ?? 25);
+        $radius = (int) ($job->radius ?? \App\Models\AppSetting::int('default_job_radius_miles', 25));
 
         // Log what we're working with for debugging
         \Illuminate\Support\Facades\Log::info('[JobNotification] notifyNearbyProviders', [

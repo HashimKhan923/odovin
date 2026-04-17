@@ -126,7 +126,7 @@ class EscrowService
         $escrow = $job->escrow;
         if (!$escrow || $escrow->status !== 'held') return;
 
-        $escrow->update(['release_at' => now()->addHours(72)]);
+        $escrow->update(['release_at' => now()->addHours(\App\Models\AppSetting::int('escrow_auto_release_hours', 72))]);
 
         Log::info('[Escrow] Release window started', ['escrow' => $escrow->id]);
     }

@@ -49,7 +49,7 @@ class QuoteRequestController extends Controller
             ->where('service_provider_id', $provider->id)
             ->where('status', 'pending')
             ->where('service_type', $validated['service_type'])
-            ->where('created_at', '>=', now()->subDays(3))
+            ->where('created_at', '>=', now()->subDays(\App\Models\AppSetting::int('quote_duplicate_block_days', 3)))
             ->first();
 
         if ($existing) {

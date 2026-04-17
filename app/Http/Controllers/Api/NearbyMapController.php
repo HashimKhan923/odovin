@@ -12,7 +12,7 @@ class NearbyMapController extends Controller
     {
         $lat    = (float) $request->lat;
         $lng    = (float) $request->lng;
-        $radius = min((int) ($request->radius ?? 25), 100);
+        $radius = min((int) ($request->radius ?? \App\Models\AppSetting::int('default_nearby_radius_miles', 25)), \App\Models\AppSetting::int('max_radius_miles', 100));
 
         if (!$lat || !$lng) {
             return response()->json(['providers' => [], 'debug' => ['error' => 'no coords']]);

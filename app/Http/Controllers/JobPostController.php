@@ -135,9 +135,9 @@ class JobPostController extends Controller
         $job = ServiceJobPost::create([
             ...$validated,
             'user_id'                  => $request->user()->id,
-            'radius'                   => $validated['radius'] ?? 25,
+            'radius'                   => $validated['radius'] ?? \App\Models\AppSetting::int('default_job_radius_miles', 25),
             'status'                   => 'open',
-            'expires_at'               => now()->addHours(24),
+            'expires_at'               => now()->addHours(\App\Models\AppSetting::int('job_post_expiry_hours', 24)),
             'media'                    => !empty($mediaFiles) ? $mediaFiles : null,
             'attached_diagnostic_ids'  => !empty($validated['attached_diagnostic_ids'])
                                             ? $validated['attached_diagnostic_ids'] : null,

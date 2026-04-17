@@ -15,7 +15,7 @@ class ServiceProviderController extends Controller
         if ($request->latitude && $request->longitude) {
             $lat    = $request->latitude;
             $lng    = $request->longitude;
-            $radius = $request->radius ?? 25;
+            $radius = $request->radius ?? \App\Models\AppSetting::int('default_nearby_radius_miles', 25);
 
             $query->selectRaw("
                 *,
@@ -66,7 +66,7 @@ class ServiceProviderController extends Controller
             default:        $query->orderByRaw($priorityOrder)->orderByDesc('rating')->orderByDesc('is_verified');
         }
 
-        $providers = $query->paginate(12)->withQueryString();
+        $providers = $query->paginate(\App\Models\AppSetting::int('providers_per_page', 12))->withQueryString();
 
         $stats = [
             'total'    => ServiceProvider::active()->count(),

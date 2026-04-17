@@ -59,7 +59,7 @@ class ServiceProviderApiController extends Controller
             'type' => 'nullable|string',
         ]);
 
-        $radius = $validated['radius'] ?? 25;
+        $radius = $validated['radius'] ?? \App\Models\AppSetting::int('default_nearby_radius_miles', 25);
 
         $providers = ServiceProvider::active()
             ->selectRaw("

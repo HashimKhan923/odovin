@@ -47,7 +47,7 @@ class ServiceJobPost extends Model
         parent::boot();
         static::creating(function ($job) {
             $job->job_number = 'JB' . strtoupper(Str::random(8));
-            $job->expires_at = $job->expires_at ?? now()->addHours(24);
+            $job->expires_at = $job->expires_at ?? now()->addHours(\App\Models\AppSetting::int('job_post_expiry_hours', 24));
         });
     }
 

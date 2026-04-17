@@ -47,7 +47,7 @@ class JobOfferController extends Controller
         if ($provider->latitude && $provider->longitude) {
             $lat       = $provider->latitude;
             $lng       = $provider->longitude;
-            $maxRadius = ($request->radius ?? 50) + $radiusBoost;
+            $maxRadius = ($request->radius ?? \App\Models\AppSetting::int('default_browse_radius_miles', 50)) + $radiusBoost;
 
             $nearbyQuery = (clone $base)
                 ->selectRaw("
