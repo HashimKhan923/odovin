@@ -26,14 +26,26 @@ class SubscriptionService
 
     public function getOrCreateSubscription(ServiceProvider $provider): ProviderSubscription
     {
+        // Check for any real subscription (including incomplete which is common
+        // right after Stripe checkout before invoice confirmation)
         $sub = ProviderSubscription::where('service_provider_id', $provider->id)
-            ->whereIn('status', ['active', 'trialing', 'past_due'])
+            ->whereIn('status', ['active', 'trialing', 'past_due', 'incomplete'])
+            ->whereNotNull('stripe_subscription_id') // only real Stripe subscriptions
             ->latest()
             ->first();
 
         if ($sub) return $sub;
 
+        // No real paid subscription — find or create Basic
         $basic = SubscriptionPlan::getBasic();
+
+        $basicSub = ProviderSubscription::where('service_provider_id', $provider->id)
+            ->where('plan_id', $basic->id)
+            ->whereNull('stripe_subscription_id')
+            ->where('status', 'active')
+            ->first();
+
+        if ($basicSub) return $basicSub;
 
         return ProviderSubscription::create([
             'service_provider_id' => $provider->id,
@@ -269,7 +281,11 @@ class SubscriptionService
             'stripe_subscription_id' => $stripeSubscription->id,
             'stripe_customer_id'     => $session->customer,
             'billing_interval'       => $billingInterval === 'year' ? 'yearly' : 'monthly',
-            'status'                 => $stripeSubscription->status,
+            // Force 'active' — payment is confirmed at this point regardless of
+            // what Stripe reports (can be 'incomplete' on first creation)
+            'status'                 => in_array($stripeSubscription->status, ['active', 'trialing'])
+                                            ? $stripeSubscription->status
+                                            : 'active',
             'current_period_start'   => $periodStart,
             'current_period_end'     => $periodEnd,
             'bids_reset_at'          => now()->addMonth(),

@@ -23,6 +23,18 @@ class SubscriptionController extends Controller
         $subscription = $this->service->getOrCreateSubscription($provider);
         $invoices     = $subscription->invoices()->latest()->limit(12)->get();
 
+        // Sync provider's plan_slug from the active subscription
+        // in case the webhook updated it but the denormalised field is stale
+        $correctSlug = $subscription->plan->slug ?? 'basic';
+        if ($provider->plan_slug !== $correctSlug || 
+            $provider->subscription_active !== $subscription->isActive()) {
+            $provider->update([
+                'plan_slug'           => $correctSlug,
+                'subscription_active' => $subscription->isActive(),
+            ]);
+            $provider->refresh();
+        }
+
         return view('provider.subscription.index', compact(
             'provider', 'plans', 'subscription', 'invoices'
         ));
