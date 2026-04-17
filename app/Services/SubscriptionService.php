@@ -226,8 +226,15 @@ class SubscriptionService
     {
         if ($session->mode !== 'subscription') return;
 
-        $stripeSubscription = Subscription::retrieve($session->subscription);
-        $metadata           = $stripeSubscription->metadata;
+        // $session->subscription may be a full object (when expanded) or just an ID string
+        if (is_string($session->subscription)) {
+            $stripeSubscription = Subscription::retrieve($session->subscription);
+        } else {
+            // Already expanded — retrieve fresh to ensure latest data
+            $stripeSubscription = Subscription::retrieve($session->subscription->id);
+        }
+
+        $metadata = $stripeSubscription->metadata;
         $providerId         = $metadata->provider_id ?? null;
         $planSlug           = $metadata->plan_slug   ?? null;
 

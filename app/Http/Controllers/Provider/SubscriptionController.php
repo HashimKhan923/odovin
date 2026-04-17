@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Provider;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProviderSubscription;
 use App\Models\SubscriptionPlan;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Stripe\Checkout\Session;
+use Stripe\Stripe;
 
 class SubscriptionController extends Controller
 {
@@ -25,7 +29,6 @@ class SubscriptionController extends Controller
     }
 
     // POST /provider/subscription/checkout
-    // Redirects to Stripe Checkout
     public function checkout(Request $request)
     {
         $request->validate([
@@ -48,16 +51,42 @@ class SubscriptionController extends Controller
         }
     }
 
-    // GET /provider/subscription/success
-    // Stripe redirects here after successful checkout
+    // GET /provider/subscription/success?session_id=xxx
+    // Stripe redirects here after payment. We activate the plan directly
+    // from the Checkout Session — this is the PRIMARY activation path.
+    // The webhook handles edge cases (delayed redirect, browser closed, etc).
+
     public function success(Request $request)
     {
+        $sessionId = $request->query('session_id');
+
+        if ($sessionId) {
+            try {
+                Stripe::setApiKey(config('services.stripe.secret'));
+                $session = Session::retrieve([
+                    'id'     => $sessionId,
+                    'expand' => ['subscription', 'subscription.items.data.price'],
+                ]);
+
+                if ($session->payment_status === 'paid' || $session->status === 'complete') {
+                    $this->service->handleCheckoutCompleted($session);
+                    Log::info('[Subscription] Activated via success redirect', [
+                        'session' => $sessionId,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                Log::error('[Subscription] Success activation failed', [
+                    'session' => $sessionId,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+        }
+
         return redirect()->route('provider.subscription.index')
             ->with('success', '🎉 Subscription activated! Your new plan is now live.');
     }
 
     // GET /provider/subscription/billing-portal
-    // Redirects to Stripe's hosted billing portal (cancel, update card, download invoices)
     public function billingPortal(Request $request)
     {
         $provider = $request->user()->serviceProvider;
