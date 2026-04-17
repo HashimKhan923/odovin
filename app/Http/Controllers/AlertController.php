@@ -128,7 +128,10 @@ class AlertController extends Controller
             $response['unpaid_jobs_count'] = ServiceJobPost::where('user_id', $userId)
                 ->whereIn('payment_status', ['unpaid', null])
                 ->whereNotNull('accepted_offer_id')
-                ->whereNull('escrow')   // no escrow row yet
+                ->whereNotExists(function ($q) {
+                    $q->select('id')->from('job_escrows')
+                      ->whereColumn('job_escrows.job_post_id', 'service_job_posts.id');
+                })
                 ->count();
 
             // Consumer: quotes received needing accept/decline decision
