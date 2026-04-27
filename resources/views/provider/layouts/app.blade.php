@@ -231,7 +231,7 @@
                     @if($subPlanSlug === 'pro')
                         <span class="sp-badge" style="margin-left:auto;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));color:#000;font-size:.6rem;">PRO</span>
                     @elseif($subPlanSlug === 'premium')
-                        <span class="sp-badge" style="margin-left:auto;background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font-size:.6rem;">★ PRO</span>
+                        <span class="sp-badge" style="margin-left:auto;background:linear-gradient(135deg,#a855f7,#ec4899);color:#fff;font-size:.6rem;">★ PREMIUM</span>
                     @endif
                 </a>
             </div>
