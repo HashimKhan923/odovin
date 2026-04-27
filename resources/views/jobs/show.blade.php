@@ -175,8 +175,41 @@ input[type=range].radius-range::-moz-range-thumb { width:14px; height:14px; bord
     </div>
     @endif
 
+    {{-- Payment: DISPUTED — escrow frozen --}}
+    @if($job->escrow && $job->escrow->status === 'disputed')
+    @php $activeDispute = $job->activeDispute(); @endphp
+    <div style="background:rgba(255,51,102,.06);border:1px solid rgba(255,51,102,.3);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#ff3366,#ff6600);"></div>
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+            <span style="font-size:1.5rem;">⚖</span>
+            <div>
+                <div style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:#ff8099;">Dispute In Progress</div>
+                @if($activeDispute)
+                <div style="font-size:.75rem;color:var(--text-tertiary);margin-top:.15rem;">{{ $activeDispute->reference }} · {{ $activeDispute->statusLabel() }}</div>
+                @endif
+            </div>
+            @if($activeDispute)
+            <span style="margin-left:auto;display:inline-flex;padding:.22rem .7rem;border-radius:20px;font-size:.72rem;font-weight:700;background:{{ $activeDispute->statusColor() }}1a;color:{{ $activeDispute->statusColor() }};border:1px solid {{ $activeDispute->statusColor() }}44;">
+                {{ $activeDispute->statusLabel() }}
+            </span>
+            @endif
+        </div>
+        <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:1rem;line-height:1.6;">
+            Payment of <strong style="color:#ff8099;">{{ $job->escrow->formattedAmount() }}</strong> is frozen while the dispute is reviewed.
+            Our team will contact both parties and resolve within 48–72 hours.
+        </p>
+        @if($activeDispute)
+        <a href="{{ route('disputes.show', $activeDispute) }}"
+           style="display:inline-flex;align-items:center;gap:.5rem;padding:.7rem 1.25rem;background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.3);border-radius:8px;color:#ff8099;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.78rem;text-decoration:none;">
+            ⚖ View Dispute & Thread →
+        </a>
+        @endif
+    </div>
+    @endif
+
     {{-- Payment: held, work done, release prompt --}}
     @if($job->escrow && $job->escrow->status === 'held' && $job->work_status === 'completed')
+    @php $activeDispute = $job->activeDispute(); @endphp
     <div style="background:rgba(0,255,170,.06);border:1px solid rgba(0,255,170,.3);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;">
         <p style="font-family:'Orbitron',sans-serif;font-size:.9rem;font-weight:700;color:var(--accent-green);margin-bottom:.625rem;">💰 Work Complete — Release Payment?</p>
         <p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:1.25rem;line-height:1.6;">
@@ -184,7 +217,7 @@ input[type=range].radius-range::-moz-range-thumb { width:14px; height:14px; bord
             has marked this job as complete. Release <strong style="color:var(--accent-green);">{{ $job->escrow->formattedAmount() }}</strong> to pay them?
             @if($job->escrow->release_at) If you take no action, payment releases automatically <strong>{{ $job->escrow->release_at->diffForHumans() }}</strong>. @endif
         </p>
-        <div style="display:flex;gap:.875rem;flex-wrap:wrap;">
+        <div style="display:flex;gap:.875rem;flex-wrap:wrap;align-items:flex-start;">
             <form method="POST" action="{{ route('jobs.payment.release', $job) }}">
                 @csrf
                 <button type="submit" style="padding:.7rem 1.6rem;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-green));border:none;border-radius:8px;color:#000;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;" onclick="return confirm('Release {{ $job->escrow->formattedAmount() }} to the provider?')">✓ Release Payment</button>
@@ -193,6 +226,17 @@ input[type=range].radius-range::-moz-range-thumb { width:14px; height:14px; bord
                 @csrf
                 <button type="submit" style="padding:.7rem 1.4rem;background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.3);border-radius:8px;color:#ff8099;font-family:'Orbitron',sans-serif;font-weight:700;font-size:.78rem;cursor:pointer;" onclick="return confirm('Are you sure? This cancels the job and issues a refund to your card.')">✗ Request Refund</button>
             </form>
+            @if(!$activeDispute)
+            <a href="{{ route('disputes.create', $job) }}"
+               style="display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.1rem;background:rgba(255,170,0,.08);border:1px solid rgba(255,170,0,.25);border-radius:8px;color:var(--accent-warning);font-size:.78rem;font-weight:600;text-decoration:none;">
+                ⚖ Raise a Dispute
+            </a>
+            @else
+            <a href="{{ route('disputes.show', $activeDispute) }}"
+               style="display:inline-flex;align-items:center;gap:.5rem;padding:.6rem 1.1rem;background:rgba(255,51,102,.08);border:1px solid rgba(255,51,102,.2);border-radius:8px;color:#ff8099;font-size:.78rem;font-weight:600;text-decoration:none;">
+                ⚖ View Dispute →
+            </a>
+            @endif
         </div>
     </div>
     @endif
@@ -279,6 +323,10 @@ input[type=range].radius-range::-moz-range-thumb { width:14px; height:14px; bord
         <div style="margin-top:1.25rem;padding:1rem;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.12);border-radius:10px;font-size:.85rem;color:var(--text-secondary);line-height:1.6;">
             <strong style="color:var(--accent-cyan);">Provider Note:</strong> {{ $job->provider_notes }}
         </div>
+        @endif
+        @if($job->work_status === 'completed')
+        @php $serviceRecord = \App\Models\ServiceRecord::where('job_post_id', $job->id)->first(); @endphp
+        @include('partials.job_evidence', ['record' => $serviceRecord])
         @endif
         @if($job->final_cost && $ws === 'completed')
         <div style="margin-top:1rem;display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;background:rgba(0,255,170,.06);border:1px solid rgba(0,255,170,.2);border-radius:10px;">

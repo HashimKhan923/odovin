@@ -137,6 +137,29 @@
 
         {{-- Revenue record if completed --}}
         @if($job->work_status === 'completed')
+        @php $serviceRecord = \App\Models\ServiceRecord::where('job_post_id', $job->id)->first(); @endphp
+        @include('partials.job_evidence', ['record' => $serviceRecord])
+
+        {{-- Dispute notice if consumer raised one --}}
+        @php $activeDispute = $job->activeDispute(); @endphp
+        @if($activeDispute)
+        <div style="background:rgba(255,51,102,.07);border:1px solid rgba(255,51,102,.3);border-radius:14px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;">
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
+                <span style="font-size:1.25rem;">⚖</span>
+                <span style="font-family:'Orbitron',sans-serif;font-size:.875rem;font-weight:700;color:#ff8099;">Dispute Raised</span>
+                <span style="margin-left:auto;font-size:.72rem;background:rgba(255,51,102,.12);color:#ff8099;border:1px solid rgba(255,51,102,.25);border-radius:20px;padding:.2rem .625rem;font-weight:700;">{{ $activeDispute->reference }}</span>
+            </div>
+            <div style="font-size:.82rem;color:var(--text-secondary);line-height:1.6;margin-bottom:.875rem;">
+                The consumer has raised a dispute: <strong>{{ $activeDispute->reasonLabel() }}</strong>.
+                Payment is frozen until resolved by our admin team.
+            </div>
+            <a href="{{ route('disputes.show', $activeDispute) }}"
+               style="display:inline-flex;align-items:center;gap:.5rem;padding:.625rem 1.1rem;background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.25);border-radius:8px;color:#ff8099;font-size:.8rem;font-weight:600;text-decoration:none;">
+                View Dispute & Respond →
+            </a>
+        </div>
+        @endif
+
         <div class="revenue-banner">
             <div style="font-size:2rem;margin-bottom:.5rem;">💰</div>
             <div style="font-family:'Orbitron',sans-serif;font-size:1.1rem;font-weight:800;color:var(--accent-green);margin-bottom:.5rem;">${{ number_format($job->final_cost, 2) }} Earned</div>

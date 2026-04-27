@@ -101,7 +101,7 @@
                 @csrf
                 <button type="submit" class="btn-accept"
                     onclick="return confirm('Accept this quote and create a job post for \${{ number_format($quote->quoted_price, 2) }}?')">
-                    ✓ Accept Quote & Post Job
+                    ✓ Accept Quote & Assign Job
                 </button>
             </form>
             <form method="POST" action="{{ route('quotes.decline', $quote) }}">

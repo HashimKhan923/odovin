@@ -13,6 +13,7 @@ class QuoteRequestController extends Controller
 
     public function create(Request $request, ServiceProvider $provider)
     {
+        return $request;
         abort_unless($provider->is_active, 404);
 
         $vehicles     = auth()->user()->vehicles()->active()->get();
@@ -122,6 +123,7 @@ class QuoteRequestController extends Controller
 
     public function accept(QuoteRequest $quote)
     {
+        return $quote;
         abort_unless($quote->user_id === auth()->id(), 403);
         abort_unless($quote->isQuoted(), 403);
         abort_unless(is_null($quote->consumer_action), 403);

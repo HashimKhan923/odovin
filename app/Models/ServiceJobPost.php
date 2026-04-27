@@ -58,6 +58,16 @@ class ServiceJobPost extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function disputes(): HasMany
+    {
+        return $this->hasMany(\App\Models\Dispute::class, 'job_post_id');
+    }
+
+    public function activeDispute()
+    {
+        return $this->disputes()->whereNotIn('status', ['closed','resolved_consumer','resolved_provider','resolved_split'])->latest()->first();
+    }
+
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);

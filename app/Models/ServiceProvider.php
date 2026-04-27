@@ -60,6 +60,20 @@ class ServiceProvider extends Model
             ->latest();
     }
 
+    /** Provider certifications */
+    public function certifications(): HasMany
+    {
+        return $this->hasMany(ProviderCertification::class, 'service_provider_id');
+    }
+
+    /** Only approved certifications visible on profile */
+    public function approvedCertifications(): HasMany
+    {
+        return $this->hasMany(ProviderCertification::class, 'service_provider_id')
+            ->where('status', 'approved')
+            ->where('show_on_profile', true);
+    }
+
     /** Full billing history */
     public function subscriptions(): HasMany
     {

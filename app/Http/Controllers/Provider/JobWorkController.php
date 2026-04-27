@@ -173,6 +173,12 @@ class JobWorkController extends Controller
             'notes'                => 'nullable|string|max:2000',
             'next_service_date'    => 'nullable|date',
             'next_service_mileage' => 'nullable|integer|min:0',
+            // Before/after evidence photos
+            'before_photos'        => 'nullable|array|max:6',
+            'before_photos.*'      => 'file|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'after_photos'         => 'nullable|array|max:6',
+            'after_photos.*'       => 'file|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'evidence_notes'       => 'nullable|string|max:1000',
             // Diagnostics
             'diagnostics'                      => 'nullable|array',
             'diagnostics.*.title'              => 'required|string|max:200',
@@ -184,6 +190,20 @@ class JobWorkController extends Controller
             'diagnostics.*.estimated_cost_min' => 'nullable|numeric|min:0',
             'diagnostics.*.estimated_cost_max' => 'nullable|numeric|min:0',
         ]);
+
+        // Upload before/after photos
+        $beforePaths = [];
+        $afterPaths  = [];
+        if ($request->hasFile('before_photos')) {
+            foreach ($request->file('before_photos') as $file) {
+                $beforePaths[] = $file->store("job-evidence/{$job->id}/before", 'public');
+            }
+        }
+        if ($request->hasFile('after_photos')) {
+            foreach ($request->file('after_photos') as $file) {
+                $afterPaths[] = $file->store("job-evidence/{$job->id}/after", 'public');
+            }
+        }
 
         DB::transaction(function () use ($validated, $job, $provider) {
 
@@ -218,6 +238,10 @@ class JobWorkController extends Controller
                     'notes'                => $validated['notes'] ?? null,
                     'next_service_date'    => $validated['next_service_date'] ?? null,
                     'next_service_mileage' => $validated['next_service_mileage'] ?? null,
+                    // Photo evidence
+                    'before_photos'        => !empty($beforePaths) ? $beforePaths : null,
+                    'after_photos'         => !empty($afterPaths)  ? $afterPaths  : null,
+                    'evidence_notes'       => $validated['evidence_notes'] ?? null,
                 ]
             );
 

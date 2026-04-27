@@ -25,6 +25,9 @@
 .badge { padding:.3rem .875rem; border-radius:12px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; display:inline-flex; align-items:center; gap:.375rem; }
 .badge-type { background:rgba(0,212,255,.15); color:var(--accent-cyan); border:1px solid rgba(0,212,255,.3); }
 .badge-verified { background:rgba(0,255,170,.15); color:var(--accent-green); border:1px solid rgba(0,255,170,.3); }
+.badge-cert { background:rgba(168,85,247,.12); color:#c084fc; border:1px solid rgba(168,85,247,.3); padding:.25rem .75rem; border-radius:20px; font-size:.72rem; font-weight:700; display:inline-flex; align-items:center; gap:.35rem; }
+.certs-section { margin-top:1.25rem; padding-top:1.25rem; border-top:1px solid var(--border-color); }
+.certs-grid { display:flex; flex-wrap:wrap; gap:.625rem; margin-top:.625rem; }
 .badge svg { width:14px; height:14px; }
 .rating-block { text-align:center; min-width:120px; }
 .rating-big { font-family:'Orbitron',sans-serif; font-size:3rem; font-weight:900; color:var(--accent-warning); line-height:1; }
@@ -115,7 +118,20 @@
             </div>
             @endif
         </div>
-        <div class="contact-strip">
+        @if($approvedCerts->isNotEmpty())
+            <div class="certs-section">
+                <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);margin-bottom:.5rem;">Verified Certifications</div>
+                <div class="certs-grid">
+                    @foreach($approvedCerts as $cert)
+                    <span class="badge-cert"
+                        title="{{ $cert->issuing_body }}{{ $cert->certificate_number ? ' #'.$cert->certificate_number : '' }}{{ $cert->expires_at ? ' · Expires '.$cert->expires_at->format('M Y') : '' }}">
+                        🏅 {{ $cert->name }}
+                    </span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+            <div class="contact-strip">
             @if($provider->phone)
             <div class="contact-item">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
@@ -135,6 +151,7 @@
         </div>
     </div>
 
+    @php $approvedCerts = $provider->approvedCertifications()->get(); @endphp
     <div class="main-grid">
         <div>
           

@@ -212,4 +212,9 @@
     </div>
 </div>
 @endif
+    @if($record->hasEvidence())
+    @include('partials.job_evidence', ['record' => $record])
+    @endif
+
+
 @endsection

@@ -73,6 +73,12 @@ class ServiceRecordController extends Controller
             'next_service_date'   => 'nullable|date|after:today',
             'next_service_mileage'=> 'nullable|integer|min:0',
             'vehicle_id'          => 'nullable|exists:vehicles,id',
+            // Before/after photo evidence
+            'before_photos'       => 'nullable|array|max:6',
+            'before_photos.*'     => 'file|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'after_photos'        => 'nullable|array|max:6',
+            'after_photos.*'      => 'file|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'evidence_notes'      => 'nullable|string|max:1000',
             // Issues
             'issues'              => 'nullable|array',
             'issues.*.title'       => 'required|string|max:200',
@@ -87,7 +93,21 @@ class ServiceRecordController extends Controller
 
         $provider = $this->provider();
 
-        DB::transaction(function () use ($validated, $request, $provider) {
+        // Upload before/after evidence photos
+        $beforePaths = [];
+        $afterPaths  = [];
+        if ($request->hasFile('before_photos')) {
+            foreach ($request->file('before_photos') as $file) {
+                $beforePaths[] = $file->store('service-records/before', 'public');
+            }
+        }
+        if ($request->hasFile('after_photos')) {
+            foreach ($request->file('after_photos') as $file) {
+                $afterPaths[] = $file->store('service-records/after', 'public');
+            }
+        }
+
+        DB::transaction(function () use ($validated, $request, $provider, $beforePaths, $afterPaths) {
             // Parse parts
             $parts = null;
             if (!empty($validated['parts_replaced'])) {
@@ -109,6 +129,9 @@ class ServiceRecordController extends Controller
                 'notes'                => $validated['notes'] ?? null,
                 'next_service_date'    => $validated['next_service_date'] ?? null,
                 'next_service_mileage' => $validated['next_service_mileage'] ?? null,
+                'before_photos'        => $beforePaths ?: null,
+                'after_photos'         => $afterPaths  ?: null,
+                'evidence_notes'       => $validated['evidence_notes'] ?? null,
             ]);
 
             // Save issues
@@ -165,6 +188,12 @@ public function edit(ServiceRecord $serviceRecord)
             'cost'                => 'nullable|numeric|min:0',
             'next_service_date'   => 'nullable|date|after:today',
             'next_service_mileage'=> 'nullable|integer|min:0',
+            // Before/after photo evidence
+            'before_photos'       => 'nullable|array|max:6',
+            'before_photos.*'     => 'file|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'after_photos'        => 'nullable|array|max:6',
+            'after_photos.*'      => 'file|image|mimes:jpg,jpeg,png,webp|max:8192',
+            'evidence_notes'      => 'nullable|string|max:1000',
             'issues'              => 'nullable|array',
             'issues.*.title'       => 'required|string|max:200',
             'issues.*.description' => 'required|string|max:1000',
@@ -178,7 +207,21 @@ public function edit(ServiceRecord $serviceRecord)
 
         $provider = $this->provider();
 
-        DB::transaction(function () use ($validated, $record, $provider) {
+        // Upload new evidence photos (merge with existing)
+        $beforePaths = $record->before_photos ?? [];
+        $afterPaths  = $record->after_photos  ?? [];
+        if ($request->hasFile('before_photos')) {
+            foreach ($request->file('before_photos') as $file) {
+                $beforePaths[] = $file->store('service-records/before', 'public');
+            }
+        }
+        if ($request->hasFile('after_photos')) {
+            foreach ($request->file('after_photos') as $file) {
+                $afterPaths[] = $file->store('service-records/after', 'public');
+            }
+        }
+
+        DB::transaction(function () use ($validated, $record, $provider, $beforePaths, $afterPaths) {
             $parts = null;
             if (!empty($validated['parts_replaced'])) {
                 $parts = array_values(array_filter(
@@ -197,6 +240,11 @@ public function edit(ServiceRecord $serviceRecord)
                 'notes'                => $validated['notes'] ?? null,
                 'next_service_date'    => $validated['next_service_date'] ?? null,
                 'next_service_mileage' => $validated['next_service_mileage'] ?? null,
+                'before_photos'        => $beforePaths ?: null,
+                'after_photos'         => $afterPaths  ?: null,
+                'evidence_notes'       => !empty($validated['evidence_notes'])
+                                            ? $validated['evidence_notes']
+                                            : $record->evidence_notes,
             ]);
 
             // Append new issues (don't delete existing ones)

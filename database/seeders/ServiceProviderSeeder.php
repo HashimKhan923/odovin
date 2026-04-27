@@ -13,7 +13,7 @@ class ServiceProviderSeeder extends Seeder
 $providers = [
             // Traditional Mechanics
             [
-                'name' => 'AutoCare Elite',
+                'business_name' => 'AutoCare Elite',
                 'type' => 'mechanic',
                 'phone' => '(555) 123-4567',
                 'email' => 'contact@autocareelite.com',
@@ -30,7 +30,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Premium Motors Service Center',
+                'business_name' => 'Premium Motors Service Center',
                 'type' => 'dealership',
                 'phone' => '(555) 234-5678',
                 'email' => 'service@premiummotors.com',
@@ -47,7 +47,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Quick Fix Auto Shop',
+                'business_name' => 'Quick Fix Auto Shop',
                 'type' => 'mechanic',
                 'phone' => '(555) 345-6789',
                 'email' => 'info@quickfixauto.com',
@@ -66,7 +66,7 @@ $providers = [
 
             // ELECTRIC VEHICLE SPECIALISTS
             [
-                'name' => 'Tesla Service Center LA',
+                'business_name' => 'Tesla Service Center LA',
                 'type' => 'ev_specialist',
                 'phone' => '(555) 888-8888',
                 'email' => 'service@tesla-la.com',
@@ -83,7 +83,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Volt EV Service',
+                'business_name' => 'Volt EV Service',
                 'type' => 'ev_specialist',
                 'phone' => '(555) 777-3000',
                 'email' => 'contact@voltevservice.com',
@@ -100,7 +100,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'EcoCharge EV Center',
+                'business_name' => 'EcoCharge EV Center',
                 'type' => 'ev_specialist',
                 'phone' => '(555) 666-2100',
                 'email' => 'service@ecocharge.com',
@@ -117,7 +117,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Lightning EV Repair',
+                'business_name' => 'Lightning EV Repair',
                 'type' => 'ev_specialist',
                 'phone' => '(555) 555-9900',
                 'email' => 'info@lightningevrepair.com',
@@ -134,7 +134,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Rivian Service Hub',
+                'business_name' => 'Rivian Service Hub',
                 'type' => 'ev_specialist',
                 'phone' => '(555) 444-7700',
                 'email' => 'service@rivian-hub.com',
@@ -153,7 +153,7 @@ $providers = [
 
             // HYBRID & EV CAPABLE SHOPS
             [
-                'name' => 'Green Auto Works',
+                'business_name' => 'Green Auto Works',
                 'type' => 'mechanic',
                 'phone' => '(555) 333-6600',
                 'email' => 'contact@greenautoworks.com',
@@ -170,7 +170,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Future Motors Service',
+                'business_name' => 'Future Motors Service',
                 'type' => 'dealership',
                 'phone' => '(555) 222-5500',
                 'email' => 'service@futuremotors.com',
@@ -187,7 +187,7 @@ $providers = [
                 'is_active' => true,
             ],
             [
-                'name' => 'Spark EV Solutions',
+                'business_name' => 'Spark EV Solutions',
                 'type' => 'ev_specialist',
                 'phone' => '(555) 111-4400',
                 'email' => 'info@sparkev.com',
@@ -206,7 +206,7 @@ $providers = [
 
             // BODY SHOPS WITH EV EXPERIENCE
             [
-                'name' => 'Electric Body Works',
+                'business_name' => 'Electric Body Works',
                 'type' => 'body_shop',
                 'phone' => '(555) 999-3300',
                 'email' => 'contact@electricbodyworks.com',
@@ -225,7 +225,7 @@ $providers = [
 
             // DETAILING SERVICES
             [
-                'name' => 'Premium EV Detailing',
+                'business_name' => 'Premium EV Detailing',
                 'type' => 'detailing',
                 'phone' => '(555) 888-2200',
                 'email' => 'booking@premiumevdetailing.com',

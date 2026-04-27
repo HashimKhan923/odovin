@@ -38,6 +38,21 @@
 .btn-back-link { display:inline-flex; align-items:center; gap:.5rem; padding:1rem 1.5rem; background:transparent; border:1px solid var(--border-color); border-radius:12px; color:var(--text-secondary); font-size:.875rem; text-decoration:none; transition:all .3s; }
 .btn-back-link:hover { border-color:var(--accent-cyan); color:var(--text-primary); }
 
+/* ── Photo evidence section ── */
+.photo-section { background:var(--card-bg); border:1px solid rgba(0,212,255,.2); border-radius:16px; padding:2rem; margin-bottom:1.5rem; position:relative; overflow:hidden; }
+.photo-section::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#6366f1,var(--accent-cyan)); }
+.photo-zone { border:2px dashed rgba(0,212,255,.2); border-radius:12px; padding:1.5rem; text-align:center; cursor:pointer; transition:all .3s; position:relative; min-height:120px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.5rem; }
+.photo-zone:hover, .photo-zone.drag-over { border-color:var(--accent-cyan); background:rgba(0,212,255,.04); }
+.photo-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.photo-zone-icon { font-size:2rem; }
+.photo-zone-text { font-size:.82rem; color:var(--text-secondary); font-weight:600; }
+.photo-zone-sub { font-size:.72rem; color:var(--text-tertiary); }
+.photo-previews { display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr)); gap:.75rem; margin-top:1rem; }
+.photo-preview-item { position:relative; border-radius:10px; overflow:hidden; aspect-ratio:1; background:rgba(0,0,0,.3); }
+.photo-preview-item img { width:100%; height:100%; object-fit:cover; }
+.photo-preview-remove { position:absolute; top:4px; right:4px; background:rgba(0,0,0,.7); border:none; border-radius:50%; width:22px; height:22px; color:#fff; font-size:.75rem; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.photo-count-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.2rem .6rem; background:rgba(0,212,255,.1); border:1px solid rgba(0,212,255,.2); border-radius:6px; font-size:.72rem; color:var(--accent-cyan); font-weight:700; margin-left:.5rem; }
+
 /* ── Diagnostics section ── */
 .diag-card { background:var(--card-bg); border:1px solid rgba(255,102,0,.25); border-radius:16px; padding:2rem; margin-bottom:1.5rem; position:relative; overflow:hidden; }
 .diag-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#ff6600,#ff3366); }
@@ -97,7 +112,7 @@
         <div class="strip-item"><div class="strip-lbl">Your Offer</div><div class="strip-val" style="color:var(--accent-warning);">${{ number_format($offer->offered_price, 2) }}</div></div>
     </div>
 
-    <form method="POST" action="{{ route('provider.jobs.work.complete-submit', $job) }}">
+    <form method="POST" action="{{ route('provider.jobs.work.complete-submit', $job) }}" enctype="multipart/form-data">
         @csrf
 
         {{-- Section 1: Completion --}}
@@ -230,6 +245,62 @@
 
         {{-- Submit --}}
         <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+    {{-- ── Before/After Photo Evidence ── --}}
+    <div class="photo-section">
+        <div class="card-title">
+            📸 Before / After Photo Evidence
+            <span style="font-size:.72rem;font-weight:400;color:var(--text-tertiary);margin-left:.5rem;">Optional — up to 6 photos per set · JPG, PNG, WebP · max 8MB each</span>
+        </div>
+        <div class="form-grid">
+            {{-- Before photos --}}
+            <div>
+                <div class="form-label" style="margin-bottom:.75rem;">
+                    Before Photos
+                    <span id="beforeCount" class="photo-count-badge" style="display:none;">0 selected</span>
+                </div>
+                <div class="photo-zone" id="beforeZone">
+                    <input type="file" name="before_photos[]" id="beforeInput"
+                        accept="image/jpeg,image/png,image/webp" multiple
+                        onchange="handlePhotos(this,'before')">
+                    <div class="photo-zone-icon">📷</div>
+                    <div class="photo-zone-text">Add before photos</div>
+                    <div class="photo-zone-sub">Tap or drag & drop</div>
+                </div>
+                <div class="photo-previews" id="beforePreviews"></div>
+            </div>
+
+            {{-- After photos --}}
+            <div>
+                <div class="form-label" style="margin-bottom:.75rem;">
+                    After Photos
+                    <span id="afterCount" class="photo-count-badge" style="display:none;">0 selected</span>
+                </div>
+                <div class="photo-zone" id="afterZone">
+                    <input type="file" name="after_photos[]" id="afterInput"
+                        accept="image/jpeg,image/png,image/webp" multiple
+                        onchange="handlePhotos(this,'after')">
+                    <div class="photo-zone-icon">✅</div>
+                    <div class="photo-zone-text">Add after photos</div>
+                    <div class="photo-zone-sub">Show the completed work</div>
+                </div>
+                <div class="photo-previews" id="afterPreviews"></div>
+            </div>
+        </div>
+
+        {{-- Evidence notes --}}
+        <div class="form-group" style="margin-top:1.25rem;">
+            <label class="form-label" for="evidence_notes">Evidence Notes (optional)</label>
+            <textarea name="evidence_notes" id="evidence_notes" class="form-textarea"
+                placeholder="Describe what the photos show — e.g. 'Before: corroded brake pads. After: new OEM pads installed, rotor resurfaced.'"
+                maxlength="1000">{{ old('evidence_notes') }}</textarea>
+        </div>
+
+        <div style="margin-top:1rem;padding:.875rem 1rem;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.1);border-radius:10px;font-size:.78rem;color:var(--text-tertiary);line-height:1.6;">
+            💡 <strong style="color:var(--text-secondary);">Why add photos?</strong>
+            Before/after evidence builds consumer trust, protects you in disputes, and is shown on the service history record. The consumer sees your photos when reviewing the completed job.
+        </div>
+    </div>
+
             <button type="submit" class="btn-complete">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Complete Job &amp; Save Record
@@ -351,4 +422,74 @@ function toggleSafety(n) {
     dot.style.borderColor  = on ? '#ff3366' : 'rgba(255,51,102,.4)';
 }
 </script>
+<script>
+// ── Photo evidence upload handling ──────────────────────────────────────────
+const photoFiles = { before: [], after: [] };
+
+function handlePhotos(input, side) {
+    const files = Array.from(input.files);
+    const maxFiles = 6;
+
+    if (files.length + photoFiles[side].length > maxFiles) {
+        alert('Maximum ' + maxFiles + ' photos per set.');
+        input.value = '';
+        return;
+    }
+
+    photoFiles[side] = [...photoFiles[side], ...files];
+    renderPreviews(side);
+    updateCount(side);
+}
+
+function renderPreviews(side) {
+    const container = document.getElementById(side + 'Previews');
+    container.innerHTML = '';
+
+    photoFiles[side].forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const item = document.createElement('div');
+            item.className = 'photo-preview-item';
+            item.innerHTML = `
+                <img src="${e.target.result}" alt="preview">
+                <button type="button" class="photo-preview-remove"
+                    onclick="removePhoto('${side}',${idx})">✕</button>`;
+            container.appendChild(item);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function removePhoto(side, idx) {
+    photoFiles[side].splice(idx, 1);
+    rebuildFileInput(side);
+    renderPreviews(side);
+    updateCount(side);
+}
+
+function rebuildFileInput(side) {
+    // Rebuild the file input with remaining files using DataTransfer
+    const input = document.getElementById(side + 'Input');
+    const dt = new DataTransfer();
+    photoFiles[side].forEach(f => dt.items.add(f));
+    input.files = dt.files;
+}
+
+function updateCount(side) {
+    const badge = document.getElementById(side + 'Count');
+    const n = photoFiles[side].length;
+    badge.style.display = n > 0 ? 'inline-flex' : 'none';
+    badge.textContent = n + ' photo' + (n !== 1 ? 's' : '');
+}
+
+// Drag-over styling
+['before','after'].forEach(side => {
+    const zone = document.getElementById(side + 'Zone');
+    if (!zone) return;
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', () => zone.classList.remove('drag-over'));
+});
+</script>
+
 @endsection

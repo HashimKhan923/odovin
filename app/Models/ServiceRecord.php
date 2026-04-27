@@ -13,6 +13,7 @@ class ServiceRecord extends Model
     protected $fillable = [
         'vehicle_id',
         'service_provider_id',
+        'job_post_id',
         'service_type',
         'description',
         'service_date',
@@ -24,14 +25,42 @@ class ServiceRecord extends Model
         'notes',
         'next_service_mileage',
         'next_service_date',
+        'before_photos',
+        'after_photos',
+        'evidence_notes',
     ];
 
     protected $casts = [
-        'service_date' => 'date',
-        'cost' => 'decimal:2',
-        'parts_replaced' => 'array',
-        'next_service_date' => 'date',
+        'service_date'     => 'date',
+        'cost'             => 'decimal:2',
+        'parts_replaced'   => 'array',
+        'next_service_date'=> 'date',
+        'before_photos'    => 'array',
+        'after_photos'     => 'array',
     ];
+
+    // ── Photo helpers ──────────────────────────────────────────────
+
+    public function hasEvidence(): bool
+    {
+        return !empty($this->before_photos) || !empty($this->after_photos);
+    }
+
+    public function beforePhotoUrls(): array
+    {
+        return array_map(
+            fn($p) => \Illuminate\Support\Facades\Storage::disk('public')->url($p),
+            $this->before_photos ?? []
+        );
+    }
+
+    public function afterPhotoUrls(): array
+    {
+        return array_map(
+            fn($p) => \Illuminate\Support\Facades\Storage::disk('public')->url($p),
+            $this->after_photos ?? []
+        );
+    }
 
     public function vehicle(): BelongsTo
     {

@@ -99,7 +99,7 @@
     <div style="background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.3);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.5rem;color:#ff8099;font-size:.875rem;">{{ session('error') }}</div>
     @endif
 
-    <form method="POST" action="{{ isset($serviceRecord) ? route('provider.service-records.update', $serviceRecord) : route('provider.service-records.store') }}" id="mainForm">
+    <form method="POST" action="{{ isset($serviceRecord) ? route('provider.service-records.update', $serviceRecord) : route('provider.service-records.store') }}" id="mainForm" enctype="multipart/form-data">
         @csrf
         @if(isset($serviceRecord)) @method('PUT') @endif
 
@@ -264,6 +264,55 @@
             </button>
         </div>
 
+        {{-- Before/After Photo Evidence --}}
+        <div style="background:var(--card-bg);border:1px solid rgba(0,212,255,.2);border-radius:16px;padding:1.75rem;margin-bottom:1.5rem;position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6366f1,var(--accent-cyan));"></div>
+            <div style="font-family:'Orbitron',sans-serif;font-size:.875rem;font-weight:700;margin-bottom:.375rem;">📸 Before / After Photos</div>
+            <div style="font-size:.78rem;color:var(--text-tertiary);margin-bottom:1.5rem;">Optional — up to 6 photos per set · JPG, PNG, WebP · max 8MB each</div>
+
+            @if(isset($serviceRecord) && $serviceRecord->hasEvidence())
+            <div style="background:rgba(0,255,170,.06);border:1px solid rgba(0,255,170,.2);border-radius:10px;padding:.875rem 1rem;margin-bottom:1.25rem;font-size:.8rem;color:var(--accent-green);">
+                ✓ This record already has {{ count($serviceRecord->before_photos ?? []) }} before and {{ count($serviceRecord->after_photos ?? []) }} after photo(s). New uploads will be added to the existing ones.
+            </div>
+            @endif
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                <div>
+                    <div style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:.625rem;display:flex;align-items:center;gap:.5rem;">
+                        <span style="width:8px;height:8px;border-radius:50%;background:#ff8099;display:inline-block;"></span>
+                        Before Photos
+                        <span id="srBeforeCount" style="display:none;font-size:.7rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);color:var(--accent-cyan);padding:.1rem .5rem;border-radius:6px;font-weight:700;"></span>
+                    </div>
+                    <div style="border:2px dashed rgba(0,212,255,.2);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;position:relative;transition:all .3s;" id="srBeforeZone">
+                        <input type="file" name="before_photos[]" id="srBeforeInput" accept="image/jpeg,image/png,image/webp" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="srHandlePhotos(this,'before')">
+                        <div style="font-size:1.5rem;margin-bottom:.35rem;">📷</div>
+                        <div style="font-size:.78rem;color:var(--text-secondary);font-weight:600;">Before photos</div>
+                        <div style="font-size:.7rem;color:var(--text-tertiary);">Tap or drag & drop</div>
+                    </div>
+                    <div id="srBeforePreviews" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:.5rem;margin-top:.625rem;"></div>
+                </div>
+                <div>
+                    <div style="font-size:.78rem;font-weight:700;color:var(--text-secondary);margin-bottom:.625rem;display:flex;align-items:center;gap:.5rem;">
+                        <span style="width:8px;height:8px;border-radius:50%;background:var(--accent-green);display:inline-block;"></span>
+                        After Photos
+                        <span id="srAfterCount" style="display:none;font-size:.7rem;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);color:var(--accent-cyan);padding:.1rem .5rem;border-radius:6px;font-weight:700;"></span>
+                    </div>
+                    <div style="border:2px dashed rgba(0,212,255,.2);border-radius:10px;padding:1.25rem;text-align:center;cursor:pointer;position:relative;transition:all .3s;" id="srAfterZone">
+                        <input type="file" name="after_photos[]" id="srAfterInput" accept="image/jpeg,image/png,image/webp" multiple style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;" onchange="srHandlePhotos(this,'after')">
+                        <div style="font-size:1.5rem;margin-bottom:.35rem;">✅</div>
+                        <div style="font-size:.78rem;color:var(--text-secondary);font-weight:600;">After photos</div>
+                        <div style="font-size:.7rem;color:var(--text-tertiary);">Show the completed work</div>
+                    </div>
+                    <div id="srAfterPreviews" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:.5rem;margin-top:.625rem;"></div>
+                </div>
+            </div>
+
+            <div style="margin-top:1.25rem;">
+                <label style="display:block;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-tertiary);margin-bottom:.4rem;">Evidence Notes (optional)</label>
+                <textarea name="evidence_notes" style="width:100%;padding:.75rem 1rem;background:rgba(0,212,255,.04);border:1px solid var(--border-color);border-radius:10px;color:var(--text-primary);font-family:'Chakra Petch',sans-serif;font-size:.875rem;resize:vertical;min-height:70px;outline:none;box-sizing:border-box;" placeholder="Describe what the photos show..." maxlength="1000">{{ isset($serviceRecord) ? $serviceRecord->evidence_notes : old('evidence_notes') }}</textarea>
+            </div>
+        </div>
+
         {{-- Submit --}}
         <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
             <button type="submit" class="btn-submit">
@@ -412,4 +461,58 @@ function toggleSafety(idx) {
     check.style.borderColor = isActive ? '#ff3366' : 'rgba(255,51,102,.4)';
 }
 </script>
+<script>
+// ── Service record photo upload handling ────────────────────────────────────
+const srFiles = { before: [], after: [] };
+
+function srHandlePhotos(input, side) {
+    const files  = Array.from(input.files);
+    const merged = [...srFiles[side], ...files];
+    if (merged.length > 6) { alert('Maximum 6 photos per set.'); input.value = ''; return; }
+    srFiles[side] = merged;
+    srRenderPreviews(side);
+    srUpdateCount(side);
+}
+
+function srRenderPreviews(side) {
+    const container = document.getElementById('sr' + side.charAt(0).toUpperCase() + side.slice(1) + 'Previews');
+    container.innerHTML = '';
+    srFiles[side].forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.style.cssText = 'position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:rgba(0,0,0,.3);';
+            div.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">
+                <button type="button" onclick="srRemove('${side}',${idx})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>`;
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+function srRemove(side, idx) {
+    srFiles[side].splice(idx, 1);
+    const dt = new DataTransfer();
+    srFiles[side].forEach(f => dt.items.add(f));
+    document.getElementById('sr' + side.charAt(0).toUpperCase() + side.slice(1) + 'Input').files = dt.files;
+    srRenderPreviews(side);
+    srUpdateCount(side);
+}
+
+function srUpdateCount(side) {
+    const badge = document.getElementById('sr' + side.charAt(0).toUpperCase() + side.slice(1) + 'Count');
+    const n = srFiles[side].length;
+    badge.style.display = n > 0 ? 'inline-flex' : 'none';
+    badge.textContent = n + ' photo' + (n !== 1 ? 's' : '');
+}
+
+['Before','After'].forEach(side => {
+    const zone = document.getElementById('sr' + side + 'Zone');
+    if (!zone) return;
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor='var(--accent-cyan)'; zone.style.background='rgba(0,212,255,.04)'; });
+    zone.addEventListener('dragleave', () => { zone.style.borderColor='rgba(0,212,255,.2)'; zone.style.background=''; });
+    zone.addEventListener('drop',      () => { zone.style.borderColor='rgba(0,212,255,.2)'; zone.style.background=''; });
+});
+</script>
+
 @endsection

@@ -159,6 +159,25 @@
                     @php $pendingQuotes = \App\Models\QuoteRequest::where('service_provider_id', auth()->user()->serviceProvider?->id ?? 0)->where('status', 'pending')->count(); @endphp
                     <span id="quotesBadge" class="sp-badge" style="background:var(--accent-warning);color:#000;{{ $pendingQuotes > 0 ? '' : 'display:none;' }}">{{ $pendingQuotes ?: 0 }}</span>
                 </a>
+                <a href="{{ route('disputes.index') }}" class="sp-nav-link {{ request()->routeIs('disputes.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/>
+                    </svg>
+                    Disputes
+                    @php
+                        $providerDisputeCount = 0;
+                        $sp = auth()->user()->serviceProvider;
+                        if ($sp) {
+                            $providerDisputeCount = \App\Models\Dispute::whereHas('job', function($q) use ($sp) {
+                                $q->where('assigned_provider_id', $sp->id)
+                                  ->orWhereHas('offers', fn($o) => $o->where('service_provider_id', $sp->id)->where('status', 'accepted'));
+                            })->whereIn('status', ['open', 'under_review'])->count();
+                        }
+                    @endphp
+                    @if($providerDisputeCount > 0)
+                    <span class="sp-badge" style="background:#ff3366;color:#fff;">{{ $providerDisputeCount }}</span>
+                    @endif
+                </a>
             </div>
 
             <div class="sp-nav-section">
@@ -188,6 +207,16 @@
                 <a href="{{ route('provider.analytics') }}" class="sp-nav-link {{ request()->routeIs('provider.analytics') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                     Analytics
+                </a>
+                <a href="{{ route('provider.certifications.index') }}" class="sp-nav-link {{ request()->routeIs('provider.certifications.*') ? 'active' : '' }}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                    </svg>
+                    Certifications
+                    @php $pendingCertCount = \App\Models\ProviderCertification::where('service_provider_id', auth()->user()->serviceProvider?->id ?? 0)->where('status','pending')->count(); @endphp
+                    @if($pendingCertCount > 0)
+                    <span class="sp-badge" style="background:var(--accent-warning);color:#000;">{{ $pendingCertCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('provider.subscription.index') }}" class="sp-nav-link {{ request()->routeIs('provider.subscription.*') ? 'active' : '' }}">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
