@@ -175,8 +175,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         @endif
 
         {{-- Before/After Photos --}}
-        @if($share->include_photos && ($record->before_photos || $record->after_photos))
-        @if(!empty($record->before_photos))
+        @php
+            $showPhotos   = $share->include_photos;
+            $hasBeforePhotos = $showPhotos && !empty($record->before_photos);
+            $hasAfterPhotos  = $showPhotos && !empty($record->after_photos);
+        @endphp
+        @if($hasBeforePhotos)
         <div style="margin-top:1rem;">
             <div class="photo-label"><span style="width:8px;height:8px;border-radius:50%;background:#ff8099;display:inline-block;"></span>Before</div>
             <div class="photo-grid">
@@ -186,7 +190,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             </div>
         </div>
         @endif
-        @if(!empty($record->after_photos))
+        @if($hasAfterPhotos)
         <div style="margin-top:.875rem;">
             <div class="photo-label"><span style="width:8px;height:8px;border-radius:50%;background:#00ffaa;display:inline-block;"></span>After</div>
             <div class="photo-grid">
@@ -195,7 +199,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
                 @endforeach
             </div>
         </div>
-        @endif
         @endif
     </div>
     @empty
