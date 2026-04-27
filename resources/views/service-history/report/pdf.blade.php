@@ -63,25 +63,47 @@ body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10pt; color: #1a1
 </head>
 <body>
 
-{{-- Page header --}}
+{{-- Header --}}
 <div class="page-header">
     <div class="page-header-bar"></div>
-    <table width="100%"><tr>
-        <td><div class="brand">ODOVIN</div><div class="report-title">Vehicle Service History Report</div></td>
-        <td style="text-align:right;vertical-align:top;font-size:8pt;color:#8899aa;">
-            Report ID: {{ substr($share->token, 0, 16) }}...<br>
-            Generated: {{ now()->format('M d, Y') }}<br>
-            @if($share->from_date || $share->to_date)
-            Period: {{ $share->from_date?->format('M Y') ?? 'All time' }} – {{ $share->to_date?->format('M Y') ?? 'Present' }}
-            @endif
-        </td>
-    </tr></table>
 
-    <div class="vehicle-name">{{ $vehicle->year }} {{ $vehicle->make }} {{ $vehicle->model }}</div>
+    <table width="100%">
+        <tr>
+            <td>
+                <div class="brand">ODOVIN</div>
+                <div class="report-title">Vehicle Service History Report</div>
+            </td>
+
+            <td style="text-align:right;font-size:8pt;color:#8899aa;">
+                Report ID: {{ substr($share->token, 0, 16) }}...<br>
+                Generated: {{ now()->format('M d, Y') }}<br>
+
+                @if($share->from_date || $share->to_date)
+                    Period:
+                    {{ $share->from_date ? $share->from_date->format('M Y') : 'All time' }}
+                    –
+                    {{ $share->to_date ? $share->to_date->format('M Y') : 'Present' }}
+                @endif
+            </td>
+        </tr>
+    </table>
+
+    <div class="vehicle-name">
+        {{ $vehicle->year }} {{ $vehicle->make }} {{ $vehicle->model }}
+    </div>
+
     <div class="vehicle-meta">
-        @if($vehicle->vin)            <strong>VIN:</strong> {{ $vehicle->vin }} &nbsp;&nbsp; @endif
-        @if($vehicle->color)          <strong>Color:</strong> {{ $vehicle->color }} &nbsp;&nbsp; @endif
-        @if($vehicle->current_mileage > 0) <strong>Mileage:</strong> {{ number_format($vehicle->current_mileage) }} mi @endif
+        @if($vehicle->vin)
+            <strong>VIN:</strong> {{ $vehicle->vin }} &nbsp;&nbsp;
+        @endif
+
+        @if($vehicle->color)
+            <strong>Color:</strong> {{ $vehicle->color }} &nbsp;&nbsp;
+        @endif
+
+        @if($vehicle->current_mileage > 0)
+            <strong>Mileage:</strong> {{ number_format($vehicle->current_mileage) }} mi
+        @endif
     </div>
 </div>
 
@@ -91,31 +113,41 @@ body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10pt; color: #1a1
         <span class="stat-num">{{ $records->count() }}</span>
         <span class="stat-lbl">Total Services</span>
     </div>
+
     @if($share->include_costs)
     <div class="stat-box">
         <span class="stat-num">${{ number_format($records->sum('cost'), 0) }}</span>
         <span class="stat-lbl">Total Spent</span>
     </div>
     @endif
+
     <div class="stat-box">
-        <span class="stat-num">{{ $records->where('service_date', '>=', now()->subYear())->count() }}</span>
+        <span class="stat-num">
+            {{ $records->where('service_date', '>=', now()->subYear())->count() }}
+        </span>
         <span class="stat-lbl">This Year</span>
     </div>
+
     @if($share->include_diagnostics)
     <div class="stat-box">
-        <span class="stat-num">{{ $records->flatMap->serviceDiagnostics->where('status', 'open')->count() }}</span>
+        <span class="stat-num">
+            {{ $records->flatMap->serviceDiagnostics->where('status', 'open')->count() }}
+        </span>
         <span class="stat-lbl">Open Issues</span>
     </div>
     @endif
 </div>
 
 {{-- Records --}}
-<div class="section-title">Service History — {{ $records->count() }} Records</div>
+<div class="section-title">
+    Service History — {{ $records->count() }} Records
+</div>
 
 @forelse($records as $record)
 <div class="record clearfix">
     <div class="record-stripe"></div>
 
+    {{-- Cost --}}
     @if($share->include_costs && $record->cost)
     <div class="record-cost-box">
         <div class="record-cost">${{ number_format($record->cost, 2) }}</div>
@@ -123,69 +155,122 @@ body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 10pt; color: #1a1
     </div>
     @endif
 
+    {{-- Header --}}
     <div class="record-header">
         <div class="record-type">{{ $record->service_type }}</div>
-        <div class="record-date">{{ $record->service_date->format('M d, Y') }}
-            @if($record->mileage_at_service) · {{ number_format($record->mileage_at_service) }} mi@endif
-            @if($record->invoice_number) · Invoice #{{ $record->invoice_number }}@endif
+
+        <div class="record-date">
+            {{ $record->service_date->format('M d, Y') }}
+
+            @if($record->mileage_at_service)
+                · {{ number_format($record->mileage_at_service) }} mi
+            @endif
+
+            @if($record->invoice_number)
+                · Invoice #{{ $record->invoice_number }}
+            @endif
         </div>
     </div>
 
+    {{-- Description --}}
     @if($record->description)
-    <div class="record-desc">{{ $record->description }}</div>
+        <div class="record-desc">{{ $record->description }}</div>
     @endif
 
+    {{-- Details --}}
     <div class="detail-row">
         @if($record->next_service_date)
-        <span class="detail-item"><span class="k">Next service: </span><span class="v">{{ $record->next_service_date->format('M d, Y') }}</span></span>
+        <span class="detail-item">
+            <span class="k">Next service: </span>
+            <span class="v">{{ $record->next_service_date->format('M d, Y') }}</span>
+        </span>
         @endif
+
         @if($record->next_service_mileage)
-        <span class="detail-item"><span class="k">Next at: </span><span class="v">{{ number_format($record->next_service_mileage) }} mi</span></span>
+        <span class="detail-item">
+            <span class="k">Next at: </span>
+            <span class="v">{{ number_format($record->next_service_mileage) }} mi</span>
+        </span>
         @endif
     </div>
 
+    {{-- Parts --}}
     @if($record->parts_replaced && count($record->parts_replaced))
     <div style="margin-top:5px;">
         @foreach($record->parts_replaced as $part)
-        <span class="part">{{ $part }}</span>
+            <span class="part">{{ $part }}</span>
         @endforeach
     </div>
     @endif
 
+    {{-- Provider --}}
     @if($share->include_provider_details && $record->serviceProvider)
     <div class="provider">
-        ✓ {{ $record->serviceProvider->business_name }}@if($record->serviceProvider->city), {{ $record->serviceProvider->city }}@endif@if($record->serviceProvider->is_verified) · Verified@endif
-    </div>
-    @endif
-
-    @if($share->include_diagnostics && $record->serviceDiagnostics->isNotEmpty())
-    @foreach($record->serviceDiagnostics as $diag)
-    <div class="diag">
-        <div class="diag-title {{ 'sev-'.$diag->severity }}">
-            {{ $diag->is_safety_critical ? '🚨 SAFETY: ' : '' }}{{ $diag->title }}
-            <span style="font-size:7.5pt;font-weight:400;">({{ ucfirst($diag->severity) }}, {{ ucfirst(str_replace('_',' ',$diag->status)) }})</span>
-        </div>
-        <div class="diag-body">{{ $diag->description }}</div>
-        @if($diag->estimated_cost_min || $diag->estimated_cost_max)
-        <div style="font-size:7.5pt;color:#889aaa;margin-top:2px;">Est. cost: ${{ number_format($diag->estimated_cost_min ?? 0) }} – ${{ number_format($diag->estimated_cost_max ?? 0) }}</div>
+        ✓ {{ $record->serviceProvider->business_name }}
+        @if($record->serviceProvider->city)
+            , {{ $record->serviceProvider->city }}
+        @endif
+        @if($record->serviceProvider->is_verified)
+            · Verified
         @endif
     </div>
-    @endforeach
     @endif
 
-    @if($record->notes)
-    <div style="margin-top:5px;font-size:8pt;color:#667788;font-style:italic;">Note: {{ $record->notes }}</div>
+    {{-- Diagnostics (FIXED) --}}
+    @if($share->include_diagnostics && $record->serviceDiagnostics->isNotEmpty())
+
+        @foreach($record->serviceDiagnostics as $diag)
+
+        <div class="diag">
+
+            <div class="diag-title sev-{{ $diag->severity }}">
+                {{ $diag->is_safety_critical ? '🚨 SAFETY: ' : '' }}
+                {{ $diag->title }}
+
+                <span style="font-size:7.5pt;">
+                    ({{ ucfirst($diag->severity) }},
+                    {{ ucfirst(str_replace('_', ' ', $diag->status)) }})
+                </span>
+            </div>
+
+            <div class="diag-body">
+                {{ $diag->description }}
+            </div>
+
+            @if($diag->estimated_cost_min || $diag->estimated_cost_max)
+            <div style="font-size:7.5pt;color:#889aaa;margin-top:2px;">
+                Est. cost:
+                ${{ number_format($diag->estimated_cost_min ?? 0) }}
+                –
+                ${{ number_format($diag->estimated_cost_max ?? 0) }}
+            </div>
+            @endif
+
+        </div>
+
+        @endforeach
+
     @endif
+
+    {{-- Notes --}}
+    @if($record->notes)
+        <div style="margin-top:5px;font-size:8pt;color:#667788;font-style:italic;">
+            Note: {{ $record->notes }}
+        </div>
+    @endif
+
 </div>
 @empty
-<div style="text-align:center;padding:20px;color:#889aaa;font-size:9pt;">No service records found for this period.</div>
+<div style="text-align:center;padding:20px;color:#889aaa;font-size:9pt;">
+    No service records found for this period.
+</div>
 @endforelse
 
 {{-- Footer --}}
 <div class="page-footer">
-    This report was generated by Odovin Vehicle Management Platform &nbsp;·&nbsp;
-    {{ url('/') }} &nbsp;·&nbsp;
-    Report ID: {{ substr($share->token, 0, 20) }}... &nbsp;·&nbsp;
+    This report was generated by Odovin Vehicle Management Platform ·
+    {{ url('/') }} ·
+    Report ID: {{ substr($share->token, 0, 20) }}... ·
     Generated {{ now()->format('M d, Y \a\t g:i A') }}
 </div>
 
