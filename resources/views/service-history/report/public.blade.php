@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Service History — {{ $vehicle->year }} {{ $vehicle->make }} {{ $vehicle->model }}</title>
+
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #e6edf3; line-height: 1.6; min-height: 100vh; }
@@ -59,8 +60,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 #lb { display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:999;align-items:center;justify-content:center; }
 #lbImg { max-width:92vw;max-height:90vh;border-radius:12px;object-fit:contain; }
 #lbClose { position:absolute;top:1.5rem;right:1.5rem;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:44px;height:44px;color:#fff;font-size:1.25rem;cursor:pointer; }
-</style>
-</head>
+</style></head>
+
 <body>
 <div class="container">
 
@@ -70,14 +71,33 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             <div class="brand">ODOVIN</div>
             <span class="report-badge">📋 Verified Service Report</span>
         </div>
-        <div class="vehicle-name">{{ $vehicle->year }} {{ $vehicle->make }} {{ $vehicle->model }}</div>
+
+        <div class="vehicle-name">
+            {{ $vehicle->year }} {{ $vehicle->make }} {{ $vehicle->model }}
+        </div>
+
         <div class="vehicle-meta">
-            @if($vehicle->vin)  <span><strong>VIN:</strong> {{ $vehicle->vin }}</span>@endif
-            @if($vehicle->color)<span><strong>Color:</strong> {{ $vehicle->color }}</span>@endif
-            @if($vehicle->current_mileage > 0)<span><strong>Mileage:</strong> {{ number_format($vehicle->current_mileage) }} mi</span>@endif
+            @if($vehicle->vin)
+                <span><strong>VIN:</strong> {{ $vehicle->vin }}</span>
+            @endif
+
+            @if($vehicle->color)
+                <span><strong>Color:</strong> {{ $vehicle->color }}</span>
+            @endif
+
+            @if($vehicle->current_mileage > 0)
+                <span><strong>Mileage:</strong> {{ number_format($vehicle->current_mileage) }} mi</span>
+            @endif
+
             <span><strong>Generated:</strong> {{ now()->format('M d, Y') }}</span>
+
             @if($share->from_date || $share->to_date)
-            <span><strong>Period:</strong> {{ $share->from_date?->format('M Y') ?? 'All time' }} – {{ $share->to_date?->format('M Y') ?? 'Present' }}</span>
+                <span>
+                    <strong>Period:</strong>
+                    {{ $share->from_date ? $share->from_date->format('M Y') : 'All time' }}
+                    –
+                    {{ $share->to_date ? $share->to_date->format('M Y') : 'Present' }}
+                </span>
             @endif
         </div>
     </div>
@@ -88,142 +108,161 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             <div class="stat-num">{{ $records->count() }}</div>
             <div class="stat-lbl">Services</div>
         </div>
+
         @if($share->include_costs)
         <div class="stat-card">
             <div class="stat-num">${{ number_format($records->sum('cost'), 0) }}</div>
             <div class="stat-lbl">Total Spent</div>
         </div>
         @endif
+
         <div class="stat-card">
-            <div class="stat-num">{{ $records->where('service_date', '>=', now()->subYear())->count() }}</div>
+            <div class="stat-num">
+                {{ $records->where('service_date', '>=', now()->subYear())->count() }}
+            </div>
             <div class="stat-lbl">This Year</div>
         </div>
+
         @if($share->include_diagnostics)
         <div class="stat-card">
-            <div class="stat-num">{{ $records->flatMap->serviceDiagnostics->where('status', 'open')->count() }}</div>
+            <div class="stat-num">
+                {{ $records->flatMap->serviceDiagnostics->where('status', 'open')->count() }}
+            </div>
             <div class="stat-lbl">Open Issues</div>
         </div>
         @endif
     </div>
 
-    {{-- Service Records --}}
-    <div class="section-title">Service History ({{ $records->count() }} records)</div>
+    {{-- Records --}}
+    <div class="section-title">
+        Service History ({{ $records->count() }} records)
+    </div>
 
     @forelse($records as $record)
     <div class="record-card">
+
         <div class="record-header">
             <div>
                 <div class="record-type">{{ $record->service_type }}</div>
-                <div class="record-date">{{ $record->service_date->format('M d, Y') }}
-                    @if($record->mileage_at_service) · {{ number_format($record->mileage_at_service) }} mi@endif
+                <div class="record-date">
+                    {{ $record->service_date->format('M d, Y') }}
+                    @if($record->mileage_at_service)
+                        · {{ number_format($record->mileage_at_service) }} mi
+                    @endif
                 </div>
             </div>
+
             @if($share->include_costs && $record->cost)
-            <div class="record-cost">${{ number_format($record->cost, 2) }}</div>
+                <div class="record-cost">${{ number_format($record->cost, 2) }}</div>
             @endif
         </div>
 
         @if($record->description)
-        <div class="record-desc">{{ $record->description }}</div>
+            <div class="record-desc">{{ $record->description }}</div>
         @endif
 
         <div class="record-detail">
             @if($record->invoice_number)
-            <div class="detail-item"><label>Invoice</label><span>#{{ $record->invoice_number }}</span></div>
+                <div class="detail-item">
+                    <label>Invoice</label>
+                    <span>#{{ $record->invoice_number }}</span>
+                </div>
             @endif
+
             @if($record->next_service_date)
-            <div class="detail-item"><label>Next Service</label><span>{{ $record->next_service_date->format('M d, Y') }}</span></div>
+                <div class="detail-item">
+                    <label>Next Service</label>
+                    <span>{{ $record->next_service_date->format('M d, Y') }}</span>
+                </div>
             @endif
+
             @if($record->next_service_mileage)
-            <div class="detail-item"><label>Next at</label><span>{{ number_format($record->next_service_mileage) }} mi</span></div>
+                <div class="detail-item">
+                    <label>Next at</label>
+                    <span>{{ number_format($record->next_service_mileage) }} mi</span>
+                </div>
             @endif
         </div>
 
-        @if($record->parts_replaced && count($record->parts_replaced))
-        <div class="parts-list">
-            @foreach($record->parts_replaced as $part)
-            <span class="part-tag">{{ $part }}</span>
-            @endforeach
-        </div>
-        @endif
-
+        {{-- Provider --}}
         @if($share->include_provider_details && $record->serviceProvider)
-        <div class="provider-tag">
-            🏪 {{ $record->serviceProvider->business_name }}
-            @if($record->serviceProvider->city) · {{ $record->serviceProvider->city }}@endif
-            @if($record->serviceProvider->is_verified) · ✓ Verified@endif
-        </div>
-        @endif
+            <div class="provider-tag">
+                🏪 {{ $record->serviceProvider->business_name }}
 
-        {{-- Diagnostics --}}
-        @if($share->include_diagnostics && $record->serviceDiagnostics->isNotEmpty())
-        @foreach($record->serviceDiagnostics as $diag)
-        <div class="diag-card">
-            <div class="diag-title {{ 'sev-' . $diag->severity }}">
-                {{ $diag->is_safety_critical ? '🚨 SAFETY: ' : '⚠ ' }}{{ $diag->title }}
-                <span style="font-size:.72rem;font-weight:400;opacity:.75;">· {{ ucfirst($diag->severity) }}</span>
-            </div>
-            <div style="font-size:.8rem;color:#8b949e;margin-top:.25rem;">{{ $diag->description }}</div>
-            <div style="font-size:.72rem;color:#8b949e;margin-top:.35rem;">
-                Status: <span style="color:#e6edf3;">{{ ucfirst(str_replace('_',' ',$diag->status)) }}</span>
-                @if($diag->estimated_cost_min || $diag->estimated_cost_max)
-                · Est. cost: <span style="color:#e6edf3;">${{ number_format($diag->estimated_cost_min ?? 0) }}–${{ number_format($diag->estimated_cost_max ?? 0) }}</span>
+                @if($record->serviceProvider->city)
+                    · {{ $record->serviceProvider->city }}
+                @endif
+
+                @if($record->serviceProvider->is_verified)
+                    · ✓ Verified
                 @endif
             </div>
-        </div>
-        @endforeach
         @endif
 
-        {{-- Before/After Photos --}}
-        @php
-            $showPhotos   = $share->include_photos;
-            $hasBeforePhotos = $showPhotos && !empty($record->before_photos);
-            $hasAfterPhotos  = $showPhotos && !empty($record->after_photos);
-        @endphp
-        @if($hasBeforePhotos)
-        <div style="margin-top:1rem;">
-            <div class="photo-label"><span style="width:8px;height:8px;border-radius:50%;background:#ff8099;display:inline-block;"></span>Before</div>
-            <div class="photo-grid">
-                @foreach($record->beforePhotoUrls() as $url)
-                <div class="photo-thumb" onclick="openLb('{{ $url }}')"><img src="{{ $url }}" loading="lazy"></div>
-                @endforeach
-            </div>
-        </div>
+        {{-- Diagnostics (FIXED SECTION) --}}
+        @if($share->include_diagnostics && $record->serviceDiagnostics->isNotEmpty())
+
+            @foreach($record->serviceDiagnostics as $diag)
+
+                <div class="diag-card">
+
+                    <div class="diag-title sev-{{ $diag->severity }}">
+                        {{ $diag->is_safety_critical ? '🚨 SAFETY: ' : '⚠ ' }}
+                        {{ $diag->title }}
+
+                        <span style="font-size:.72rem;opacity:.7;">
+                            · {{ ucfirst($diag->severity) }}
+                        </span>
+                    </div>
+
+                    <div style="font-size:.8rem;color:#8b949e;margin-top:.25rem;">
+                        {{ $diag->description }}
+                    </div>
+
+                    <div style="font-size:.72rem;color:#8b949e;margin-top:.35rem;">
+                        Status:
+                        <span style="color:#e6edf3;">
+                            {{ ucfirst(str_replace('_', ' ', $diag->status)) }}
+                        </span>
+
+                        @if($diag->estimated_cost_min || $diag->estimated_cost_max)
+                            · Est:
+                            ${{ number_format($diag->estimated_cost_min ?? 0) }}
+                            –
+                            ${{ number_format($diag->estimated_cost_max ?? 0) }}
+                        @endif
+                    </div>
+
+                </div>
+
+            @endforeach
+
         @endif
-        @if($hasAfterPhotos)
-        <div style="margin-top:.875rem;">
-            <div class="photo-label"><span style="width:8px;height:8px;border-radius:50%;background:#00ffaa;display:inline-block;"></span>After</div>
-            <div class="photo-grid">
-                @foreach($record->afterPhotoUrls() as $url)
-                <div class="photo-thumb" onclick="openLb('{{ $url }}')"><img src="{{ $url }}" loading="lazy"></div>
-                @endforeach
-            </div>
-        </div>
-        @endif
+
     </div>
+
     @empty
-    <div style="text-align:center;padding:3rem;color:#8b949e;">No service records found for this period.</div>
+        <div style="text-align:center;padding:3rem;color:#8b949e;">
+            No service records found.
+        </div>
     @endforelse
 
     {{-- Footer --}}
     <div class="report-footer">
-        <div>This report was generated by <a href="{{ url('/') }}">Odovin</a> and shared by the vehicle owner.</div>
-        <div style="margin-top:.35rem;">Report ID: {{ $share->token }} · Generated {{ now()->format('M d, Y \a\t g:i A') }}</div>
+        <div>
+            This report was generated by
+            <a href="{{ url('/') }}">Odovin</a>
+        </div>
+
+        <div style="margin-top:.5rem;">
+            Report ID: {{ $share->token }}
+        </div>
+
         <a href="{{ route('service-history.report.pdf', $share->token) }}" class="pdf-btn">
             📄 Download PDF
         </a>
     </div>
-</div>
 
-{{-- Lightbox --}}
-<div id="lb" onclick="if(event.target===this)closeLb()">
-    <button id="lbClose" onclick="closeLb()">✕</button>
-    <img id="lbImg" src="">
 </div>
-<script>
-function openLb(src) { document.getElementById('lbImg').src=src; document.getElementById('lb').style.display='flex'; }
-function closeLb()   { document.getElementById('lb').style.display='none'; }
-document.addEventListener('keydown', e => { if(e.key==='Escape') closeLb(); });
-</script>
 </body>
 </html>
